@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+    <application>
+        <provider
+            android:name="io.wickkit.core.WickKitInitializer"
+            android:authorities="${applicationId}.wickkit-initializer"
+            android:exported="false" />
+    </application>
+</manifest>
