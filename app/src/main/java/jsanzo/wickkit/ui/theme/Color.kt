@@ -1,4 +1,4 @@
-package jsanzo97.wickkit.ui.theme
+package jsanzo.wickkit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

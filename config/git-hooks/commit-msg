@@ -1,0 +1,67 @@
+#!/bin/sh
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip empty messages
+if [ -z "$COMMIT_MSG" ]; then
+  echo "Error: Commit message is empty."
+  exit 1
+fi
+
+# Skip merge/rebase/fixup/squash commits
+case "$COMMIT_MSG" in
+  Merge*|Revert*|fixup\!*|squash\!*) exit 0 ;;
+esac
+
+# Extract ticket and type from branch: type/WKK-XX-description
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+TICKET=$(echo "$BRANCH" | grep -oE 'WKK-[0-9]+')
+BRANCH_PREFIX=$(echo "$BRANCH" | sed -n 's|^\([a-z]*\)/.*|\1|p')
+
+case "$BRANCH_PREFIX" in
+  feature) INFERRED_TYPE="feat" ;;
+  bug)     INFERRED_TYPE="fix" ;;
+  refactor) INFERRED_TYPE="refactor" ;;
+  task|chore) INFERRED_TYPE="chore" ;;
+  spike)   INFERRED_TYPE="chore" ;;
+  docs)    INFERRED_TYPE="docs" ;;
+  *)       INFERRED_TYPE="" ;;
+esac
+
+# Already correct: type(WKK-XX): description
+PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)\(WKK-[0-9]+\): .{5,}$"
+if echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  exit 0
+fi
+
+# Has type but missing scope → inject (WKK-XX)
+if [ -n "$TICKET" ] && echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert): .{5,}$"; then
+  NEW_MSG=$(echo "$COMMIT_MSG" | sed "s/^\([a-z]*\): /\1($TICKET): /")
+  echo "$NEW_MSG" > "$COMMIT_MSG_FILE"
+  echo "Auto-corrected commit message to: $NEW_MSG"
+  exit 0
+fi
+
+# Plain text → infer type and inject ticket
+if [ -n "$INFERRED_TYPE" ] && [ -n "$TICKET" ] && ! echo "$COMMIT_MSG" | grep -qE "^[a-z]+(\(.+\))?: "; then
+  NEW_MSG="$INFERRED_TYPE($TICKET): $COMMIT_MSG"
+  echo "$NEW_MSG" > "$COMMIT_MSG_FILE"
+  echo "Auto-corrected commit message to: $NEW_MSG"
+  exit 0
+fi
+
+echo ""
+echo "Error: Commit message does not follow the required format."
+echo ""
+if [ -n "$TICKET" ]; then
+  echo "  Expected: type($TICKET): description (min 5 chars)"
+  echo "  Example:  feat($TICKET): add shake gesture trigger"
+else
+  echo "  Expected: type(WKK-XX): description (min 5 chars)"
+  echo "  Note: could not detect ticket from branch. Branch format: type/WKK-XX-description"
+fi
+echo ""
+echo "  Valid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+echo ""
+exit 1
