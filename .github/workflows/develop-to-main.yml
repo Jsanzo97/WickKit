@@ -1,0 +1,58 @@
+name: Develop → Main
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  open-release-pr:
+    name: Open release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: version
+        run: |
+          LATEST=$(git tag --list "v*.*.*" --sort=-v:refname | head -n1)
+          LATEST=${LATEST:-v0.0.0}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+          case "${{ inputs.bump_type }}" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+          esac
+          echo "version=v${MAJOR}.${MINOR}.${PATCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Check for existing PR
+        id: existing
+        run: |
+          EXISTING=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
+          echo "pr_number=${EXISTING}" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Open PR
+        if: steps.existing.outputs.pr_number == ''
+        run: |
+          gh pr create \
+            --base main \
+            --head develop \
+            --title "Release ${{ steps.version.outputs.version }} [WickKit]" \
+            --body "Automated release PR for ${{ steps.version.outputs.version }}."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

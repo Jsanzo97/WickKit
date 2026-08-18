@@ -1,16 +1,19 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("detekt-convention")
+    id("spotless-convention")
+    id("jacoco-convention")
 }
 
 android {
-    namespace = "jsanzo97.wickkit"
+    namespace = "jsanzo.wickkit"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "jsanzo97.wickkit"
+        applicationId = "jsanzo.wickkit"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

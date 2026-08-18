@@ -1,0 +1,100 @@
+build:
+  maxIssues: 0
+
+config:
+  warningsAsErrors: false
+  checkExhaustiveness: false
+
+complexity:
+  active: true
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 15
+  CognitiveComplexMethod:
+    active: false
+  LargeClass:
+    active: true
+    threshold: 600
+  LongMethod:
+    active: true
+    threshold: 90
+  LongParameterList:
+    active: true
+    functionThreshold: 6
+    constructorThreshold: 7
+    ignoreAnnotated:
+      - 'Composable'
+  NestedBlockDepth:
+    active: true
+    threshold: 4
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 11
+    thresholdInClasses: 11
+    thresholdInInterfaces: 11
+    thresholdInObjects: 11
+    thresholdInEnums: 11
+    ignorePrivate: true
+    ignoreOverridden: false
+    excludes:
+      - '**/test/**'
+      - '**/androidTest/**'
+
+coroutines:
+  active: true
+  InjectDispatcher:
+    active: true
+  RedundantSuspendModifier:
+    active: true
+  SleepInsteadOfDelay:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
+
+style:
+  active: true
+  ForbiddenComment:
+    active: true
+    comments:
+      - reason: 'Unresolved FIXME'
+        value: 'FIXME:'
+      - reason: 'Commit blocking TODO'
+        value: 'STOPSHIP:'
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+    excludePackageStatements: true
+    excludeImportStatements: true
+  ReturnCount:
+    active: true
+    max: 3
+  UnusedImports:
+    active: true
+  UnusedParameter:
+    active: true
+  UnusedPrivateMember:
+    active: true
+    ignoreAnnotated:
+      - 'Preview'
+  UnusedPrivateClass:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+  WildcardImport:
+    active: true
+    excludeImports:
+      - 'java.util.*'
+
+naming:
+  active: true
+  BooleanPropertyNaming:
+    active: false
+  FunctionNaming:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'
+
+comments:
+  active: false
