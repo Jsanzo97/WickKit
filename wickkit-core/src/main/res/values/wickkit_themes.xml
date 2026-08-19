@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="WickKit.Overlay" parent="android:Theme.Translucent.NoTitleBar">
+        <!-- Disable the default window enter/exit animation — Compose handles transitions -->
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+</resources>

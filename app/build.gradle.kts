@@ -54,4 +54,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(project(":wickkit-core"))
+    releaseImplementation(project(":wickkit-no-op"))
 }
