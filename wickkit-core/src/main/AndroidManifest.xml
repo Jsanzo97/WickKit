@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application>
         <provider
             android:name="io.wickkit.core.WickKitInitializer"
             android:authorities="${applicationId}.wickkit-initializer"
+            android:exported="false" />
+
+        <activity
+            android:name="io.wickkit.overlay.WickKitActivity"
+            android:theme="@style/WickKit.Overlay"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name="io.wickkit.overlay.WickKitPermissionActivity"
+            android:theme="@style/WickKit.Overlay"
             android:exported="false" />
     </application>
 </manifest>
