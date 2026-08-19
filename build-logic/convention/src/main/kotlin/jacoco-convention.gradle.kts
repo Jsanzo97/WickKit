@@ -10,14 +10,18 @@ tasks.withType<Test> {
 }
 
 private val classExcludes = listOf(
-    "**/R.class", "**/R$*.class", "**/BuildConfig.*",
-    "**/Manifest*.*", "**/*Test*.*",
-    "**/Activity*.*", "**/Fragment*.*",
-    "**/Screen*.*", "**/Preview*.*",
-    "**/Navigation*.*", "**/NavHost*.*", "**/Route*.*",
-    "**/*Composable*.*", "**/*Compose*.*", "**/*Component*.*",
-    "**/*Module*.*", "**/*_Factory*.*", "**/*Lambda*.*",
-    "**/*Companion*.*",
+    // Android generated
+    "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+    // Tests
+    "**/*Test*.*",
+    // Android-specific — not unit-testable
+    "io/wickkit/overlay/**",
+    "io/wickkit/core/**",
+    "io/wickkit/WickKit*",
+    "io/wickkit/logs/WickKitLogcat*",
+    "**/*Activity*.*", "**/*Fragment*.*",
+    "**/*Screen*.*", "**/*Preview*.*",
+    "**/*Module*.*", "**/*_Factory*.*", "**/*Lambda*.*", "**/*Companion*.*",
 )
 
 tasks.register<JacocoReport>("jacocoTestReport") {
@@ -31,7 +35,9 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     val buildDir = layout.buildDirectory.get().asFile
 
     classDirectories.setFrom(
-        fileTree("$buildDir/tmp/kotlin-classes/debug") { exclude(classExcludes) }
+        fileTree("$buildDir/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes") {
+            exclude(classExcludes)
+        }
     )
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(

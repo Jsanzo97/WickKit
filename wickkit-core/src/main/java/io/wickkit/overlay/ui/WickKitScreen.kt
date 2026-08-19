@@ -44,7 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import io.wickkit.overlay.ui.tab.DeviceTab
 import io.wickkit.overlay.ui.tab.FlagsTab
@@ -182,7 +182,7 @@ private fun PanelHeader(onClose: () -> Unit) {
             Text(
                 text = "Debug Panel",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
         Spacer(Modifier.width(8.dp))
@@ -190,7 +190,7 @@ private fun PanelHeader(onClose: () -> Unit) {
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Close",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -210,13 +210,13 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
                 onClick = { onSelect(tab) },
                 text = { Text(text = tab.label, style = MaterialTheme.typography.labelLarge) },
                 selectedContentColor = MaterialTheme.colorScheme.primary,
-                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0F1117)
+@PreviewLightDark
 @Composable
 private fun DebugPanelLogsPreview() {
     WickKitTheme {
@@ -228,7 +228,7 @@ private fun DebugPanelLogsPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0F1117)
+@PreviewLightDark
 @Composable
 private fun DebugPanelDevicePreview() {
     WickKitTheme {

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import io.wickkit.logs.WickKitLogcat
 import io.wickkit.overlay.WickKitActivity
 import io.wickkit.overlay.WickKitNotification
 import io.wickkit.overlay.WickKitPermissionActivity
@@ -20,6 +21,7 @@ object WickKit {
 
     internal fun init(context: Context) {
         val app = context.applicationContext as? Application ?: return
+        WickKitLogcat.start()
         app.registerActivityLifecycleCallbacks(activityTracker())
     }
 
