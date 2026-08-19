@@ -33,7 +33,7 @@ internal object WickKitLogcat {
                 )
                 process.inputStream.bufferedReader().lineSequence().forEach { line ->
                     parseLine(line)?.let { (level, tag, message, time) ->
-                        WickKitLogStore.add(level, tag, message, time)
+                        WickKitLogManager.add(level, tag, message, time)
                     }
                 }
             }

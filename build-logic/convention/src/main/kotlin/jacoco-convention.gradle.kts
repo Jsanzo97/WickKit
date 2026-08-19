@@ -22,6 +22,10 @@ private val classExcludes = listOf(
     "**/*Activity*.*", "**/*Fragment*.*",
     "**/*Screen*.*", "**/*Preview*.*",
     "**/*Module*.*", "**/*_Factory*.*", "**/*Lambda*.*", "**/*Companion*.*",
+    // Data / value classes — auto-generated getters, copy, equals, hashCode
+    "io/wickkit/network/NetworkEntry*",
+    "io/wickkit/network/MockRule*",
+    "io/wickkit/logs/LogEntry*",
 )
 
 tasks.register<JacocoReport>("jacocoTestReport") {
