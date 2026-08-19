@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.spotless) apply false
+    jacoco
 }
 
 val appVersionName: String by lazy {
@@ -42,17 +43,27 @@ tasks.register<JacocoReport>("jacocoRootReport") {
         html.required.set(true)
     }
 
-    val allClassDirs = subprojects.flatMap { sub ->
-        sub.tasks.withType<JacocoReport>().flatMap { it.classDirectories.files }
-    }
-    val allSourceDirs = subprojects.flatMap { sub ->
-        sub.tasks.withType<JacocoReport>().flatMap { it.sourceDirectories.files }
-    }
-    val allExecData = subprojects.flatMap { sub ->
-        sub.tasks.withType<JacocoReport>().flatMap { it.executionData.files }.filter { it.exists() }
-    }
+    // Only SDK modules (not the sample app). Evaluated lazily at execution time.
+    val sdkModules = subprojects.filter { it.name.startsWith("wickkit") }
 
-    classDirectories.setFrom(allClassDirs)
-    sourceDirectories.setFrom(allSourceDirs)
-    executionData.setFrom(allExecData)
+    classDirectories.setFrom(provider {
+        sdkModules.flatMap { sub ->
+            sub.tasks.withType<JacocoReport>()
+                .filter { task -> task.executionData.files.any { it.exists() } }
+                .flatMap { task -> task.classDirectories.files }
+        }
+    })
+    sourceDirectories.setFrom(provider {
+        sdkModules.flatMap { sub ->
+            sub.tasks.withType<JacocoReport>()
+                .filter { task -> task.executionData.files.any { it.exists() } }
+                .flatMap { task -> task.sourceDirectories.files }
+        }
+    })
+    executionData.setFrom(provider {
+        sdkModules.flatMap { sub ->
+            sub.tasks.withType<JacocoReport>()
+                .flatMap { task -> task.executionData.files.filter { it.exists() } }
+        }
+    })
 }

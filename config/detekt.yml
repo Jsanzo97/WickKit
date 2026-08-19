@@ -53,6 +53,9 @@ coroutines:
 
 style:
   active: true
+  DestructuringDeclarationWithTooManyEntries:
+    active: true
+    maxDestructuringEntries: 5
   ForbiddenComment:
     active: true
     comments:
@@ -78,6 +81,10 @@ style:
     active: true
     ignoreAnnotated:
       - 'Preview'
+      - 'PreviewLightDark'
+      - 'PreviewScreenSizes'
+      - 'PreviewFontScales'
+      - 'PreviewDynamicColors'
   UnusedPrivateClass:
     active: true
   UnusedPrivateProperty:
