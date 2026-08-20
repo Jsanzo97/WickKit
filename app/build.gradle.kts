@@ -56,5 +56,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.timber)
     debugImplementation(project(":wickkit-core"))
+    debugImplementation(project(":wickkit-network"))
     releaseImplementation(project(":wickkit-no-op"))
+    implementation(libs.okhttp)
 }

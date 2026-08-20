@@ -8,3 +8,7 @@ plugins {
 android {
     namespace = "io.wickkit.noop"
 }
+
+dependencies {
+    compileOnly(libs.okhttp)
+}

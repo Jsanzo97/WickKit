@@ -1,34 +1,58 @@
 package jsanzo.wickkit
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import io.wickkit.WickKit
+import io.wickkit.network.WickKitNetworkInterceptor
 import jsanzo.wickkit.ui.theme.WickKitTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 
 class MainActivity : ComponentActivity() {
+
+    private val notificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { /* granted state is handled by WickKitNotification.canPost() */ }
+
+    private val httpClient by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(WickKitNetworkInterceptor())
+            .build()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.plant(Timber.DebugTree())
 
-        // All of these are captured by WickKit via logcat — no special integration needed
         Timber.tag("Timber").d("Timber debug log")
         Timber.tag("Timber").i("Timber info log")
         Timber.tag("Timber").w("Timber warning log")
@@ -44,6 +68,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             WickKitTheme {
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(
                         modifier = Modifier
@@ -55,15 +84,59 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Text("WickKit Sample App")
                         Spacer(Modifier.height(24.dp))
-                        Button(onClick = { WickKit.open(context) }) {
+                        Button(
+                            onClick = { WickKit.open(context) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
                             Text("Open Debug Panel")
                         }
                         Spacer(Modifier.height(12.dp))
-                        OutlinedButton(onClick = { generateSampleLogs() }) {
+                        OutlinedButton(
+                            onClick = {
+                                generateSampleLogs()
+                                Toast.makeText(context, "Sample logs generated", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
                             Text("Generate Logs")
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = {
+                                generateSampleRequests()
+                                Toast.makeText(context, "Network requests sent", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Make Network Requests")
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun generateSampleRequests() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val base = "https://jsonplaceholder.typicode.com"
+            runCatching {
+                httpClient.newCall(Request.Builder().url("$base/posts/1").build()).execute().close()
+            }
+            runCatching {
+                httpClient.newCall(Request.Builder().url("$base/posts/2").build()).execute().close()
+            }
+            runCatching {
+                val body = """{"title":"WickKit Test","body":"Testing network inspector","userId":1}"""
+                    .toRequestBody("application/json".toMediaType())
+                httpClient.newCall(
+                    Request.Builder().url("$base/posts").post(body).build(),
+                ).execute().close()
+            }
+            runCatching {
+                httpClient.newCall(Request.Builder().url("$base/posts/99999").build()).execute().close()
+            }
+            runCatching {
+                httpClient.newCall(Request.Builder().url("$base/users").build()).execute().close()
             }
         }
     }

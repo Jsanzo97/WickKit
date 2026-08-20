@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import io.wickkit.logs.LogEntry
 import io.wickkit.logs.LogLevel
 import io.wickkit.logs.LogNoise
-import io.wickkit.logs.WickKitLogStore
+import io.wickkit.logs.WickKitLogManager
 import io.wickkit.logs.matches
 import io.wickkit.logs.parseLogFilter
 import io.wickkit.overlay.ui.WickKitTheme
@@ -62,11 +62,11 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-private val ToolbarHeight = 34.dp
+private val ToolbarHeight = 36.dp
 
 @Composable
 internal fun LogsTab() {
-    val entries by WickKitLogStore.entries.collectAsState()
+    val entries by WickKitLogManager.entries.collectAsState()
     LogsTabContent(entries = entries)
 }
 
@@ -74,7 +74,7 @@ internal fun LogsTab() {
 private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
     var search by remember { mutableStateOf("") }
     var showAll by remember { mutableStateOf(false) }
-    val selectedLevels by WickKitLogStore.selectedLevels.collectAsState()
+    val selectedLevels by WickKitLogManager.selectedLevels.collectAsState()
     val context = LocalContext.current
 
     val filtered: ImmutableList<LogEntry> = remember(entries, search, selectedLevels, showAll) {
@@ -93,12 +93,12 @@ private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
             showAll = showAll,
             onSearch = { search = it },
             onShowAllChange = { showAll = it },
-            onClear = { WickKitLogStore.clear() },
+            onClear = { WickKitLogManager.clear() },
             onShare = { shareLogEntries(context, filtered) },
         )
         LevelFilterRow(
             enabledLevels = selectedLevels,
-            onToggle = { WickKitLogStore.toggleLevel(it) },
+            onToggle = { WickKitLogManager.toggleLevel(it) },
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
@@ -125,9 +125,9 @@ private fun LogsToolbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+            .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
             modifier = Modifier
@@ -135,7 +135,7 @@ private fun LogsToolbar(
                 .height(ToolbarHeight)
                 .clip(RoundedCornerShape(8.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 8.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
             if (search.isEmpty()) {
@@ -162,7 +162,7 @@ private fun LogsToolbar(
                 .size(ToolbarHeight)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(interactionSource = null, indication = null) { onShare() }
-                .padding(7.dp),
+                .padding(6.dp),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -177,7 +177,7 @@ private fun LogsToolbar(
                 .height(ToolbarHeight)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(interactionSource = null, indication = null) { onClear() }
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -212,7 +212,7 @@ private fun AppAllToggle(showAll: Boolean, onShowAllChange: (Boolean) -> Unit) {
                         },
                     )
                     .clickable(interactionSource = null, indication = null) { onShowAllChange(isAll) }
-                    .padding(horizontal = 10.dp),
+                    .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -239,8 +239,8 @@ private fun LevelFilterRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         LogLevel.entries.forEach { level ->
             LevelChip(
@@ -261,15 +261,15 @@ private fun LevelChip(
     val color = level.badgeColor()
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(if (selected) color.copy(alpha = 0.15f) else Color.Transparent)
             .border(
                 width = 1.dp,
                 color = if (selected) color.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(8.dp),
             )
             .clickable(interactionSource = null, indication = null) { onClick() }
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -327,7 +327,7 @@ private fun LogEntryRow(entry: LogEntry, onLongClick: () -> Unit) {
                 onClick = {},
                 onLongClick = onLongClick,
             )
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Box(

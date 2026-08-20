@@ -4,6 +4,7 @@ plugins {
     id("spotless-convention")
     id("jacoco-convention")
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -23,4 +24,5 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.serialization.json)
 }
