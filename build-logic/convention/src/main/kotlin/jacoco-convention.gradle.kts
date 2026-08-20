@@ -26,6 +26,9 @@ private val classExcludes = listOf(
     "io/wickkit/network/NetworkEntry*",
     "io/wickkit/network/MockRule*",
     "io/wickkit/logs/LogEntry*",
+    "io/wickkit/database/DatabaseEntry*",
+    "io/wickkit/database/DatabaseStatus*",
+    "io/wickkit/database/ColumnInfo*",
 )
 
 tasks.register<JacocoReport>("jacocoTestReport") {

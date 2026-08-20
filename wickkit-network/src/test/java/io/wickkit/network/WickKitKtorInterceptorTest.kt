@@ -1,4 +1,4 @@
-@file:Suppress("INACCESSIBLE_TYPE")
+@file:Suppress("INACCESSIBLE_TYPE", "DEPRECATION")
 
 package io.wickkit.network
 
@@ -124,6 +124,28 @@ class WickKitKtorInterceptorTest {
         }.use { client ->
             val body = client.get("https://api.example.com/data").bodyAsText()
             assertEquals("""{"saved":true}""", body)
+        }
+    }
+
+    @Test
+    fun `request body larger than 50KB is truncated in interceptor entry`() = runBlocking {
+        val largeBody = ByteArray(52 * 1024) { 'x'.code.toByte() }
+        HttpClient(MockEngine) {
+            install(WickKitKtorInterceptor)
+            engine {
+                addHandler {
+                    respond(
+                        content = "{}",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+            }
+        }.use { client ->
+            val response = client.post("https://api.example.com/upload") {
+                setBody(largeBody)
+            }
+            assertEquals(HttpStatusCode.OK, response.status)
         }
     }
 

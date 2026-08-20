@@ -43,6 +43,8 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission(),
     ) { /* granted state is handled by WickKitNotification.canPost() */ }
 
+    private val sampleDb by lazy { SampleDatabase(this) }
+
     private val httpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(WickKitNetworkInterceptor())
@@ -52,6 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.plant(Timber.DebugTree())
+        lifecycleScope.launch(Dispatchers.IO) { sampleDb.writableDatabase }
 
         Timber.tag("Timber").d("Timber debug log")
         Timber.tag("Timber").i("Timber info log")
@@ -109,6 +112,16 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Make Network Requests")
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = {
+                                lifecycleScope.launch(Dispatchers.IO) { sampleDb.reseed() }
+                                Toast.makeText(context, "Database reseeded", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Reseed Sample Database")
                         }
                     }
                 }

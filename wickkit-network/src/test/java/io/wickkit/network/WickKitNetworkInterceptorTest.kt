@@ -187,6 +187,19 @@ class WickKitNetworkInterceptorTest {
     }
 
     @Test
+    fun `mock with unrecognised status code still returns that code`() {
+        MockRuleManager.add(
+            MockRule(id = 0, urlPattern = "/teapot", method = null, statusCode = 418, responseBody = "I'm a teapot"),
+        )
+        val request = Request.Builder().url("https://api.example.com/teapot").build()
+        val chain = FakeChain(request) { error("chain must not be called") }
+
+        val result = interceptor.intercept(chain)
+
+        assertEquals(418, result.code)
+    }
+
+    @Test
     fun `mock with delay does not prevent response`() {
         MockRuleManager.add(
             MockRule(id = 0, urlPattern = "/slow", method = null, statusCode = 200, responseBody = "ok", delayMs = 1),
