@@ -11,6 +11,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -29,8 +31,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,10 +42,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.overlay.ui.tab.DatabaseTab
 import io.wickkit.overlay.ui.tab.DeviceTab
 import io.wickkit.overlay.ui.tab.FlagsTab
 import io.wickkit.overlay.ui.tab.LogsTab
@@ -57,6 +61,7 @@ import kotlin.time.Duration.Companion.milliseconds
 private enum class WickKitTab(val label: String) {
     Logs("Logs"),
     Network("Network"),
+    Database("Database"),
     Flags("Flags"),
     Device("Device"),
 }
@@ -141,6 +146,7 @@ private fun DebugPanel(
         when (selectedTab) {
             WickKitTab.Logs -> LogsTab()
             WickKitTab.Network -> NetworkTab()
+            WickKitTab.Database -> DatabaseTab()
             WickKitTab.Flags -> FlagsTab()
             WickKitTab.Device -> DeviceTab()
         }
@@ -198,21 +204,42 @@ private fun PanelHeader(onClose: () -> Unit) {
 
 @Composable
 private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
-    SecondaryTabRow(
-        selectedTabIndex = selected.ordinal,
-        containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.primary,
-        divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outline) },
-    ) {
-        WickKitTab.entries.forEach { tab ->
-            Tab(
-                selected = selected == tab,
-                onClick = { onSelect(tab) },
-                text = { Text(text = tab.label, style = MaterialTheme.typography.labelLarge) },
-                selectedContentColor = MaterialTheme.colorScheme.primary,
-                unselectedContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            )
+    val indicatorColor = MaterialTheme.colorScheme.primary
+    val selectedColor = MaterialTheme.colorScheme.primary
+    val unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+        ) {
+            WickKitTab.entries.forEach { tab ->
+                val isSelected = selected == tab
+                Box(
+                    modifier = Modifier
+                        .clickable { onSelect(tab) }
+                        .height(48.dp)
+                        .drawBehind {
+                            if (isSelected) {
+                                drawRect(
+                                    color = indicatorColor,
+                                    topLeft = Offset(0f, size.height - 2.dp.toPx()),
+                                    size = Size(size.width, 2.dp.toPx()),
+                                )
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = tab.label,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (isSelected) selectedColor else unselectedColor,
+                    )
+                }
+            }
         }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
     }
 }
 

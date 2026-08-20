@@ -88,5 +88,13 @@ class LogFilterTest {
 
     // endregion
 
+    @Test
+    fun `LogLevel entries expose non-empty label and chipLabel`() {
+        for (level in LogLevel.values()) {
+            assertTrue("${level.name}.label was empty", level.label.isNotEmpty())
+            assertTrue("${level.name}.chipLabel was empty", level.chipLabel.isNotEmpty())
+        }
+    }
+
     private fun entry(tag: String, message: String) = LogEntry(0L, LogLevel.DEBUG, tag, message, "00:00:00.000")
 }

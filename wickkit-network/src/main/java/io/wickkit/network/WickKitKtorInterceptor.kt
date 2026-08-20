@@ -27,6 +27,7 @@ class WickKitKtorInterceptor private constructor() {
             val timeFormat = object : ThreadLocal<SimpleDateFormat>() {
                 override fun initialValue() = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
             }
+
             val saveBodyInstalled = scope.pluginOrNull(SaveBodyPlugin) != null
             scope.plugin(HttpSend).intercept { request ->
                 val id = idCounter.getAndIncrement()
