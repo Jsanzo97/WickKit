@@ -29,10 +29,13 @@ private val classExcludes = listOf(
     "io/wickkit/database/DatabaseEntry*",
     "io/wickkit/database/DatabaseStatus*",
     "io/wickkit/database/ColumnInfo*",
-    "io/wickkit/flags/SpEntry*",
-    "io/wickkit/flags/SpFileState*",
-    "io/wickkit/flags/RcEntry*",
+    "io/wickkit/flags/SharedPreferencesEntry*",
+    "io/wickkit/flags/SharedPreferencesFileState*",
+    "io/wickkit/flags/RemoteConfigEntry*",
     "io/wickkit/flags/FlagType*",
+    "io/wickkit/leaks/LeakEntry*",
+    // Background coroutine infrastructure — requires TestScope injection to test
+    "io/wickkit/leaks/ObjectWatcher*",
     // Firebase bridge — reflection-based, untestable without Firebase in classpath
     "io/wickkit/flags/RemoteConfigBridge*",
 )

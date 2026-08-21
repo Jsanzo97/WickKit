@@ -53,6 +53,7 @@ import io.wickkit.overlay.ui.tab.DatabaseTab
 import io.wickkit.overlay.ui.tab.DeviceTab
 import io.wickkit.overlay.ui.tab.FlagsTab
 import io.wickkit.overlay.ui.tab.LogsTab
+import io.wickkit.overlay.ui.tab.MemoryLeaksTab
 import io.wickkit.overlay.ui.tab.NetworkTab
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,6 +64,7 @@ private enum class WickKitTab(val label: String) {
     Network("Network"),
     Database("Database"),
     Flags("Flags"),
+    Leaks("Leaks"),
     Device("Device"),
 }
 
@@ -148,6 +150,7 @@ private fun DebugPanel(
             WickKitTab.Network -> NetworkTab()
             WickKitTab.Database -> DatabaseTab()
             WickKitTab.Flags -> FlagsTab()
+            WickKitTab.Leaks -> MemoryLeaksTab()
             WickKitTab.Device -> DeviceTab()
         }
     }

@@ -7,6 +7,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
+import io.wickkit.leaks.ObjectWatcher
 import io.wickkit.logs.WickKitLogcat
 import io.wickkit.overlay.WickKitActivity
 import io.wickkit.overlay.WickKitNotification
@@ -18,6 +22,12 @@ object WickKit {
     internal var isVisible = false
     private var currentActivity: WeakReference<Activity>? = null
     private var notificationSetUp = false
+
+    private val fragmentWatcher = object : FragmentManager.FragmentLifecycleCallbacks() {
+        override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+            ObjectWatcher.watch(f)
+        }
+    }
 
     internal fun init(context: Context) {
         val app = context.applicationContext as? Application ?: return
@@ -51,7 +61,11 @@ object WickKit {
     }
 
     private fun activityTracker() = object : Application.ActivityLifecycleCallbacks {
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            if (activity is FragmentActivity) {
+                activity.supportFragmentManager.registerFragmentLifecycleCallbacks(fragmentWatcher, true)
+            }
+        }
         override fun onActivityStarted(activity: Activity) = Unit
         override fun onActivityResumed(activity: Activity) {
             when (activity) {
@@ -71,7 +85,11 @@ object WickKit {
         }
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
         override fun onActivityDestroyed(activity: Activity) {
-            if (activity is WickKitActivity) isVisible = false
+            if (activity is WickKitActivity) {
+                isVisible = false
+            } else if (activity !is WickKitPermissionActivity) {
+                ObjectWatcher.watch(activity)
+            }
         }
     }
 }

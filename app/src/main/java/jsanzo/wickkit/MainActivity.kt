@@ -1,6 +1,7 @@
 package jsanzo.wickkit
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -174,6 +175,16 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Fetch Remote Config")
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    context.startActivity(Intent(context, LeakedActivity::class.java))
+                    Toast.makeText(context, "Leak simulated — check Leaks tab in 5s", Toast.LENGTH_LONG).show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Simulate Memory Leak")
             }
         }
     }

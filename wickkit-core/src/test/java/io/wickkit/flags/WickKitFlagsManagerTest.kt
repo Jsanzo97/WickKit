@@ -168,6 +168,30 @@ class WickKitFlagsManagerTest {
         assertTrue(prefs.getBoolean("feature", false))
     }
 
+    @Test
+    fun `toggleSpOverride is no-op when enabled but backup key is missing`() {
+        val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("feature", false).commit()
+        val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
+        wickkitPrefs.edit().putString("sp.enabled.test_prefs.feature", "true").commit()
+
+        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
+
+        assertFalse(prefs.getBoolean("feature", false))
+    }
+
+    @Test
+    fun `toggleSpOverride is no-op when disabled but override key is missing`() {
+        val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("feature", false).commit()
+        val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
+        wickkitPrefs.edit().putString("sp.enabled.test_prefs.feature", "false").commit()
+
+        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
+
+        assertFalse(prefs.getBoolean("feature", false))
+    }
+
     // ── Remote Config public API ───────────────────────────────────────────────
 
     @Test
