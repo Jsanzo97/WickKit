@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +56,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Timber.plant(Timber.DebugTree())
         lifecycleScope.launch(Dispatchers.IO) { sampleDb.writableDatabase }
-
+        SampleRemoteConfig.init()
         Timber.tag("Timber").d("Timber debug log")
         Timber.tag("Timber").i("Timber info log")
         Timber.tag("Timber").w("Timber warning log")
@@ -66,10 +67,8 @@ class MainActivity : ComponentActivity() {
         Log.w("AndroidLog", "android.util.Log warning")
         Log.e("AndroidLog", "android.util.Log error")
         println("println goes to logcat as System.out at INFO level")
-
         enableEdgeToEdge()
         setContent {
-            val context = LocalContext.current
             WickKitTheme {
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -77,53 +76,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("WickKit Sample App")
-                        Spacer(Modifier.height(24.dp))
-                        Button(
-                            onClick = { WickKit.open(context) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Open Debug Panel")
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        OutlinedButton(
-                            onClick = {
-                                generateSampleLogs()
-                                Toast.makeText(context, "Sample logs generated", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Generate Logs")
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        OutlinedButton(
-                            onClick = {
-                                generateSampleRequests()
-                                Toast.makeText(context, "Network requests sent", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Make Network Requests")
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        OutlinedButton(
-                            onClick = {
-                                lifecycleScope.launch(Dispatchers.IO) { sampleDb.reseed() }
-                                Toast.makeText(context, "Database reseeded", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Reseed Sample Database")
-                        }
-                    }
+                    SampleContent(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -150,6 +103,77 @@ class MainActivity : ComponentActivity() {
             }
             runCatching {
                 httpClient.newCall(Request.Builder().url("$base/users").build()).execute().close()
+            }
+        }
+    }
+
+    @Composable
+    private fun SampleContent(modifier: Modifier = Modifier) {
+        val context = LocalContext.current
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("WickKit Sample App")
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = { WickKit.open(context) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Open Debug Panel")
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    generateSampleLogs()
+                    Toast.makeText(context, "Sample logs generated", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Generate Logs")
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    generateSampleRequests()
+                    Toast.makeText(context, "Network requests sent", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Make Network Requests")
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    lifecycleScope.launch(Dispatchers.IO) { sampleDb.reseed() }
+                    Toast.makeText(context, "Database reseeded", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Reseed Sample Database")
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    SamplePreferences.seed(context)
+                    Toast.makeText(context, "Preferences seeded", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Seed Sample Preferences")
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    SampleRemoteConfig.fetch()
+                    Toast.makeText(context, "Fetching Remote Config", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Fetch Remote Config")
             }
         }
     }

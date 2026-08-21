@@ -59,8 +59,10 @@ import io.wickkit.logs.matches
 import io.wickkit.logs.parseLogFilter
 import io.wickkit.overlay.ui.WickKitTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentSet
 
 private val ToolbarHeight = 36.dp
 
@@ -97,7 +99,7 @@ private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
             onShare = { shareLogEntries(context, filtered) },
         )
         LevelFilterRow(
-            enabledLevels = selectedLevels,
+            enabledLevels = selectedLevels.toPersistentSet(),
             onToggle = { WickKitLogManager.toggleLevel(it) },
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
@@ -233,7 +235,7 @@ private fun AppAllToggle(showAll: Boolean, onShowAllChange: (Boolean) -> Unit) {
 
 @Composable
 private fun LevelFilterRow(
-    enabledLevels: Set<LogLevel>,
+    enabledLevels: ImmutableSet<LogLevel>,
     onToggle: (LogLevel) -> Unit,
 ) {
     Row(

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
@@ -59,4 +60,6 @@ dependencies {
     debugImplementation(project(":wickkit-network"))
     releaseImplementation(project(":wickkit-no-op"))
     implementation(libs.okhttp)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.remote.config)
 }

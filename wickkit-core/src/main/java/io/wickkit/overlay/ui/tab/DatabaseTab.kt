@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,7 +46,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -58,6 +61,8 @@ import io.wickkit.database.DatabaseDiscovery
 import io.wickkit.database.DatabaseEntry
 import io.wickkit.database.DatabaseManager
 import io.wickkit.database.DatabaseStatus
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -132,7 +137,7 @@ private fun DatabaseListScreen(onSelect: (DatabaseEntry) -> Unit) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        ScreenTitle("Databases")
+        ScreenTitle()
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         when {
             databases == null -> LoadingState()
@@ -268,6 +273,7 @@ private suspend fun persistEdit(
 @Composable
 private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
     var uiState by remember(table) { mutableStateOf(TableUiState()) }
     var editingCell by remember { mutableStateOf<CellKey?>(null) }
     var editValue by remember { mutableStateOf(TextFieldValue("")) }
@@ -304,7 +310,11 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
     val editedBorderColor = MaterialTheme.colorScheme.primary
     val editedBgColor = MaterialTheme.colorScheme.primary.copy(alpha = EDITED_BG_ALPHA)
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
+    ) {
         ScreenToolbar(title = table, onBack = onBack)
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         if (uiState.showsReadOnlyBanner(hasPk)) ReadOnlyBanner()
@@ -317,14 +327,14 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 stickyHeader {
-                    GridHeader(columns = uiState.columns, hScroll = hScroll)
+                    GridHeader(columns = uiState.columns.toPersistentList(), hScroll = hScroll)
                 }
                 itemsIndexed(uiState.rows) { rowIdx, row ->
                     val key = rowKey(uiState.columns, row)
                     val isEdited = key in uiState.editedRowKeys
                     GridRow(
-                        row = row,
-                        columns = uiState.columns,
+                        row = row.toPersistentList(),
+                        columns = uiState.columns.toPersistentList(),
                         hScroll = hScroll,
                         isEdited = isEdited,
                         editedBorderColor = editedBorderColor,
@@ -353,7 +363,7 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
 
 @Composable
 private fun GridHeader(
-    columns: List<ColumnInfo>,
+    columns: ImmutableList<ColumnInfo>,
     hScroll: androidx.compose.foundation.ScrollState,
 ) {
     Column(
@@ -376,8 +386,8 @@ private fun GridHeader(
 
 @Composable
 private fun GridRow(
-    row: List<Any?>,
-    columns: List<ColumnInfo>,
+    row: ImmutableList<Any?>,
+    columns: ImmutableList<ColumnInfo>,
     hScroll: androidx.compose.foundation.ScrollState,
     isEdited: Boolean,
     editedBorderColor: Color,
@@ -517,9 +527,9 @@ private fun DataCell(
 // ─── Shared components ────────────────────────────────────────────────────────
 
 @Composable
-private fun ScreenTitle(title: String) {
+private fun ScreenTitle() {
     Text(
-        text = title,
+        text = "Databases",
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
         color = MaterialTheme.colorScheme.onSurface,

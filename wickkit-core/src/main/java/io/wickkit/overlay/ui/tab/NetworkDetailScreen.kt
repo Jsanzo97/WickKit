@@ -39,6 +39,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import io.wickkit.network.NetworkEntry
 import io.wickkit.overlay.ui.WickKitTheme
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toPersistentMap
 
 @Composable
 internal fun NetworkDetailScreen(
@@ -62,7 +64,10 @@ internal fun NetworkDetailScreen(
             StatusRow(entry = entry)
 
             if (entry.requestHeaders.isNotEmpty()) {
-                HeadersSection(title = "Request Headers", headers = entry.requestHeaders)
+                HeadersSection(
+                    title = "Request Headers",
+                    headers = entry.requestHeaders.toPersistentMap(),
+                )
             }
             if (!entry.requestBody.isNullOrBlank()) {
                 BodySection(title = "Request Body", body = entry.requestBody, context = context)
@@ -72,7 +77,10 @@ internal fun NetworkDetailScreen(
                 ErrorSection(error = entry.error)
             } else {
                 if (entry.responseHeaders.isNotEmpty()) {
-                    HeadersSection(title = "Response Headers", headers = entry.responseHeaders)
+                    HeadersSection(
+                        title = "Response Headers",
+                        headers = entry.responseHeaders.toPersistentMap(),
+                    )
                 }
                 if (!entry.responseBody.isNullOrBlank()) {
                     BodySection(title = "Response Body", body = entry.responseBody, context = context)
@@ -180,7 +188,10 @@ private fun MockedBadge() {
 }
 
 @Composable
-private fun HeadersSection(title: String, headers: Map<String, String>) {
+private fun HeadersSection(
+    title: String,
+    headers: ImmutableMap<String, String>,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionHeader(title = title)
         SelectionContainer {
@@ -210,7 +221,11 @@ private fun HeadersSection(title: String, headers: Map<String, String>) {
 }
 
 @Composable
-private fun BodySection(title: String, body: String, context: Context) {
+private fun BodySection(
+    title: String,
+    body: String,
+    context: Context,
+) {
     val formatted = prettyJson(body)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(

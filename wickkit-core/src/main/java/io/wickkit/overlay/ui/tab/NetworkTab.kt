@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -154,6 +157,7 @@ private fun NetworkRequestsScreen(
     onEntryLongClick: (NetworkEntry) -> Unit,
     onMocksClick: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     var search by remember { mutableStateOf("") }
     var methodFilter by remember { mutableStateOf<String?>(null) }
 
@@ -164,7 +168,11 @@ private fun NetworkRequestsScreen(
         }.toImmutableList()
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
+    ) {
         RequestsToolbar(
             search = search,
             activeRulesCount = activeRulesCount,
@@ -603,7 +611,7 @@ private fun MocksEmptyState() {
 }
 
 @Composable
-private fun CompactToggle(checked: Boolean, onToggle: () -> Unit) {
+internal fun CompactToggle(checked: Boolean, onToggle: () -> Unit) {
     val trackColor = if (checked) {
         MaterialTheme.colorScheme.primary
     } else {

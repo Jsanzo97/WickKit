@@ -3,6 +3,7 @@ package io.wickkit.overlay.ui.tab
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -60,6 +63,7 @@ internal fun MockRuleEditor(
     onBack: () -> Unit,
     onSave: (MockRule) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     val isFromEntry = prefillFrom != null
     var urlPattern by remember { mutableStateOf(rule?.urlPattern ?: prefillFrom?.url ?: "") }
     var selectedMethod by remember { mutableStateOf(rule?.method ?: prefillFrom?.method) }
@@ -70,7 +74,11 @@ internal fun MockRuleEditor(
     var delayMs by remember { mutableStateOf(rule?.delayMs?.toString() ?: "0") }
     var jsonError by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
+    ) {
         EditorToolbar(
             isEditing = rule != null,
             onBack = onBack,
