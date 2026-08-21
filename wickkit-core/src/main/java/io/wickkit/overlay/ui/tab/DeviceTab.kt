@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import android.util.TypedValue
 import android.view.WindowManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -136,7 +137,7 @@ private fun buildDisplaySection(context: Context): DeviceInfoSection {
         }
         display?.let { "${it.refreshRate.toInt()} Hz" } ?: "N/A"
     }.getOrElse { "N/A" }
-    val fontScale = "×%.1f".format(dm.scaledDensity / dm.density)
+    val fontScale = "×%.1f".format(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 1f, dm) / dm.density)
     val orientation = if (dm.widthPixels < dm.heightPixels) "portrait" else "landscape"
     return DeviceInfoSection(
         title = "Display",

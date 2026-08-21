@@ -17,6 +17,7 @@ kotlinxCollectionsImmutable = "0.5.1"
 okhttp = "5.5.0"
 ktor = "3.5.2"
 kotlinxSerializationJson = "1.11.0"
+fragment = "1.9.0"
 robolectric = "4.16.1"
 mockk = "1.14.11"
 firebase-bom = "34.18.0"
@@ -51,6 +52,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
