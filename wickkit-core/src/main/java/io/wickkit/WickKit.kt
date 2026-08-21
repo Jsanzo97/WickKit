@@ -15,6 +15,7 @@ import io.wickkit.logs.WickKitLogcat
 import io.wickkit.overlay.WickKitActivity
 import io.wickkit.overlay.WickKitNotification
 import io.wickkit.overlay.WickKitPermissionActivity
+import io.wickkit.performance.WickKitPerformanceManager
 import java.lang.ref.WeakReference
 
 object WickKit {
@@ -32,6 +33,7 @@ object WickKit {
     internal fun init(context: Context) {
         val app = context.applicationContext as? Application ?: return
         WickKitLogcat.start()
+        WickKitPerformanceManager.start()
         app.registerActivityLifecycleCallbacks(activityTracker())
     }
 
@@ -76,10 +78,15 @@ object WickKit {
                 else -> {
                     currentActivity = WeakReference(activity)
                     setupNotification(activity)
+                    WickKitPerformanceManager.onActivityResumed(activity)
                 }
             }
         }
-        override fun onActivityPaused(activity: Activity) = Unit
+        override fun onActivityPaused(activity: Activity) {
+            if (activity !is WickKitActivity && activity !is WickKitPermissionActivity) {
+                WickKitPerformanceManager.onActivityPaused()
+            }
+        }
         override fun onActivityStopped(activity: Activity) {
             if (currentActivity?.get() === activity) currentActivity = null
         }

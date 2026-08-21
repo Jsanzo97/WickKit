@@ -48,8 +48,6 @@ internal fun NetworkDetailScreen(
     onBack: () -> Unit,
     onMockRequest: (NetworkEntry) -> Unit,
 ) {
-    val context = LocalContext.current
-
     Column(modifier = Modifier.fillMaxSize()) {
         DetailToolbar(method = entry.method, url = entry.url, onBack = onBack)
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
@@ -70,7 +68,7 @@ internal fun NetworkDetailScreen(
                 )
             }
             if (!entry.requestBody.isNullOrBlank()) {
-                BodySection(title = "Request Body", body = entry.requestBody, context = context)
+                BodySection(title = "Request Body", body = entry.requestBody)
             }
 
             if (entry.error != null) {
@@ -83,7 +81,7 @@ internal fun NetworkDetailScreen(
                     )
                 }
                 if (!entry.responseBody.isNullOrBlank()) {
-                    BodySection(title = "Response Body", body = entry.responseBody, context = context)
+                    BodySection(title = "Response Body", body = entry.responseBody)
                 }
             }
         }
@@ -224,8 +222,8 @@ private fun HeadersSection(
 private fun BodySection(
     title: String,
     body: String,
-    context: Context,
 ) {
+    val context = LocalContext.current
     val formatted = prettyJson(body)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(

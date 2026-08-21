@@ -34,8 +34,11 @@ private val classExcludes = listOf(
     "io/wickkit/flags/RemoteConfigEntry*",
     "io/wickkit/flags/FlagType*",
     "io/wickkit/leaks/LeakEntry*",
+    "io/wickkit/performance/PerformanceSnapshot*",
+    "io/wickkit/performance/FrameStats*",
     // Background coroutine infrastructure — requires TestScope injection to test
     "io/wickkit/leaks/ObjectWatcher*",
+    "io/wickkit/performance/WickKitPerformanceManager*",
     // Firebase bridge — reflection-based, untestable without Firebase in classpath
     "io/wickkit/flags/RemoteConfigBridge*",
 )
