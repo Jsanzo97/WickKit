@@ -25,12 +25,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.wickkit.overlay.ui.WickKitTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 internal fun PlaceholderTab(
     title: String,
     description: String,
-    features: List<String>,
+    features: ImmutableList<String>,
 ) {
     Column(
         modifier = Modifier
@@ -111,7 +113,7 @@ private fun PlaceholderTabPreview() {
                 "Request/response inspector (headers, body, timing)",
                 "Zero-setup OkHttp interception via Gradle plugin",
                 "Response mocking by URL pattern or regex",
-            ),
+            ).toPersistentList(),
         )
     }
 }
