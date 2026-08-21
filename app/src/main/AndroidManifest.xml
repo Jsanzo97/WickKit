@@ -28,6 +28,9 @@
         <activity
             android:name=".LeakedActivity"
             android:exported="false" />
+        <activity
+            android:name=".JankActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -186,6 +186,15 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text("Simulate Memory Leak")
             }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    context.startActivity(Intent(context, JankActivity::class.java))
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Simulate Performance Issues")
+            }
         }
     }
 }

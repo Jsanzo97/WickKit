@@ -11,7 +11,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -47,6 +45,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import io.wickkit.overlay.ui.tab.DatabaseTab
@@ -55,6 +54,7 @@ import io.wickkit.overlay.ui.tab.FlagsTab
 import io.wickkit.overlay.ui.tab.LogsTab
 import io.wickkit.overlay.ui.tab.MemoryLeaksTab
 import io.wickkit.overlay.ui.tab.NetworkTab
+import io.wickkit.overlay.ui.tab.PerformanceTab
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -65,6 +65,7 @@ private enum class WickKitTab(val label: String) {
     Database("Database"),
     Flags("Flags"),
     Leaks("Leaks"),
+    Performance("Performance"),
     Device("Device"),
 }
 
@@ -151,6 +152,7 @@ private fun DebugPanel(
             WickKitTab.Database -> DatabaseTab()
             WickKitTab.Flags -> FlagsTab()
             WickKitTab.Leaks -> MemoryLeaksTab()
+            WickKitTab.Performance -> PerformanceTab()
             WickKitTab.Device -> DeviceTab()
         }
     }
@@ -211,34 +213,35 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
     val selectedColor = MaterialTheme.colorScheme.primary
     val unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-        ) {
-            WickKitTab.entries.forEach { tab ->
-                val isSelected = selected == tab
-                Box(
-                    modifier = Modifier
-                        .clickable { onSelect(tab) }
-                        .height(48.dp)
-                        .drawBehind {
-                            if (isSelected) {
-                                drawRect(
-                                    color = indicatorColor,
-                                    topLeft = Offset(0f, size.height - 2.dp.toPx()),
-                                    size = Size(size.width, 2.dp.toPx()),
-                                )
-                            }
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = tab.label,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (isSelected) selectedColor else unselectedColor,
-                    )
+        WickKitTab.entries.chunked(4).forEach { rowTabs ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                rowTabs.forEach { tab ->
+                    val isSelected = selected == tab
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSelect(tab) }
+                            .height(40.dp)
+                            .drawBehind {
+                                if (isSelected) {
+                                    drawRect(
+                                        color = indicatorColor,
+                                        topLeft = Offset(0f, size.height - 2.dp.toPx()),
+                                        size = Size(size.width, 2.dp.toPx()),
+                                    )
+                                }
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = tab.label,
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isSelected) selectedColor else unselectedColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
