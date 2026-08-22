@@ -7,6 +7,8 @@ import android.os.Looper
 import android.view.Choreographer
 import androidx.compose.runtime.InternalComposeApi
 import androidx.compose.runtime.Recomposer
+import io.wickkit.compose.WickKitComposeTracker
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -116,32 +118,28 @@ internal object WickKitPerformanceManager {
         }
     }
 
-    internal fun updateRuntimeStats(
-        recompositions: Long,
-        threads: Int,
-        jvmUsedMb: Long,
-        jvmMaxMb: Long,
-        nativeHeapMb: Long,
-    ) {
+    internal fun updateRuntimeStats(stats: RuntimeStats) {
         val now = System.currentTimeMillis()
         val elapsed = now - lastPollTimeMs
-        val delta = recompositions - lastRecompositionCount
+        val delta = stats.recompositions - lastRecompositionCount
         val perSecond = if (lastPollTimeMs > 0L && elapsed > 0L) {
             (delta * 1_000f / elapsed).coerceAtLeast(0f)
         } else {
             0f
         }
-        lastRecompositionCount = recompositions
+        lastRecompositionCount = stats.recompositions
         lastPollTimeMs = now
 
         _snapshot.update { current ->
             current.copy(
-                recompositionCount = recompositions,
+                recompositionCount = stats.recompositions,
                 recompositionsPerSecond = perSecond,
-                threadCount = threads,
-                jvmUsedMb = jvmUsedMb,
-                jvmMaxMb = jvmMaxMb,
-                nativeHeapMb = nativeHeapMb,
+                threadCount = stats.threads,
+                jvmUsedMb = stats.jvmUsedMb,
+                jvmMaxMb = stats.jvmMaxMb,
+                nativeHeapMb = stats.nativeHeapMb,
+                composableEntries = stats.composableEntries,
+                composableTrackingActive = stats.composableTrackingActive,
             )
         }
     }
@@ -164,7 +162,22 @@ internal object WickKitPerformanceManager {
         val jvmUsed = (runtime.totalMemory() - runtime.freeMemory()) / 1024L / 1024L
         val jvmMax = runtime.maxMemory() / 1024L / 1024L
         val nativeHeap = Debug.getNativeHeapAllocatedSize() / 1024L / 1024L
-        updateRuntimeStats(recompositions, Thread.activeCount(), jvmUsed, jvmMax, nativeHeap)
+        val composableEntries = runCatching {
+            WickKitComposeTracker.computeEntries()
+        }.getOrElse {
+            persistentListOf()
+        }
+        updateRuntimeStats(
+            RuntimeStats(
+                recompositions = recompositions,
+                threads = Thread.activeCount(),
+                jvmUsedMb = jvmUsed,
+                jvmMaxMb = jvmMax,
+                nativeHeapMb = nativeHeap,
+                composableEntries = composableEntries,
+                composableTrackingActive = WickKitComposeTracker.isPluginActive(),
+            ),
+        )
     }
 
     private fun collectLiveFrameStats() {

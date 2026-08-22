@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.wickkit.WickKit
+import io.wickkit.compose.WickKitComposeTracker
 import jsanzo.wickkit.ui.theme.WickKitTheme
 import kotlinx.coroutines.delay
 import kotlin.math.cos
@@ -57,6 +58,8 @@ internal class JankActivity : ComponentActivity() {
 
 @Composable
 private fun JankContent(modifier: Modifier = Modifier) {
+    // Manual tracker call — simulates what the WickKit Gradle plugin injects at compile time.
+    WickKitComposeTracker.onRecompose("JankContent")
     val context = LocalContext.current
     var recomposeCount by remember { mutableIntStateOf(0) }
 
@@ -98,13 +101,15 @@ private fun JankContent(modifier: Modifier = Modifier) {
             onClick = { WickKit.open(context) },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Open WickKit → Performance")
+            Text("Open WickKit Overlay")
         }
     }
 }
 
 @Composable
 private fun SpinningCanvas(tick: Int) {
+    // Manual tracker call — simulates what the WickKit Gradle plugin injects at compile time.
+    WickKitComposeTracker.onRecompose("SpinningCanvas")
     Canvas(modifier = Modifier.size(160.dp)) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val radius = size.width / 2f - 8.dp.toPx()

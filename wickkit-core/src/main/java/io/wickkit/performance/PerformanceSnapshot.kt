@@ -1,6 +1,9 @@
 package io.wickkit.performance
 
 import androidx.compose.runtime.Immutable
+import io.wickkit.compose.ComposableEntry
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal data class PerformanceSnapshot(
@@ -18,4 +21,6 @@ internal data class PerformanceSnapshot(
     val jvmUsedMb: Long = 0L,
     val jvmMaxMb: Long = 0L,
     val nativeHeapMb: Long = 0L,
+    val composableEntries: ImmutableList<ComposableEntry> = persistentListOf(),
+    val composableTrackingActive: Boolean = false,
 )
