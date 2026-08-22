@@ -36,9 +36,12 @@ private val classExcludes = listOf(
     "io/wickkit/leaks/LeakEntry*",
     "io/wickkit/performance/PerformanceSnapshot*",
     "io/wickkit/performance/FrameStats*",
+    "io/wickkit/compose/ComposableEntry*",
+    "io/wickkit/compose/RecomposeSeverity*",
     // Background coroutine infrastructure — requires TestScope injection to test
     "io/wickkit/leaks/ObjectWatcher*",
     "io/wickkit/performance/WickKitPerformanceManager*",
+    "io/wickkit/compose/WickKitComposeTracker*",
     // Firebase bridge — reflection-based, untestable without Firebase in classpath
     "io/wickkit/flags/RemoteConfigBridge*",
 )

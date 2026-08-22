@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import io.wickkit.compose.WickKitComposeTracker
 import io.wickkit.leaks.ObjectWatcher
 import io.wickkit.logs.WickKitLogcat
 import io.wickkit.overlay.WickKitActivity
@@ -89,6 +90,9 @@ object WickKit {
         }
         override fun onActivityStopped(activity: Activity) {
             if (currentActivity?.get() === activity) currentActivity = null
+            if (activity !is WickKitActivity && activity !is WickKitPermissionActivity) {
+                WickKitComposeTracker.reset()
+            }
         }
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
         override fun onActivityDestroyed(activity: Activity) {

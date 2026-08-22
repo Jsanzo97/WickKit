@@ -14,7 +14,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":wickkit-core"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
+    implementation(libs.kotlinx.collections.immutable)
+    testImplementation(libs.junit)
 }
