@@ -26,6 +26,7 @@ case "$BRANCH_PREFIX" in
   task|chore) INFERRED_TYPE="chore" ;;
   spike)   INFERRED_TYPE="chore" ;;
   docs)    INFERRED_TYPE="docs" ;;
+  fix)     INFERRED_TYPE="fix" ;;
   *)       INFERRED_TYPE="" ;;
 esac
 
