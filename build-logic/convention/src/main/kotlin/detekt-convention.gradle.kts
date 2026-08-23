@@ -10,5 +10,5 @@ detekt {
 }
 
 dependencies {
-    add("detektPlugins", "io.nlopez.compose.rules:detekt:0.6.3")
+    add("detektPlugins", "io.nlopez.compose.rules:detekt:0.6.4")
 }
