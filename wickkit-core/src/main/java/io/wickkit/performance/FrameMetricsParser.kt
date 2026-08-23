@@ -5,7 +5,7 @@ private const val FROZEN_FRAME_THRESHOLD_MS = 700
 private const val PERCENT = 100
 
 internal fun parseFrameData(entries: List<Pair<Int, Int>>): FrameStats? {
-    val sorted = entries.filter { (ms, count) -> ms > 0 && count > 0 }.sortedBy { it.first }
+    val sorted = entries.filter { (durationMs, count) -> durationMs > 0 && count > 0 }.sortedBy { it.first }
     if (sorted.isEmpty()) return null
 
     var totalFrames = 0
@@ -31,14 +31,22 @@ internal fun parseFrameData(entries: List<Pair<Int, Int>>): FrameStats? {
         slowFrames = slowFrames,
         frozenFrames = frozenFrames,
         jankRate = jankRate,
-        p50Ms = percentile(sorted, totalFrames, 50).toFloat(),
-        p90Ms = percentile(sorted, totalFrames, 90).toFloat(),
+        p50Ms = percentile(
+            sorted = sorted,
+            totalFrames = totalFrames,
+            targetPercentile = 50,
+        ).toFloat(),
+        p90Ms = percentile(
+            sorted = sorted,
+            totalFrames = totalFrames,
+            targetPercentile = 90,
+        ).toFloat(),
         totalFrames = totalFrames,
     )
 }
 
-private fun percentile(sorted: List<Pair<Int, Int>>, totalFrames: Int, pct: Int): Int {
-    val target = (totalFrames * pct) / PERCENT
+private fun percentile(sorted: List<Pair<Int, Int>>, totalFrames: Int, targetPercentile: Int): Int {
+    val target = (totalFrames * targetPercentile) / PERCENT
     var cumulative = 0
     for ((durationMs, count) in sorted) {
         cumulative += count

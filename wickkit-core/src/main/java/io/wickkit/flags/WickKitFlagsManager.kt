@@ -34,9 +34,9 @@ object WickKitFlagsManager {
     }
 
     private fun reload() {
-        val ctx = appContext ?: return
-        loadSpFiles(ctx)
-        if (isRemoteConfigAvailable) loadRcEntries(ctx)
+        val context = appContext ?: return
+        loadSpFiles(context)
+        if (isRemoteConfigAvailable) loadRcEntries(context)
     }
 
     // ── SharedPreferences ────────────────────────────────────────────────────────
@@ -56,7 +56,14 @@ object WickKitFlagsManager {
         val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
         val entries = prefs.all.entries
             .sortedBy { it.key }
-            .mapNotNull { (key, value) -> buildSharedPreferencesEntry(wickkitPrefs, name, key, value) }
+            .mapNotNull { (key, value) ->
+                buildSharedPreferencesEntry(
+                    wickkitPrefs = wickkitPrefs,
+                    prefsName = name,
+                    key = key,
+                    value = value,
+                )
+            }
             .toImmutableList()
         return SharedPreferencesFileState(name = name, entries = entries)
     }
@@ -68,10 +75,10 @@ object WickKitFlagsManager {
         value: Any?,
     ): SharedPreferencesEntry? {
         val type = typeOf(value) ?: return null
-        val hasOverride = wickkitPrefs.contains(spBackupKey(prefsName, key))
-        val overrideEncoded = wickkitPrefs.getString(spOverrideKey(prefsName, key), null)
-        val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName, key), null)
-        val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName, key), null) == "true"
+        val hasOverride = wickkitPrefs.contains(spBackupKey(prefsName = prefsName, key = key))
+        val overrideEncoded = wickkitPrefs.getString(spOverrideKey(prefsName = prefsName, key = key), null)
+        val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null)
+        val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName = prefsName, key = key), null) == "true"
         return SharedPreferencesEntry(
             key = key,
             currentValue = value.toString(),
@@ -83,65 +90,101 @@ object WickKitFlagsManager {
         )
     }
 
-    internal fun setSpOverride(prefsName: String, key: String, type: FlagType, value: String) {
-        val ctx = appContext ?: return
-        val prefs = ctx.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-        val wickkitPrefs = wickkitPrefs(ctx)
-        if (!wickkitPrefs.contains(spBackupKey(prefsName, key))) {
+    internal fun setSpOverride(
+        prefsName: String,
+        key: String,
+        type: FlagType,
+        value: String,
+    ) {
+        val context = appContext ?: return
+        val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        val wickkitPrefs = wickkitPrefs(context)
+        if (!wickkitPrefs.contains(spBackupKey(prefsName = prefsName, key = key))) {
             val original = prefs.all[key]
             val originalType = typeOf(original) ?: type
             wickkitPrefs.edit {
                 putString(
-                    spBackupKey(prefsName, key),
-                    encode(originalType, original?.toString() ?: ""),
+                    spBackupKey(prefsName = prefsName, key = key),
+                    encode(type = originalType, value = original?.toString() ?: ""),
                 )
             }
         }
         wickkitPrefs.edit()
-            .putString(spOverrideKey(prefsName, key), encode(type, value))
-            .putString(spEnabledKey(prefsName, key), "true")
+            .putString(spOverrideKey(prefsName = prefsName, key = key), encode(type = type, value = value))
+            .putString(spEnabledKey(prefsName = prefsName, key = key), "true")
             .apply()
-        prefs.edit().also { writeTyped(it, key, value, type) }.apply()
-        loadSpFiles(ctx)
+        prefs.edit().also { editor ->
+            writeTyped(
+                editor = editor,
+                key = key,
+                value = value,
+                type = type,
+            )
+        }.apply()
+        loadSpFiles(context)
     }
 
     internal fun toggleSpOverride(prefsName: String, key: String) {
-        val ctx = appContext ?: return
-        val prefs = ctx.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-        val wickkitPrefs = wickkitPrefs(ctx)
-        val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName, key), null) == "true"
+        val context = appContext ?: return
+        val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        val wickkitPrefs = wickkitPrefs(context)
+        val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName = prefsName, key = key), null) == "true"
         if (isEnabled) {
-            val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName, key), null) ?: return
+            val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null) ?: return
             val (backupType, backupValue) = decode(backupEncoded)
-            prefs.edit().also { writeTyped(it, key, backupValue, backupType) }.apply()
-            wickkitPrefs.edit { putString(spEnabledKey(prefsName, key), "false") }
+            prefs.edit().also { editor ->
+                writeTyped(
+                    editor = editor,
+                    key = key,
+                    value = backupValue,
+                    type = backupType,
+                )
+            }.apply()
+            wickkitPrefs.edit { putString(spEnabledKey(prefsName = prefsName, key = key), "false") }
         } else {
-            val overrideEncoded = wickkitPrefs.getString(spOverrideKey(prefsName, key), null) ?: return
+            val overrideEncoded = wickkitPrefs.getString(
+                spOverrideKey(prefsName = prefsName, key = key),
+                null,
+            ) ?: return
             val (overrideType, overrideValue) = decode(overrideEncoded)
-            prefs.edit().also { writeTyped(it, key, overrideValue, overrideType) }.apply()
-            wickkitPrefs.edit { putString(spEnabledKey(prefsName, key), "true") }
+            prefs.edit().also { editor ->
+                writeTyped(
+                    editor = editor,
+                    key = key,
+                    value = overrideValue,
+                    type = overrideType,
+                )
+            }.apply()
+            wickkitPrefs.edit { putString(spEnabledKey(prefsName = prefsName, key = key), "true") }
         }
-        loadSpFiles(ctx)
+        loadSpFiles(context)
     }
 
     internal fun clearSpOverride(prefsName: String, key: String) {
-        val ctx = appContext ?: return
-        val prefs = ctx.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-        val wickkitPrefs = wickkitPrefs(ctx)
-        val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName, key), null) == "true"
+        val context = appContext ?: return
+        val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        val wickkitPrefs = wickkitPrefs(context)
+        val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName = prefsName, key = key), null) == "true"
         if (isEnabled) {
-            val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName, key), null)
+            val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null)
             if (backupEncoded != null) {
                 val (backupType, backupValue) = decode(backupEncoded)
-                prefs.edit().also { writeTyped(it, key, backupValue, backupType) }.apply()
+                prefs.edit().also { editor ->
+                    writeTyped(
+                        editor = editor,
+                        key = key,
+                        value = backupValue,
+                        type = backupType,
+                    )
+                }.apply()
             }
         }
         wickkitPrefs.edit {
-            remove(spBackupKey(prefsName, key))
-                .remove(spOverrideKey(prefsName, key))
-                .remove(spEnabledKey(prefsName, key))
+            remove(spBackupKey(prefsName = prefsName, key = key))
+                .remove(spOverrideKey(prefsName = prefsName, key = key))
+                .remove(spEnabledKey(prefsName = prefsName, key = key))
         }
-        loadSpFiles(ctx)
+        loadSpFiles(context)
     }
 
     // ── Remote Config ─────────────────────────────────────────────────────────────
@@ -165,31 +208,31 @@ object WickKitFlagsManager {
     }
 
     internal fun setRcOverride(key: String, value: String) {
-        val ctx = appContext ?: return
-        wickkitPrefs(ctx).edit {
+        val context = appContext ?: return
+        wickkitPrefs(context).edit {
             putString(RC_OVERRIDE_PREFIX + key, value)
                 .putString(RC_ENABLED_PREFIX + key, "true")
         }
-        loadRcEntries(ctx)
+        loadRcEntries(context)
     }
 
     internal fun toggleRcOverride(key: String) {
-        val ctx = appContext ?: return
-        val prefs = wickkitPrefs(ctx)
+        val context = appContext ?: return
+        val prefs = wickkitPrefs(context)
         val isEnabled = prefs.getString(RC_ENABLED_PREFIX + key, null) == "true"
         prefs.edit {
             putString(RC_ENABLED_PREFIX + key, if (isEnabled) "false" else "true")
         }
-        loadRcEntries(ctx)
+        loadRcEntries(context)
     }
 
     internal fun clearRcOverride(key: String) {
-        val ctx = appContext ?: return
-        wickkitPrefs(ctx).edit {
+        val context = appContext ?: return
+        wickkitPrefs(context).edit {
             remove(RC_OVERRIDE_PREFIX + key)
                 .remove(RC_ENABLED_PREFIX + key)
         }
-        loadRcEntries(ctx)
+        loadRcEntries(context)
     }
 
     // ── Public API for app code ───────────────────────────────────────────────────
@@ -215,8 +258,8 @@ object WickKitFlagsManager {
     ): Double = activeRcOverride(key)?.toDoubleOrNull() ?: remoteValue
 
     private fun activeRcOverride(key: String): String? {
-        val ctx = appContext ?: return null
-        val prefs = wickkitPrefs(ctx)
+        val context = appContext ?: return null
+        val prefs = wickkitPrefs(context)
         val isEnabled = prefs.getString(RC_ENABLED_PREFIX + key, null) == "true"
         return if (isEnabled) prefs.getString(RC_OVERRIDE_PREFIX + key, null) else null
     }
@@ -243,11 +286,16 @@ object WickKitFlagsManager {
     private fun encode(type: FlagType, value: String) = "${type.name}:$value"
 
     private fun decode(encoded: String): Pair<FlagType, String> {
-        val colon = encoded.indexOf(':')
-        return FlagType.valueOf(encoded.substring(0, colon)) to encoded.substring(colon + 1)
+        val separatorIndex = encoded.indexOf(':')
+        return FlagType.valueOf(encoded.substring(0, separatorIndex)) to encoded.substring(separatorIndex + 1)
     }
 
-    private fun writeTyped(editor: SharedPreferences.Editor, key: String, value: String, type: FlagType) {
+    private fun writeTyped(
+        editor: SharedPreferences.Editor,
+        key: String,
+        value: String,
+        type: FlagType,
+    ) {
         when (type) {
             FlagType.BOOLEAN -> editor.putBoolean(key, value.lowercase() == "true")
             FlagType.STRING -> editor.putString(key, value)

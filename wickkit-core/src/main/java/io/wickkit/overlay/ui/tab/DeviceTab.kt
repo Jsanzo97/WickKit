@@ -95,8 +95,8 @@ private fun buildDeviceInfo(context: Context): List<DeviceInfoSection> = listOf(
 
 private fun buildAppSection(context: Context): DeviceInfoSection {
     val isDebug = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    val pi = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
-    val version = pi?.let {
+    val packageInfo = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+    val version = packageInfo?.let {
         val code = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             it.longVersionCode
         } else {
@@ -127,7 +127,7 @@ private fun buildDeviceSection(): DeviceInfoSection = DeviceInfoSection(
 )
 
 private fun buildDisplaySection(context: Context): DeviceInfoSection {
-    val dm = context.resources.displayMetrics
+    val displayMetrics = context.resources.displayMetrics
     val refreshRate = runCatching {
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             context.display
@@ -137,13 +137,15 @@ private fun buildDisplaySection(context: Context): DeviceInfoSection {
         }
         display?.let { "${it.refreshRate.toInt()} Hz" } ?: "N/A"
     }.getOrElse { "N/A" }
-    val fontScale = "×%.1f".format(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 1f, dm) / dm.density)
-    val orientation = if (dm.widthPixels < dm.heightPixels) "portrait" else "landscape"
+    val fontScale = "×%.1f".format(
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 1f, displayMetrics) / displayMetrics.density,
+    )
+    val orientation = if (displayMetrics.widthPixels < displayMetrics.heightPixels) "portrait" else "landscape"
     return DeviceInfoSection(
         title = "Display",
         items = listOf(
-            "Resolution" to "${dm.widthPixels} × ${dm.heightPixels} px",
-            "Density" to "${dm.densityDpi} dpi (×${dm.density})",
+            "Resolution" to "${displayMetrics.widthPixels} × ${displayMetrics.heightPixels} px",
+            "Density" to "${displayMetrics.densityDpi} dpi (×${displayMetrics.density})",
             "Refresh rate" to refreshRate,
             "Font scale" to fontScale,
             "Orientation" to orientation,
@@ -152,27 +154,27 @@ private fun buildDisplaySection(context: Context): DeviceInfoSection {
 }
 
 private fun buildMemorySection(context: Context): DeviceInfoSection {
-    val memInfo = runCatching {
-        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
+    val memoryInfo = runCatching {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        ActivityManager.MemoryInfo().also { info -> activityManager.getMemoryInfo(info) }
     }.getOrNull()
     return DeviceInfoSection(
         title = "Memory",
         items = listOf(
             "Max heap" to "${Runtime.getRuntime().maxMemory() / 1024 / 1024} MB",
-            "Total RAM" to (memInfo?.let { "${it.totalMem / 1024 / 1024} MB" } ?: "N/A"),
-            "Available RAM" to (memInfo?.let { "${it.availMem / 1024 / 1024} MB" } ?: "N/A"),
+            "Total RAM" to (memoryInfo?.let { "${it.totalMem / 1024 / 1024} MB" } ?: "N/A"),
+            "Available RAM" to (memoryInfo?.let { "${it.availMem / 1024 / 1024} MB" } ?: "N/A"),
         ),
     )
 }
 
 private fun buildStorageSection(): DeviceInfoSection {
-    val stat = runCatching { StatFs(Environment.getDataDirectory().path) }.getOrNull()
+    val statFs = runCatching { StatFs(Environment.getDataDirectory().path) }.getOrNull()
     return DeviceInfoSection(
         title = "Storage (internal)",
         items = listOf(
-            "Free" to (stat?.let { "${it.availableBytes / 1024 / 1024} MB" } ?: "N/A"),
-            "Total" to (stat?.let { "${it.totalBytes / 1024 / 1024} MB" } ?: "N/A"),
+            "Free" to (statFs?.let { "${it.availableBytes / 1024 / 1024} MB" } ?: "N/A"),
+            "Total" to (statFs?.let { "${it.totalBytes / 1024 / 1024} MB" } ?: "N/A"),
         ),
     )
 }

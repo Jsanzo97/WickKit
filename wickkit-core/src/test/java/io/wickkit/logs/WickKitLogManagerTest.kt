@@ -28,7 +28,12 @@ class WickKitLogManagerTest {
 
     @Test
     fun `add stores entry with correct fields`() {
-        WickKitLogManager.add(LogLevel.DEBUG, "Tag", "Message", "10:00:00.000")
+        WickKitLogManager.add(
+            level = LogLevel.DEBUG,
+            tag = "Tag",
+            message = "Message",
+            time = "10:00:00.000",
+        )
         val entry = WickKitLogManager.entries.value.single()
         assertEquals(LogLevel.DEBUG, entry.level)
         assertEquals("Tag", entry.tag)
@@ -38,16 +43,36 @@ class WickKitLogManagerTest {
 
     @Test
     fun `add assigns unique ids`() {
-        WickKitLogManager.add(LogLevel.DEBUG, "Tag", "first", "00:00:00.000")
-        WickKitLogManager.add(LogLevel.DEBUG, "Tag", "second", "00:00:00.001")
+        WickKitLogManager.add(
+            level = LogLevel.DEBUG,
+            tag = "Tag",
+            message = "first",
+            time = "00:00:00.000",
+        )
+        WickKitLogManager.add(
+            level = LogLevel.DEBUG,
+            tag = "Tag",
+            message = "second",
+            time = "00:00:00.001",
+        )
         val entries = WickKitLogManager.entries.value
         assertNotEquals(entries[0].id, entries[1].id)
     }
 
     @Test
     fun `add preserves insertion order`() {
-        WickKitLogManager.add(LogLevel.DEBUG, "Tag", "first", "00:00:00.000")
-        WickKitLogManager.add(LogLevel.INFO, "Tag", "second", "00:00:00.001")
+        WickKitLogManager.add(
+            level = LogLevel.DEBUG,
+            tag = "Tag",
+            message = "first",
+            time = "00:00:00.000",
+        )
+        WickKitLogManager.add(
+            level = LogLevel.INFO,
+            tag = "Tag",
+            message = "second",
+            time = "00:00:00.001",
+        )
         val entries = WickKitLogManager.entries.value
         assertEquals("first", entries[0].message)
         assertEquals("second", entries[1].message)
@@ -55,21 +80,45 @@ class WickKitLogManagerTest {
 
     @Test
     fun `clear removes all entries`() {
-        WickKitLogManager.add(LogLevel.INFO, "Tag", "Msg", "00:00:00.000")
+        WickKitLogManager.add(
+            level = LogLevel.INFO,
+            tag = "Tag",
+            message = "Msg",
+            time = "00:00:00.000",
+        )
         WickKitLogManager.clear()
         assertTrue(WickKitLogManager.entries.value.isEmpty())
     }
 
     @Test
     fun `entries are capped at 500`() {
-        repeat(501) { i -> WickKitLogManager.add(LogLevel.DEBUG, "Tag", "msg$i", "00:00:00.000") }
+        repeat(501) { index ->
+            WickKitLogManager.add(
+                level = LogLevel.DEBUG,
+                tag = "Tag",
+                message = "msg$index",
+                time = "00:00:00.000",
+            )
+        }
         assertEquals(500, WickKitLogManager.entries.value.size)
     }
 
     @Test
     fun `oldest entry is dropped when cap is exceeded`() {
-        repeat(500) { i -> WickKitLogManager.add(LogLevel.DEBUG, "Tag", "msg$i", "00:00:00.000") }
-        WickKitLogManager.add(LogLevel.DEBUG, "Tag", "newest", "00:00:00.000")
+        repeat(500) { index ->
+            WickKitLogManager.add(
+                level = LogLevel.DEBUG,
+                tag = "Tag",
+                message = "msg$index",
+                time = "00:00:00.000",
+            )
+        }
+        WickKitLogManager.add(
+            level = LogLevel.DEBUG,
+            tag = "Tag",
+            message = "newest",
+            time = "00:00:00.000",
+        )
         val entries = WickKitLogManager.entries.value
         assertEquals(500, entries.size)
         assertEquals("msg1", entries.first().message)

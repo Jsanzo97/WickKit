@@ -27,7 +27,7 @@ internal object ObjectWatcher {
             delay(GC_SETTLE_MS.milliseconds)
             if (ref.get() != null) {
                 val detectedAt = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
-                WickKitLeakManager.add(className, detectedAt)
+                WickKitLeakManager.add(className = className, detectedAt = detectedAt)
             }
         }
     }

@@ -82,7 +82,7 @@ class LogNoiseTest {
         val noisy = List(100) { entry("NoiseTag") }
         val diverse = (1..100).map { entry("unique$it") }
         val entries = (noisy + diverse).toImmutableList()
-        assertFalse("NoiseTag" in LogNoise.noisyTags(entries, windowSize = 100))
+        assertFalse("NoiseTag" in LogNoise.noisyTags(entries = entries, windowSize = 100))
     }
 
     @Test
@@ -90,11 +90,17 @@ class LogNoiseTest {
         // 20 out of 100 entries → noisy at threshold 0.2, not noisy at 0.21
         val entries = (List(20) { entry("NoiseTag") } + List(80) { entry("OtherTag") })
             .toImmutableList()
-        assertTrue("NoiseTag" in LogNoise.noisyTags(entries, threshold = 0.2f))
-        assertFalse("NoiseTag" in LogNoise.noisyTags(entries, threshold = 0.21f))
+        assertTrue("NoiseTag" in LogNoise.noisyTags(entries = entries, threshold = 0.2f))
+        assertFalse("NoiseTag" in LogNoise.noisyTags(entries = entries, threshold = 0.21f))
     }
 
     // endregion
 
-    private fun entry(tag: String) = LogEntry(0L, LogLevel.DEBUG, tag, "message", "00:00:00.000")
+    private fun entry(tag: String) = LogEntry(
+        id = 0L,
+        level = LogLevel.DEBUG,
+        tag = tag,
+        message = "message",
+        time = "00:00:00.000",
+    )
 }

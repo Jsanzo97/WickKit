@@ -20,13 +20,13 @@ class WickKitPerformanceManagerTest {
 
     @Test
     fun `snapshot starts empty after reset`() {
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals("", s.activityName)
-        assertNull(s.fps)
-        assertEquals(0, s.totalFrames)
-        assertEquals(0L, s.recompositionCount)
-        assertEquals(0, s.threadCount)
-        assertEquals(0L, s.jvmUsedMb)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals("", snapshot.activityName)
+        assertNull(snapshot.fps)
+        assertEquals(0, snapshot.totalFrames)
+        assertEquals(0L, snapshot.recompositionCount)
+        assertEquals(0, snapshot.threadCount)
+        assertEquals(0L, snapshot.jvmUsedMb)
     }
 
     // endregion
@@ -42,9 +42,9 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `updateFrameStats with stats stores slow and frozen frame counts`() {
         WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals(5, s.slowFrames)
-        assertEquals(1, s.frozenFrames)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(5, snapshot.slowFrames)
+        assertEquals(1, snapshot.frozenFrames)
     }
 
     @Test
@@ -56,9 +56,9 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `updateFrameStats with stats stores percentiles`() {
         WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals(8f, s.p50Ms)
-        assertEquals(15f, s.p90Ms)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(8f, snapshot.p50Ms)
+        assertEquals(15f, snapshot.p90Ms)
     }
 
     @Test
@@ -71,25 +71,31 @@ class WickKitPerformanceManagerTest {
     fun `updateFrameStats with null clears frame fields`() {
         WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
         WickKitPerformanceManager.updateFrameStats(null)
-        val s = WickKitPerformanceManager.snapshot.value
-        assertNull(s.fps)
-        assertNull(s.jankRate)
-        assertNull(s.p50Ms)
-        assertNull(s.p90Ms)
-        assertEquals(0, s.slowFrames)
-        assertEquals(0, s.frozenFrames)
-        assertEquals(0, s.totalFrames)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertNull(snapshot.fps)
+        assertNull(snapshot.jankRate)
+        assertNull(snapshot.p50Ms)
+        assertNull(snapshot.p90Ms)
+        assertEquals(0, snapshot.slowFrames)
+        assertEquals(0, snapshot.frozenFrames)
+        assertEquals(0, snapshot.totalFrames)
     }
 
     @Test
     fun `updateFrameStats with null preserves runtime fields`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 50L, threads = 10, jvmUsedMb = 32L, jvmMaxMb = 256L, nativeHeapMb = 12L),
+            RuntimeStats(
+                recompositions = 50L,
+                threads = 10,
+                jvmUsedMb = 32L,
+                jvmMaxMb = 256L,
+                nativeHeapMb = 12L,
+            ),
         )
         WickKitPerformanceManager.updateFrameStats(null)
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals(50L, s.recompositionCount)
-        assertEquals(10, s.threadCount)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(50L, snapshot.recompositionCount)
+        assertEquals(10, snapshot.threadCount)
     }
 
     // endregion
@@ -99,7 +105,13 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `updateRuntimeStats stores recomposition count`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 200L, threads = 5, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 200L,
+                threads = 5,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 0L,
+            ),
         )
         assertEquals(200L, WickKitPerformanceManager.snapshot.value.recompositionCount)
     }
@@ -107,7 +119,13 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `updateRuntimeStats stores thread count`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 0L, threads = 18, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 0L,
+                threads = 18,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 0L,
+            ),
         )
         assertEquals(18, WickKitPerformanceManager.snapshot.value.threadCount)
     }
@@ -115,17 +133,29 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `updateRuntimeStats stores jvm memory`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 0L, threads = 0, jvmUsedMb = 42L, jvmMaxMb = 256L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 0L,
+                threads = 0,
+                jvmUsedMb = 42L,
+                jvmMaxMb = 256L,
+                nativeHeapMb = 0L,
+            ),
         )
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals(42L, s.jvmUsedMb)
-        assertEquals(256L, s.jvmMaxMb)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(42L, snapshot.jvmUsedMb)
+        assertEquals(256L, snapshot.jvmMaxMb)
     }
 
     @Test
     fun `updateRuntimeStats stores native heap`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 0L, threads = 0, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 18L),
+            RuntimeStats(
+                recompositions = 0L,
+                threads = 0,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 18L,
+            ),
         )
         assertEquals(18L, WickKitPerformanceManager.snapshot.value.nativeHeapMb)
     }
@@ -133,7 +163,13 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `recompositionsPerSecond is zero on first call`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 100L, threads = 0, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 100L,
+                threads = 0,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 0L,
+            ),
         )
         assertEquals(0f, WickKitPerformanceManager.snapshot.value.recompositionsPerSecond, 0.01f)
     }
@@ -141,10 +177,22 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `recompositionsPerSecond is non-negative on subsequent calls`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 100L, threads = 0, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 100L,
+                threads = 0,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 0L,
+            ),
         )
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 150L, threads = 0, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 150L,
+                threads = 0,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 0L,
+            ),
         )
         val rate = WickKitPerformanceManager.snapshot.value.recompositionsPerSecond
         assert(rate >= 0f) { "Expected non-negative rate, got $rate" }
@@ -154,11 +202,17 @@ class WickKitPerformanceManagerTest {
     fun `updateRuntimeStats preserves frame stats`() {
         WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 10L, threads = 5, jvmUsedMb = 20L, jvmMaxMb = 128L, nativeHeapMb = 8L),
+            RuntimeStats(
+                recompositions = 10L,
+                threads = 5,
+                jvmUsedMb = 20L,
+                jvmMaxMb = 128L,
+                nativeHeapMb = 8L,
+            ),
         )
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals(60f, s.fps)
-        assertEquals(100, s.totalFrames)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(60f, snapshot.fps)
+        assertEquals(100, snapshot.totalFrames)
     }
 
     // endregion
@@ -169,21 +223,27 @@ class WickKitPerformanceManagerTest {
     fun `reset clears frame stats`() {
         WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
         WickKitPerformanceManager.reset()
-        val s = WickKitPerformanceManager.snapshot.value
-        assertNull(s.fps)
-        assertEquals(0, s.totalFrames)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertNull(snapshot.fps)
+        assertEquals(0, snapshot.totalFrames)
     }
 
     @Test
     fun `reset clears runtime stats`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 99L, threads = 12, jvmUsedMb = 50L, jvmMaxMb = 200L, nativeHeapMb = 10L),
+            RuntimeStats(
+                recompositions = 99L,
+                threads = 12,
+                jvmUsedMb = 50L,
+                jvmMaxMb = 200L,
+                nativeHeapMb = 10L,
+            ),
         )
         WickKitPerformanceManager.reset()
-        val s = WickKitPerformanceManager.snapshot.value
-        assertEquals(0L, s.recompositionCount)
-        assertEquals(0, s.threadCount)
-        assertEquals(0L, s.jvmUsedMb)
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(0L, snapshot.recompositionCount)
+        assertEquals(0, snapshot.threadCount)
+        assertEquals(0L, snapshot.jvmUsedMb)
     }
 
     @Test
@@ -217,7 +277,13 @@ class WickKitPerformanceManagerTest {
     @Test
     fun `composableEntries default to empty list`() {
         WickKitPerformanceManager.updateRuntimeStats(
-            RuntimeStats(recompositions = 0L, threads = 0, jvmUsedMb = 0L, jvmMaxMb = 0L, nativeHeapMb = 0L),
+            RuntimeStats(
+                recompositions = 0L,
+                threads = 0,
+                jvmUsedMb = 0L,
+                jvmMaxMb = 0L,
+                nativeHeapMb = 0L,
+            ),
         )
         assertTrue(WickKitPerformanceManager.snapshot.value.composableEntries.isEmpty())
     }

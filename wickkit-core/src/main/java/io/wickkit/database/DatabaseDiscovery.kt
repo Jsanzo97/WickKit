@@ -7,13 +7,12 @@ import java.io.File
 
 object DatabaseDiscovery {
 
-    fun findDatabases(context: Context): List<DatabaseEntry> {
-        val dir = context.getDatabasePath("_").parentFile ?: return emptyList()
-        return (dir.listFiles() ?: return emptyList())
-            .filter { it.isFile && !isAuxFile(it.name) }
-            .map { toEntry(it) }
-            .sortedBy { it.name }
-    }
+    fun findDatabases(context: Context): List<DatabaseEntry> = context.getDatabasePath("_").parentFile
+        ?.listFiles()
+        ?.filter { it.isFile && !isAuxFile(it.name) }
+        ?.map { toEntry(it) }
+        ?.sortedBy { it.name }
+        ?: emptyList()
 
     private fun isAuxFile(name: String) = name.endsWith("-wal") || name.endsWith("-shm") || name.endsWith("-journal")
 
@@ -25,8 +24,11 @@ object DatabaseDiscovery {
                 SQLiteDatabase.OPEN_READONLY,
             ).close()
             DatabaseStatus.Ok
-        }.getOrElse { e ->
-            if (e is SQLiteException) DatabaseStatus.Encrypted else DatabaseStatus.Unsupported
+        }.getOrElse { throwable ->
+            when (throwable) {
+                is SQLiteException -> DatabaseStatus.Encrypted
+                else -> DatabaseStatus.Unsupported
+            }
         }
         return DatabaseEntry(
             name = file.name,

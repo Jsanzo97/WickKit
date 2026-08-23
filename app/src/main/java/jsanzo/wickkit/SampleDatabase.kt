@@ -7,8 +7,8 @@ import android.database.sqlite.SQLiteOpenHelper
 
 class SampleDatabase(context: Context) : SQLiteOpenHelper(context, "wickkit_sample.db", null, 1) {
 
-    override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(
+    override fun onCreate(database: SQLiteDatabase) {
+        database.execSQL(
             """
             CREATE TABLE users (
                 id      INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +19,7 @@ class SampleDatabase(context: Context) : SQLiteOpenHelper(context, "wickkit_samp
             )
             """.trimIndent(),
         )
-        db.execSQL(
+        database.execSQL(
             """
             CREATE TABLE products (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,11 +30,11 @@ class SampleDatabase(context: Context) : SQLiteOpenHelper(context, "wickkit_samp
             )
             """.trimIndent(),
         )
-        seedUsers(db)
-        seedProducts(db)
+        seedUsers(database)
+        seedProducts(database)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
 
     fun reseed() {
         writableDatabase.run {
@@ -45,7 +45,7 @@ class SampleDatabase(context: Context) : SQLiteOpenHelper(context, "wickkit_samp
         }
     }
 
-    private fun seedUsers(db: SQLiteDatabase) {
+    private fun seedUsers(database: SQLiteDatabase) {
         val rows = listOf(
             row("name" to "Alice Martín", "email" to "alice@example.com", "age" to 29, "role" to "admin"),
             row("name" to "Bob García", "email" to "bob@example.com", "age" to 34, "role" to "user"),
@@ -53,10 +53,10 @@ class SampleDatabase(context: Context) : SQLiteOpenHelper(context, "wickkit_samp
             row("name" to "Diana Ruiz", "email" to "diana@example.com", "age" to 42, "role" to "moderator"),
             row("name" to "Elena Pérez", "email" to "elena@example.com", "age" to 31, "role" to "user"),
         )
-        rows.forEach { db.insert("users", null, it) }
+        rows.forEach { database.insert("users", null, it) }
     }
 
-    private fun seedProducts(db: SQLiteDatabase) {
+    private fun seedProducts(database: SQLiteDatabase) {
         val rows = listOf(
             row("name" to "Wireless Keyboard", "price" to 49.99, "category" to "Electronics", "in_stock" to 1),
             row("name" to "USB-C Hub", "price" to 34.95, "category" to "Electronics", "in_stock" to 1),
@@ -65,18 +65,18 @@ class SampleDatabase(context: Context) : SQLiteOpenHelper(context, "wickkit_samp
             row("name" to "Standing Desk Mat", "price" to 79.00, "category" to "Office", "in_stock" to 1),
             row("name" to "Cable Organiser", "price" to 15.99, "category" to "Office", "in_stock" to 0),
         )
-        rows.forEach { db.insert("products", null, it) }
+        rows.forEach { database.insert("products", null, it) }
     }
 
     private fun row(vararg pairs: Pair<String, Any?>): ContentValues = ContentValues().apply {
-        pairs.forEach { (k, v) ->
-            when (v) {
-                is String -> put(k, v)
-                is Int -> put(k, v)
-                is Long -> put(k, v)
-                is Double -> put(k, v)
-                is Float -> put(k, v)
-                null -> putNull(k)
+        pairs.forEach { (key, value) ->
+            when (value) {
+                is String -> put(key, value)
+                is Int -> put(key, value)
+                is Long -> put(key, value)
+                is Double -> put(key, value)
+                is Float -> put(key, value)
+                null -> putNull(key)
             }
         }
     }

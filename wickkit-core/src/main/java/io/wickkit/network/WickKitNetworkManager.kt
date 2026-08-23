@@ -16,8 +16,7 @@ object WickKitNetworkManager {
 
     fun add(entry: NetworkEntry) {
         entries.update { current ->
-            val base = if (current.size >= MAX_ENTRIES) current.removingAt(0) else current
-            base.adding(entry)
+            (if (current.size >= MAX_ENTRIES) current.removingAt(0) else current).adding(entry)
         }
     }
 

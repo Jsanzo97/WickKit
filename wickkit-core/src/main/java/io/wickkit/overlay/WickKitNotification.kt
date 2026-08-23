@@ -18,27 +18,28 @@ internal object WickKitNotification {
 
     fun show(context: Context) {
         createChannel(context)
-        if (!canPost(context)) return
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            Intent(context, WickKitActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.wickkit_ic_notification)
-            .setContentTitle("WickKit")
-            .setContentText("Tap to open debug panel")
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setAutoCancel(false)
-            .setContentIntent(pendingIntent)
-            .build()
+        if (canPost(context)) {
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, WickKitActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.wickkit_ic_notification)
+                .setContentTitle("WickKit")
+                .setContentText("Tap to open debug panel")
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setContentIntent(pendingIntent)
+                .build()
 
-        @Suppress("MissingPermission")
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+            @Suppress("MissingPermission")
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+        }
     }
 
     fun dismiss(context: Context) {

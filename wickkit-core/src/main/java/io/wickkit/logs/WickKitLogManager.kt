@@ -19,7 +19,12 @@ internal object WickKitLogManager {
     val selectedLevels: StateFlow<Set<LogLevel>>
         field = MutableStateFlow(LogLevel.entries.toSet())
 
-    fun add(level: LogLevel, tag: String, message: String, time: String) {
+    fun add(
+        level: LogLevel,
+        tag: String,
+        message: String,
+        time: String,
+    ) {
         val entry = LogEntry(
             id = idCounter.getAndIncrement(),
             level = level,
@@ -28,8 +33,7 @@ internal object WickKitLogManager {
             time = time,
         )
         entries.update { current ->
-            val base = if (current.size >= MAX_ENTRIES) current.removingAt(0) else current
-            base.adding(entry)
+            (if (current.size >= MAX_ENTRIES) current.removingAt(0) else current).adding(entry)
         }
     }
 

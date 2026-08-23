@@ -154,7 +154,11 @@ internal fun MockRuleEditor(
 }
 
 @Composable
-private fun EditorToolbar(isEditing: Boolean, onBack: () -> Unit, onSave: () -> Unit) {
+private fun EditorToolbar(
+    isEditing: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,7 +197,11 @@ private fun EditorToolbar(isEditing: Boolean, onBack: () -> Unit, onSave: () -> 
 }
 
 @Composable
-private fun MethodSelectorRow(selected: String?, onSelect: (String?) -> Unit, enabled: Boolean = true) {
+private fun MethodSelectorRow(
+    selected: String?,
+    onSelect: (String?) -> Unit,
+    enabled: Boolean = true,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         FieldLabel(text = "Method")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

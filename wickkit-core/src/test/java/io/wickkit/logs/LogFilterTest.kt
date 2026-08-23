@@ -55,15 +55,15 @@ class LogFilterTest {
 
     @Test
     fun `ByText matches message case-insensitively`() {
-        val e = entry(tag = "Tag", message = "Payment started")
-        assertTrue(e.matches(LogFilter.ByText("payment")))
-        assertTrue(e.matches(LogFilter.ByText("PAYMENT")))
+        val logEntry = entry(tag = "Tag", message = "Payment started")
+        assertTrue(logEntry.matches(LogFilter.ByText("payment")))
+        assertTrue(logEntry.matches(LogFilter.ByText("PAYMENT")))
     }
 
     @Test
     fun `ByText matches tag case-insensitively`() {
-        val e = entry(tag = "OkHttp", message = "message")
-        assertTrue(e.matches(LogFilter.ByText("okhttp")))
+        val logEntry = entry(tag = "OkHttp", message = "message")
+        assertTrue(logEntry.matches(LogFilter.ByText("okhttp")))
     }
 
     @Test
@@ -90,11 +90,17 @@ class LogFilterTest {
 
     @Test
     fun `LogLevel entries expose non-empty label and chipLabel`() {
-        for (level in LogLevel.values()) {
+        for (level in LogLevel.entries) {
             assertTrue("${level.name}.label was empty", level.label.isNotEmpty())
             assertTrue("${level.name}.chipLabel was empty", level.chipLabel.isNotEmpty())
         }
     }
 
-    private fun entry(tag: String, message: String) = LogEntry(0L, LogLevel.DEBUG, tag, message, "00:00:00.000")
+    private fun entry(tag: String, message: String) = LogEntry(
+        id = 0L,
+        level = LogLevel.DEBUG,
+        tag = tag,
+        message = message,
+        time = "00:00:00.000",
+    )
 }

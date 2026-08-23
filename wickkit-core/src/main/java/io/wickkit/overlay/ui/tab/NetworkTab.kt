@@ -79,15 +79,15 @@ internal fun NetworkTab() {
     var screen: NetworkScreen by remember { mutableStateOf(NetworkScreen.Requests) }
 
     BackHandler(enabled = screen !is NetworkScreen.Requests) {
-        screen = when (val s = screen) {
+        screen = when (val currentScreen = screen) {
             is NetworkScreen.Detail -> NetworkScreen.Requests
             NetworkScreen.Mocks -> NetworkScreen.Requests
-            is NetworkScreen.MockEditor -> s.returnTo
+            is NetworkScreen.MockEditor -> currentScreen.returnTo
             NetworkScreen.Requests -> NetworkScreen.Requests
         }
     }
 
-    when (val s = screen) {
+    when (val currentScreen = screen) {
         NetworkScreen.Requests -> NetworkRequestsScreen(
             entries = entries,
             activeRulesCount = rules.count { it.isEnabled },
@@ -103,13 +103,13 @@ internal fun NetworkTab() {
         )
 
         is NetworkScreen.Detail -> NetworkDetailScreen(
-            entry = s.entry,
+            entry = currentScreen.entry,
             onBack = { screen = NetworkScreen.Requests },
             onMockRequest = {
                 screen = NetworkScreen.MockEditor(
                     rule = null,
                     prefillFrom = it,
-                    returnTo = NetworkScreen.Detail(s.entry),
+                    returnTo = NetworkScreen.Detail(currentScreen.entry),
                 )
             },
         )
@@ -136,11 +136,11 @@ internal fun NetworkTab() {
         )
 
         is NetworkScreen.MockEditor -> MockRuleEditor(
-            rule = s.rule,
-            prefillFrom = s.prefillFrom,
-            onBack = { screen = s.returnTo },
+            rule = currentScreen.rule,
+            prefillFrom = currentScreen.prefillFrom,
+            onBack = { screen = currentScreen.returnTo },
             onSave = { rule ->
-                if (s.rule == null) MockRuleManager.add(rule) else MockRuleManager.update(rule)
+                if (currentScreen.rule == null) MockRuleManager.add(rule) else MockRuleManager.update(rule)
                 screen = NetworkScreen.Mocks
             },
         )
@@ -311,7 +311,12 @@ private fun MethodFilterRow(selected: String?, onSelect: (String?) -> Unit) {
 }
 
 @Composable
-private fun MethodChip(label: String, isSelected: Boolean, color: Color, onClick: () -> Unit) {
+private fun MethodChip(
+    label: String,
+    isSelected: Boolean,
+    color: Color,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
@@ -336,7 +341,11 @@ private fun MethodChip(label: String, isSelected: Boolean, color: Color, onClick
 }
 
 @Composable
-private fun NetworkEntryRow(entry: NetworkEntry, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun NetworkEntryRow(
+    entry: NetworkEntry,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -421,9 +430,17 @@ private fun StatusBadge(entry: NetworkEntry) {
             entry.error != null -> "ERR" to Color(0xFF9E9E9E)
             else -> (entry.statusCode?.toString() ?: "?") to statusColor(entry.statusCode)
         }
-        StatusLabel(text = text, color = color, modifier = Modifier.fillMaxWidth())
+        StatusLabel(
+            text = text,
+            color = color,
+            modifier = Modifier.fillMaxWidth(),
+        )
         if (entry.isMocked) {
-            StatusLabel(text = "MOCK", color = Color(0xFF9C27B0), modifier = Modifier.fillMaxWidth())
+            StatusLabel(
+                text = "MOCK",
+                color = Color(0xFF9C27B0),
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -434,7 +451,11 @@ internal fun StatusCodeBadge(code: Int) {
 }
 
 @Composable
-private fun StatusLabel(text: String, color: Color, modifier: Modifier = Modifier) {
+private fun StatusLabel(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
@@ -654,9 +675,9 @@ internal fun statusColor(code: Int?): Color = when {
     else -> Color(0xFFEF5350)
 }
 
-internal fun formatDuration(ms: Long): String = when {
-    ms < 1000 -> "${ms}ms"
-    else -> "${"%.1f".format(ms / 1000.0)}s"
+internal fun formatDuration(milliseconds: Long): String = when {
+    milliseconds < 1000 -> "${milliseconds}ms"
+    else -> "${"%.1f".format(milliseconds / 1000.0)}s"
 }
 
 // ─── Previews ─────────────────────────────────────────────────────────────────
@@ -776,8 +797,23 @@ private fun NetworkRequestsEmptyPreview() {
 }
 
 private fun sampleRules() = persistentListOf(
-    MockRule(0, "/api/v1/checkout", "POST", 500, """{"error":"Service unavailable"}""", delayMs = 0),
-    MockRule(1, "/api/v1/products", null, 200, """{"items":[]}""", delayMs = 2000, isEnabled = false),
+    MockRule(
+        id = 0,
+        urlPattern = "/api/v1/checkout",
+        method = "POST",
+        statusCode = 500,
+        responseBody = """{"error":"Service unavailable"}""",
+        delayMs = 0,
+    ),
+    MockRule(
+        id = 1,
+        urlPattern = "/api/v1/products",
+        method = null,
+        statusCode = 200,
+        responseBody = """{"items":[]}""",
+        delayMs = 2000,
+        isEnabled = false,
+    ),
 )
 
 @PreviewLightDark

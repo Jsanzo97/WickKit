@@ -254,70 +254,70 @@ private fun severityColor(severity: RecomposeSeverity): Color = when (severity) 
     RecomposeSeverity.RED -> FpsBadColor
 }
 
-private fun buildPerformanceInfo(s: PerformanceSnapshot): List<PerfSection> = listOf(
-    buildFramesSection(s),
-    buildComposeSection(s),
-    buildMemorySection(s),
-    buildRuntimeSection(s),
+private fun buildPerformanceInfo(snapshot: PerformanceSnapshot): List<PerfSection> = listOf(
+    buildFramesSection(snapshot),
+    buildComposeSection(snapshot),
+    buildMemorySection(snapshot),
+    buildRuntimeSection(snapshot),
 )
 
-private fun buildFramesSection(s: PerformanceSnapshot): PerfSection {
-    val hasData = s.totalFrames > 0
+private fun buildFramesSection(snapshot: PerformanceSnapshot): PerfSection {
+    val hasData = snapshot.totalFrames > 0
     val dash = "—"
     return PerfSection(
         title = "Frames",
         items = listOf(
             PerfSectionItem(
                 label = "Activity",
-                value = s.activityName.ifEmpty { dash },
+                value = snapshot.activityName.ifEmpty { dash },
             ),
             PerfSectionItem(
                 label = "Avg FPS",
-                value = s.fps?.let { "%.1f".format(it) } ?: dash,
-                valueColor = s.fps?.let { fpsColor(it) },
+                value = snapshot.fps?.let { "%.1f".format(it) } ?: dash,
+                valueColor = snapshot.fps?.let { fpsColor(it) },
             ),
             PerfSectionItem(
                 label = "Total frames",
-                value = if (hasData) "%,d".format(s.totalFrames) else dash,
+                value = if (hasData) "%,d".format(snapshot.totalFrames) else dash,
             ),
             PerfSectionItem(
                 label = "Slow (>16 ms)",
                 value = if (hasData) {
-                    "${"%,d".format(s.slowFrames)} (${"%.1f".format(s.jankRate ?: 0f)}%)"
+                    "${"%,d".format(snapshot.slowFrames)} (${"%.1f".format(snapshot.jankRate ?: 0f)}%)"
                 } else {
                     dash
                 },
-                valueColor = s.jankRate?.let { jankColor(it) },
+                valueColor = snapshot.jankRate?.let { jankColor(it) },
             ),
             PerfSectionItem(
                 label = "Frozen (>700 ms)",
-                value = if (hasData) "${s.frozenFrames}" else dash,
-                valueColor = if (s.frozenFrames > 0) FpsBadColor else null,
+                value = if (hasData) "${snapshot.frozenFrames}" else dash,
+                valueColor = if (snapshot.frozenFrames > 0) FpsBadColor else null,
             ),
             PerfSectionItem(
                 label = "Render P50",
-                value = s.p50Ms?.let { "%.0f ms".format(it) } ?: dash,
+                value = snapshot.p50Ms?.let { "%.0f ms".format(it) } ?: dash,
             ),
             PerfSectionItem(
                 label = "Render P90",
-                value = s.p90Ms?.let { "%.0f ms".format(it) } ?: dash,
+                value = snapshot.p90Ms?.let { "%.0f ms".format(it) } ?: dash,
             ),
         ),
     )
 }
 
-private fun buildComposeSection(s: PerformanceSnapshot): PerfSection = PerfSection(
+private fun buildComposeSection(snapshot: PerformanceSnapshot): PerfSection = PerfSection(
     title = "Compose",
     isCompose = true,
     items = listOf(
         PerfSectionItem(
             label = "Recompositions",
-            value = "%,d".format(s.recompositionCount),
+            value = "%,d".format(snapshot.recompositionCount),
         ),
         PerfSectionItem(
             label = "Per second",
-            value = if (s.recompositionsPerSecond > 0f) {
-                "%.1f /s".format(s.recompositionsPerSecond)
+            value = if (snapshot.recompositionsPerSecond > 0f) {
+                "%.1f /s".format(snapshot.recompositionsPerSecond)
             } else {
                 "0 /s"
             },
@@ -325,19 +325,19 @@ private fun buildComposeSection(s: PerformanceSnapshot): PerfSection = PerfSecti
     ),
 )
 
-private fun buildMemorySection(s: PerformanceSnapshot): PerfSection = PerfSection(
+private fun buildMemorySection(snapshot: PerformanceSnapshot): PerfSection = PerfSection(
     title = "Memory (live)",
     items = listOf(
-        PerfSectionItem(label = "JVM used", value = "${s.jvmUsedMb} MB"),
-        PerfSectionItem(label = "JVM max", value = "${s.jvmMaxMb} MB"),
-        PerfSectionItem(label = "Native heap", value = "${s.nativeHeapMb} MB"),
+        PerfSectionItem(label = "JVM used", value = "${snapshot.jvmUsedMb} MB"),
+        PerfSectionItem(label = "JVM max", value = "${snapshot.jvmMaxMb} MB"),
+        PerfSectionItem(label = "Native heap", value = "${snapshot.nativeHeapMb} MB"),
     ),
 )
 
-private fun buildRuntimeSection(s: PerformanceSnapshot): PerfSection = PerfSection(
+private fun buildRuntimeSection(snapshot: PerformanceSnapshot): PerfSection = PerfSection(
     title = "Runtime (live)",
     items = listOf(
-        PerfSectionItem(label = "Active threads", value = "${s.threadCount}"),
+        PerfSectionItem(label = "Active threads", value = "${snapshot.threadCount}"),
     ),
 )
 
@@ -369,9 +369,27 @@ private fun sampleSnapshot() = PerformanceSnapshot(
     jvmMaxMb = 256L,
     nativeHeapMb = 18L,
     composableEntries = persistentListOf(
-        ComposableEntry("CheckoutButton", 1_204L, 62.0f, 87.3f, RecomposeSeverity.RED),
-        ComposableEntry("ProductCard", 312L, 18.2f, 23.1f, RecomposeSeverity.ORANGE),
-        ComposableEntry("SearchBar", 84L, 7.0f, 12.4f, RecomposeSeverity.YELLOW),
+        ComposableEntry(
+            name = "CheckoutButton",
+            totalCount = 1_204L,
+            ratePerSecond = 62.0f,
+            peakRatePerSecond = 87.3f,
+            severity = RecomposeSeverity.RED,
+        ),
+        ComposableEntry(
+            name = "ProductCard",
+            totalCount = 312L,
+            ratePerSecond = 18.2f,
+            peakRatePerSecond = 23.1f,
+            severity = RecomposeSeverity.ORANGE,
+        ),
+        ComposableEntry(
+            name = "SearchBar",
+            totalCount = 84L,
+            ratePerSecond = 7.0f,
+            peakRatePerSecond = 12.4f,
+            severity = RecomposeSeverity.YELLOW,
+        ),
     ),
 )
 

@@ -23,11 +23,15 @@ internal class WickKitClassVisitor(next: ClassVisitor) : ClassVisitor(ASM_API, n
         signature: String?,
         exceptions: Array<String>?,
     ): MethodVisitor? {
-        val next = super.visitMethod(access, name, descriptor, signature, exceptions)
+        val nextMethodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions)
         val shouldInstrument = access and SYNTHETIC_FLAGS == 0 &&
             '$' !in name && !name.startsWith('<') &&
             COMPOSER_DESC in descriptor
-        return if (shouldInstrument && next != null) WickKitMethodVisitor(next, name) else next
+        return if (shouldInstrument && nextMethodVisitor != null) {
+            WickKitMethodVisitor(next = nextMethodVisitor, composableName = name)
+        } else {
+            nextMethodVisitor
+        }
     }
 }
 
@@ -45,9 +49,21 @@ private class WickKitMethodVisitor(
 
     override fun visitCode() {
         super.visitCode()
-        if (nonRestartable) return
-        mv.visitFieldInsn(Opcodes.GETSTATIC, TRACKER_OWNER, "INSTANCE", TRACKER_FIELD_DESC)
-        mv.visitLdcInsn(composableName)
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, TRACKER_OWNER, "onRecompose", TRACKER_METHOD_DESC, false)
+        if (!nonRestartable) {
+            mv.visitFieldInsn(
+                Opcodes.GETSTATIC,
+                TRACKER_OWNER,
+                "INSTANCE",
+                TRACKER_FIELD_DESC,
+            )
+            mv.visitLdcInsn(composableName)
+            mv.visitMethodInsn(
+                Opcodes.INVOKEVIRTUAL,
+                TRACKER_OWNER,
+                "onRecompose",
+                TRACKER_METHOD_DESC,
+                false,
+            )
+        }
     }
 }

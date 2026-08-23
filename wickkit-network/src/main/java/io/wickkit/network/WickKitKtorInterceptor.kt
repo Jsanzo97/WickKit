@@ -36,7 +36,7 @@ class WickKitKtorInterceptor private constructor() {
                 val method = request.method.value
                 val requestHeaders = request.headers.build()
                     .entries()
-                    .associate { (k, v) -> k to v.joinToString(", ") }
+                    .associate { (key, headerValues) -> key to headerValues.joinToString(", ") }
                 val requestBody = readRequestBody(request.body)
                 val startMs = System.currentTimeMillis()
                 val call = try {
@@ -81,7 +81,7 @@ class WickKitKtorInterceptor private constructor() {
                         statusCode = call.response.status.value,
                         responseHeaders = call.response.headers
                             .entries()
-                            .associate { (k, v) -> k to v.joinToString(", ") },
+                            .associate { (key, headerValues) -> key to headerValues.joinToString(", ") },
                         responseBody = responseBody,
                         durationMs = System.currentTimeMillis() - startMs,
                         time = time,

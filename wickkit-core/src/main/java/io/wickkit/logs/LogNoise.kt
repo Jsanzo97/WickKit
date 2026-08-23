@@ -24,12 +24,15 @@ internal object LogNoise {
         entries: ImmutableList<LogEntry>,
         windowSize: Int = 100,
         threshold: Float = 0.3f,
-    ): Set<String> {
-        if (entries.size < 20) return emptySet()
-        val window = entries.takeLast(windowSize)
-        val limit = maxOf((window.size * threshold).toInt(), 10)
-        return window.groupingBy { it.tag }.eachCount()
-            .filterValues { it >= limit }
-            .keys
+    ): Set<String> = when {
+        entries.size < 20 -> emptySet()
+
+        else -> {
+            val window = entries.takeLast(windowSize)
+            val limit = maxOf((window.size * threshold).toInt(), 10)
+            window.groupingBy { it.tag }.eachCount()
+                .filterValues { it >= limit }
+                .keys
+        }
     }
 }

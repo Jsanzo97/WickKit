@@ -33,7 +33,12 @@ internal object WickKitLogcat {
                 )
                 process.inputStream.bufferedReader().lineSequence().forEach { line ->
                     parseLine(line)?.let { (level, tag, message, time) ->
-                        WickKitLogManager.add(level, tag, message, time)
+                        WickKitLogManager.add(
+                            level = level,
+                            tag = tag,
+                            message = message,
+                            time = time,
+                        )
                     }
                 }
             }
@@ -46,7 +51,12 @@ internal object WickKitLogcat {
         val level = levelMap[match.groupValues[2].firstOrNull()] ?: return null
         val tag = match.groupValues[3].trim()
         val message = match.groupValues[4]
-        return ParsedLine(level, tag, message, time)
+        return ParsedLine(
+            level = level,
+            tag = tag,
+            message = message,
+            time = time,
+        )
     }
 
     private data class ParsedLine(

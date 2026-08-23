@@ -28,9 +28,15 @@ class WickKitNetworkInterceptor : Interceptor {
         val requestHeaders = request.headers.toFlatMap()
         val requestBody = readRequestBody(request)
 
-        val mockRule = MockRuleManager.findMatch(url, method)
+        val mockRule = MockRuleManager.findMatch(url = url, method = method)
         if (mockRule != null) {
-            return serveMock(request, mockRule, id, time, requestBody)
+            return serveMock(
+                request = request,
+                rule = mockRule,
+                id = id,
+                time = time,
+                requestBody = requestBody,
+            )
         }
 
         val startMs = System.currentTimeMillis()
@@ -90,7 +96,7 @@ class WickKitNetworkInterceptor : Interceptor {
             .code(rule.statusCode)
             .message(statusMessage(rule.statusCode))
             .body(mockBody)
-            .apply { rule.responseHeaders.forEach { (k, v) -> header(k, v) } }
+            .apply { rule.responseHeaders.forEach { (key, value) -> header(key, value) } }
             .build()
         WickKitNetworkManager.add(
             NetworkEntry(
@@ -111,18 +117,16 @@ class WickKitNetworkInterceptor : Interceptor {
         return response
     }
 
-    private fun readRequestBody(request: okhttp3.Request): String? {
-        val body = request.body ?: return null
-        if (body.isOneShot()) return "[one-shot body]"
-        return runCatching {
-            val buffer = Buffer()
-            body.writeTo(buffer)
-            if (buffer.size > MAX_BODY_BYTES) {
-                "[body too large: ${buffer.size} bytes]"
-            } else {
-                buffer.readUtf8()
-            }
-        }.getOrNull()
+    private fun readRequestBody(request: okhttp3.Request): String? = request.body?.let { body ->
+        when {
+            body.isOneShot() -> "[one-shot body]"
+
+            else -> runCatching {
+                val buffer = Buffer()
+                body.writeTo(buffer)
+                if (buffer.size > MAX_BODY_BYTES) "[body too large: ${buffer.size} bytes]" else buffer.readUtf8()
+            }.getOrNull()
+        }
     }
 
     private fun Headers.toFlatMap(): Map<String, String> = names().associateWith { name ->

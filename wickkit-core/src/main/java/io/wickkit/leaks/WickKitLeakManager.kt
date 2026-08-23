@@ -29,8 +29,7 @@ internal object WickKitLeakManager {
                     ),
                 )
             } else {
-                val base = if (current.size >= MAX_ENTRIES) current.removingAt(0) else current
-                base.adding(
+                (if (current.size >= MAX_ENTRIES) current.removingAt(0) else current).adding(
                     LeakEntry(
                         id = idCounter.getAndIncrement(),
                         className = className,

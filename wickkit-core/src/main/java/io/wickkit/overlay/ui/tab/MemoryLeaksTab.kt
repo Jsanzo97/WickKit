@@ -58,14 +58,14 @@ internal fun MemoryLeaksTab() {
         screen = LeakScreen.List
     }
 
-    when (val s = screen) {
+    when (val currentScreen = screen) {
         LeakScreen.List -> MemoryLeaksTabContent(
             entries = entries,
             onEntryClick = { screen = LeakScreen.Detail(it) },
         )
 
         is LeakScreen.Detail -> LeakDetailScreen(
-            entry = s.entry,
+            entry = currentScreen.entry,
             onBack = { screen = LeakScreen.List },
         )
     }
@@ -225,9 +225,25 @@ private fun LeaksEmptyState() {
 }
 
 private fun sampleEntries(): ImmutableList<LeakEntry> = persistentListOf(
-    LeakEntry(0, "io.wickkit.sample.MainActivity", "10:23:44.001", 1),
-    LeakEntry(1, "io.wickkit.sample.HomeFragment", "10:23:54.022", 3, firstDetectedAt = "10:23:49.500"),
-    LeakEntry(2, "io.wickkit.sample.ProfileActivity", "10:24:01.200", 1),
+    LeakEntry(
+        id = 0,
+        className = "io.wickkit.sample.MainActivity",
+        detectedAt = "10:23:44.001",
+        instanceCount = 1,
+    ),
+    LeakEntry(
+        id = 1,
+        className = "io.wickkit.sample.HomeFragment",
+        detectedAt = "10:23:54.022",
+        instanceCount = 3,
+        firstDetectedAt = "10:23:49.500",
+    ),
+    LeakEntry(
+        id = 2,
+        className = "io.wickkit.sample.ProfileActivity",
+        detectedAt = "10:24:01.200",
+        instanceCount = 1,
+    ),
 )
 
 @PreviewLightDark
