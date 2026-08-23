@@ -3,9 +3,12 @@ plugins {
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
+    id("publish-convention")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
+
+description = "WickKit debug overlay for Android — core module"
 
 android {
     namespace = "io.wickkit.core"

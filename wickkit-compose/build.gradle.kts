@@ -3,8 +3,11 @@ plugins {
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
+    id("publish-convention")
     alias(libs.plugins.kotlin.compose)
 }
+
+description = "WickKit Compose integration for recomposition tracking"
 
 android {
     namespace = "io.wickkit.compose"
