@@ -32,7 +32,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - name: Build
-        run: ./gradlew assembleRelease -x detekt
+        run: >
+          ./gradlew
+          :wickkit-core:assembleRelease
+          :wickkit-network:assembleRelease
+          :wickkit-flags:assembleRelease
+          :wickkit-no-op:assembleRelease
+          :wickkit-compose:assembleRelease
+          :wickkit-compose-no-op:assembleRelease
+          -x detekt
       - name: Publish to Maven Central
         if: inputs.publish_target == 'maven-central'
         run: ./gradlew publishToMavenCentral --no-daemon
