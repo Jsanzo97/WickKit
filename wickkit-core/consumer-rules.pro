@@ -1,0 +1,3 @@
+-keep class io.wickkit.core.WickKitInitializer
+-keep class io.wickkit.overlay.WickKitActivity
+-keep class io.wickkit.overlay.WickKitPermissionActivity
