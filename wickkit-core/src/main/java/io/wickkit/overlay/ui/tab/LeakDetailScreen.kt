@@ -39,21 +39,25 @@ internal fun LeakDetailScreen(entry: LeakEntry, onBack: () -> Unit) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        LeakDetailHeader(simpleClass = simpleClass, packagePath = packagePath, onBack = onBack)
+        LeakDetailHeader(
+            simpleClass = simpleClass,
+            packagePath = packagePath,
+            onBack = onBack,
+        )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item { LeakSectionHeader("Object") }
-            item { LeakInfoRow("Class", simpleClass) }
+            item { LeakInfoRow(label = "Class", value = simpleClass) }
             if (packagePath.isNotEmpty()) {
-                item { LeakInfoRow("Package", packagePath) }
+                item { LeakInfoRow(label = "Package", value = packagePath) }
             }
-            item { LeakInfoRow("Type", objectType) }
+            item { LeakInfoRow(label = "Type", value = objectType) }
 
             item { LeakSectionHeader("Detection") }
-            item { LeakInfoRow("Instances leaked", "${entry.instanceCount}") }
-            item { LeakInfoRow("First detected", entry.firstDetectedAt) }
+            item { LeakInfoRow(label = "Instances leaked", value = "${entry.instanceCount}") }
+            item { LeakInfoRow(label = "First detected", value = entry.firstDetectedAt) }
             if (entry.instanceCount > 1) {
-                item { LeakInfoRow("Latest detected", entry.detectedAt) }
+                item { LeakInfoRow(label = "Latest detected", value = entry.detectedAt) }
             }
 
             item { LeakSectionHeader("Common causes") }
@@ -65,7 +69,11 @@ internal fun LeakDetailScreen(entry: LeakEntry, onBack: () -> Unit) {
 }
 
 @Composable
-private fun LeakDetailHeader(simpleClass: String, packagePath: String, onBack: () -> Unit) {
+private fun LeakDetailHeader(
+    simpleClass: String,
+    packagePath: String,
+    onBack: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

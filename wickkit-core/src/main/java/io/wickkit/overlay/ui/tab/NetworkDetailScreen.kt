@@ -235,7 +235,7 @@ private fun BodySection(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable(interactionSource = null, indication = null) {
-                        copyToClipboard(context, body)
+                        copyToClipboard(context = context, text = body)
                     }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 contentAlignment = Alignment.Center,
@@ -304,8 +304,8 @@ private fun prettyJson(body: String): String = try {
 }
 
 private fun copyToClipboard(context: Context, text: String) {
-    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    cm.setPrimaryClip(ClipData.newPlainText("body", text))
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboardManager.setPrimaryClip(ClipData.newPlainText("body", text))
     Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
 }
 

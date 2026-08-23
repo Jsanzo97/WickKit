@@ -136,70 +136,76 @@ class MockRuleManagerTest {
 
     @Test
     fun `findMatch returns null when no rules exist`() {
-        assertNull(MockRuleManager.findMatch("https://api.example.com/users", "GET"))
+        assertNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET"))
     }
 
     @Test
     fun `findMatch returns null when no rule matches the url`() {
         MockRuleManager.add(rule(urlPattern = "/orders"))
-        assertNull(MockRuleManager.findMatch("https://api.example.com/users", "GET"))
+        assertNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET"))
     }
 
     @Test
     fun `findMatch matches url pattern case-insensitively`() {
         MockRuleManager.add(rule(urlPattern = "/API/Users"))
-        assertNotNull(MockRuleManager.findMatch("https://example.com/api/users", "GET"))
+        assertNotNull(MockRuleManager.findMatch(url = "https://example.com/api/users", method = "GET"))
     }
 
     @Test
     fun `findMatch matches partial url pattern`() {
         MockRuleManager.add(rule(urlPattern = "/users"))
-        assertNotNull(MockRuleManager.findMatch("https://api.example.com/v1/users/42", "GET"))
+        assertNotNull(MockRuleManager.findMatch(url = "https://api.example.com/v1/users/42", method = "GET"))
     }
 
     @Test
     fun `findMatch returns null when method does not match`() {
         MockRuleManager.add(rule(urlPattern = "/users", method = "GET"))
-        assertNull(MockRuleManager.findMatch("https://api.example.com/users", "POST"))
+        assertNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "POST"))
     }
 
     @Test
     fun `findMatch matches method case-insensitively`() {
         MockRuleManager.add(rule(urlPattern = "/users", method = "get"))
-        assertNotNull(MockRuleManager.findMatch("https://api.example.com/users", "GET"))
+        assertNotNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET"))
     }
 
     @Test
     fun `findMatch with null method matches any http method`() {
         MockRuleManager.add(rule(urlPattern = "/users", method = null))
-        assertNotNull(MockRuleManager.findMatch("https://api.example.com/users", "DELETE"))
-        assertNotNull(MockRuleManager.findMatch("https://api.example.com/users", "PATCH"))
+        assertNotNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "DELETE"))
+        assertNotNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "PATCH"))
     }
 
     @Test
     fun `findMatch skips disabled rules`() {
         MockRuleManager.add(rule(urlPattern = "/users", isEnabled = false))
-        assertNull(MockRuleManager.findMatch("https://api.example.com/users", "GET"))
+        assertNull(MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET"))
     }
 
     @Test
     fun `findMatch returns first matching enabled rule`() {
         MockRuleManager.add(rule(urlPattern = "/users", statusCode = 200))
         MockRuleManager.add(rule(urlPattern = "/users", statusCode = 500))
-        assertEquals(200, MockRuleManager.findMatch("https://api.example.com/users", "GET")!!.statusCode)
+        assertEquals(200, MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET")!!.statusCode)
     }
 
     @Test
     fun `findMatch skips disabled rule and returns next matching enabled rule`() {
-        MockRuleManager.add(rule(urlPattern = "/users", statusCode = 200, isEnabled = false))
+        MockRuleManager.add(
+            rule(
+                urlPattern = "/users",
+                statusCode = 200,
+                isEnabled = false,
+            ),
+        )
         MockRuleManager.add(rule(urlPattern = "/users", statusCode = 500))
-        assertEquals(500, MockRuleManager.findMatch("https://api.example.com/users", "GET")!!.statusCode)
+        assertEquals(500, MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET")!!.statusCode)
     }
 
     @Test
     fun `findMatch returns the matched rule with its response body`() {
         MockRuleManager.add(rule(urlPattern = "/users", responseBody = """{"id":1}"""))
-        val match = MockRuleManager.findMatch("https://api.example.com/users", "GET")
+        val match = MockRuleManager.findMatch(url = "https://api.example.com/users", method = "GET")
         assertEquals("""{"id":1}""", match!!.responseBody)
     }
 

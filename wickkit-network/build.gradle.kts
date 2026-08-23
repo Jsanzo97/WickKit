@@ -3,7 +3,10 @@ plugins {
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
+    id("publish-convention")
 }
+
+description = "WickKit debug overlay — network inspection module"
 
 android {
     namespace = "io.wickkit.network"

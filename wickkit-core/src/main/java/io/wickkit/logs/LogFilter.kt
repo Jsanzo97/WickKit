@@ -6,13 +6,10 @@ internal sealed interface LogFilter {
     data class ByTag(val query: String) : LogFilter
 }
 
-internal fun parseLogFilter(query: String): LogFilter {
-    if (query.isBlank()) return LogFilter.None
-    return if (query.startsWith("tag:", ignoreCase = true)) {
-        LogFilter.ByTag(query.drop(4).trim())
-    } else {
-        LogFilter.ByText(query)
-    }
+internal fun parseLogFilter(query: String): LogFilter = when {
+    query.isBlank() -> LogFilter.None
+    query.startsWith("tag:", ignoreCase = true) -> LogFilter.ByTag(query.drop(4).trim())
+    else -> LogFilter.ByText(query)
 }
 
 internal fun LogEntry.matches(filter: LogFilter): Boolean = when (filter) {

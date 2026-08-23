@@ -74,8 +74,8 @@ private const val EDITED_BG_ALPHA = 0.07f
 
 private sealed interface DbScreen {
     data object DatabaseList : DbScreen
-    data class TableList(val db: DatabaseEntry) : DbScreen
-    data class TableData(val db: DatabaseEntry, val table: String) : DbScreen
+    data class TableList(val database: DatabaseEntry) : DbScreen
+    data class TableData(val database: DatabaseEntry, val table: String) : DbScreen
 }
 
 private data class TableUiState(
@@ -99,28 +99,28 @@ internal fun DatabaseTab() {
     var screen: DbScreen by remember { mutableStateOf(DbScreen.DatabaseList) }
 
     BackHandler(enabled = screen !is DbScreen.DatabaseList) {
-        screen = when (val s = screen) {
-            is DbScreen.TableData -> DbScreen.TableList(s.db)
+        screen = when (val currentScreen = screen) {
+            is DbScreen.TableData -> DbScreen.TableList(currentScreen.database)
             is DbScreen.TableList -> DbScreen.DatabaseList
             DbScreen.DatabaseList -> DbScreen.DatabaseList
         }
     }
 
-    when (val s = screen) {
+    when (val currentScreen = screen) {
         DbScreen.DatabaseList -> DatabaseListScreen(
-            onSelect = { db -> screen = DbScreen.TableList(db) },
+            onSelect = { database -> screen = DbScreen.TableList(database) },
         )
 
         is DbScreen.TableList -> TableListScreen(
-            db = s.db,
+            database = currentScreen.database,
             onBack = { screen = DbScreen.DatabaseList },
-            onSelect = { table -> screen = DbScreen.TableData(s.db, table) },
+            onSelect = { table -> screen = DbScreen.TableData(currentScreen.database, table) },
         )
 
         is DbScreen.TableData -> TableDataScreen(
-            db = s.db,
-            table = s.table,
-            onBack = { screen = DbScreen.TableList(s.db) },
+            database = currentScreen.database,
+            table = currentScreen.table,
+            onBack = { screen = DbScreen.TableList(currentScreen.database) },
         )
     }
 }
@@ -145,8 +145,8 @@ private fun DatabaseListScreen(onSelect: (DatabaseEntry) -> Unit) {
             databases!!.isEmpty() -> EmptyState("No databases found")
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(databases!!.size) { i ->
-                    DatabaseRow(db = databases!![i], onSelect = onSelect)
+                items(databases!!.size) { index ->
+                    DatabaseRow(databaseEntry = databases!![index], onSelect = onSelect)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 }
             }
@@ -155,31 +155,31 @@ private fun DatabaseListScreen(onSelect: (DatabaseEntry) -> Unit) {
 }
 
 @Composable
-private fun DatabaseRow(db: DatabaseEntry, onSelect: (DatabaseEntry) -> Unit) {
+private fun DatabaseRow(databaseEntry: DatabaseEntry, onSelect: (DatabaseEntry) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = db.status == DatabaseStatus.Ok) { onSelect(db) }
+            .clickable(enabled = databaseEntry.status == DatabaseStatus.Ok) { onSelect(databaseEntry) }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = db.name,
+                text = databaseEntry.name,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = if (db.status == DatabaseStatus.Ok) {
+                color = if (databaseEntry.status == DatabaseStatus.Ok) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 },
             )
             Text(
-                text = formatSize(db.sizeBytes),
+                text = formatSize(databaseEntry.sizeBytes),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        when (db.status) {
+        when (databaseEntry.status) {
             DatabaseStatus.Ok -> Unit
             DatabaseStatus.Encrypted -> StatusBadge("Encrypted", MaterialTheme.colorScheme.error)
             DatabaseStatus.Unsupported -> StatusBadge("Unsupported", MaterialTheme.colorScheme.onSurfaceVariant)
@@ -191,22 +191,22 @@ private fun DatabaseRow(db: DatabaseEntry, onSelect: (DatabaseEntry) -> Unit) {
 
 @Composable
 private fun TableListScreen(
-    db: DatabaseEntry,
+    database: DatabaseEntry,
     onBack: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
     var tables by remember { mutableStateOf<List<Pair<String, Long>>?>(null) }
 
-    LaunchedEffect(db.path) {
+    LaunchedEffect(database.path) {
         tables = withContext(Dispatchers.IO) {
-            DatabaseManager(db.path).use { inspector ->
+            DatabaseManager(database.path).use { inspector ->
                 inspector.listTables().map { it to inspector.getRowCount(it) }
             }
         }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        ScreenToolbar(title = db.name, onBack = onBack)
+        ScreenToolbar(title = database.name, onBack = onBack)
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         when {
             tables == null -> LoadingState()
@@ -214,8 +214,8 @@ private fun TableListScreen(
             tables!!.isEmpty() -> EmptyState("No tables found")
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(tables!!.size) { i ->
-                    val (name, count) = tables!![i]
+                items(tables!!.size) { index ->
+                    val (name, count) = tables!![index]
                     TableRow(name = name, rowCount = count, onClick = { onSelect(name) })
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 }
@@ -253,25 +253,30 @@ private suspend fun persistEdit(
     cell: CellKey,
     uiState: TableUiState,
     newText: String,
-    dbPath: String,
+    databasePath: String,
     table: String,
 ): Pair<String, List<List<Any?>>>? = withContext(Dispatchers.IO) {
-    val (rowIdx, colName) = cell
-    val originalRow = uiState.rows.getOrNull(rowIdx) ?: return@withContext null
+    val (rowIndex, colName) = cell
+    val originalRow = uiState.rows.getOrNull(rowIndex) ?: return@withContext null
     val original = originalRow.getOrNull(
         uiState.columns.indexOfFirst { it.name == colName },
     )?.toString() ?: ""
     if (newText == original) return@withContext null
     runCatching {
-        DatabaseManager(dbPath).use { manager ->
-            manager.updateRow(table, uiState.columns, originalRow, mapOf(colName to newText))
-            rowKey(uiState.columns, originalRow) to manager.getRows(table)
+        DatabaseManager(databasePath).use { manager ->
+            manager.updateRow(
+                table = table,
+                columns = uiState.columns,
+                originalRow = originalRow,
+                edits = mapOf(colName to newText),
+            )
+            rowKey(columns = uiState.columns, row = originalRow) to manager.getRows(table)
         }
     }.getOrNull()
 }
 
 @Composable
-private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit) {
+private fun TableDataScreen(database: DatabaseEntry, table: String, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var uiState by remember(table) { mutableStateOf(TableUiState()) }
@@ -281,14 +286,14 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
     LaunchedEffect(table) {
         uiState = withContext(Dispatchers.IO) {
             runCatching {
-                DatabaseManager(db.path).use { inspector ->
+                DatabaseManager(database.path).use { inspector ->
                     TableUiState(
                         columns = inspector.getColumns(table),
                         rows = inspector.getRows(table),
                         isLoading = false,
                     )
                 }
-            }.getOrElse { e -> TableUiState(isLoading = false, error = e.message ?: "Unknown error") }
+            }.getOrElse { throwable -> TableUiState(isLoading = false, error = throwable.message ?: "Unknown error") }
         }
     }
 
@@ -297,7 +302,13 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
         editingCell = null
         val snapshot = editValue.text
         scope.launch {
-            val result = persistEdit(cell, uiState, snapshot, db.path, table)
+            val result = persistEdit(
+                cell = cell,
+                uiState = uiState,
+                newText = snapshot,
+                databasePath = database.path,
+                table = table,
+            )
             if (result != null) {
                 val (key, refreshed) = result
                 uiState = uiState.copy(rows = refreshed, editedRowKeys = uiState.editedRowKeys + key)
@@ -306,7 +317,7 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
     }
 
     val hasPk = uiState.columns.any { it.isPrimaryKey }
-    val hScroll = rememberScrollState()
+    val horizontalScroll = rememberScrollState()
     val editedBorderColor = MaterialTheme.colorScheme.primary
     val editedBgColor = MaterialTheme.colorScheme.primary.copy(alpha = EDITED_BG_ALPHA)
 
@@ -327,28 +338,28 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 stickyHeader {
-                    GridHeader(columns = uiState.columns.toPersistentList(), hScroll = hScroll)
+                    GridHeader(columns = uiState.columns.toPersistentList(), horizontalScroll = horizontalScroll)
                 }
-                itemsIndexed(uiState.rows) { rowIdx, row ->
+                itemsIndexed(uiState.rows) { rowIndex, row ->
                     val key = rowKey(uiState.columns, row)
                     val isEdited = key in uiState.editedRowKeys
                     GridRow(
                         row = row.toPersistentList(),
                         columns = uiState.columns.toPersistentList(),
-                        hScroll = hScroll,
+                        horizontalScroll = horizontalScroll,
                         isEdited = isEdited,
                         editedBorderColor = editedBorderColor,
                         editedBgColor = editedBgColor,
                         hasPk = hasPk,
                         editingCell = editingCell,
                         editValue = editValue,
-                        rowIndex = rowIdx,
+                        rowIndex = rowIndex,
                         onEditValueChange = { editValue = it },
                         onCellClick = { colName ->
                             if (editingCell != null) commitEdit()
                             val value = row.getOrNull(uiState.columns.indexOfFirst { it.name == colName })
                             val text = value?.toString() ?: ""
-                            editingCell = rowIdx to colName
+                            editingCell = rowIndex to colName
                             editValue = TextFieldValue(text = text, selection = TextRange(text.length))
                         },
                         onCommitEdit = ::commitEdit,
@@ -364,7 +375,7 @@ private fun TableDataScreen(db: DatabaseEntry, table: String, onBack: () -> Unit
 @Composable
 private fun GridHeader(
     columns: ImmutableList<ColumnInfo>,
-    hScroll: androidx.compose.foundation.ScrollState,
+    horizontalScroll: androidx.compose.foundation.ScrollState,
 ) {
     Column(
         modifier = Modifier
@@ -374,7 +385,7 @@ private fun GridHeader(
         Row(
             modifier = Modifier
                 .padding(start = EDITED_BORDER_WIDTH.dp) // align with data rows
-                .horizontalScroll(hScroll),
+                .horizontalScroll(horizontalScroll),
         ) {
             columns.forEach { col ->
                 HeaderCell(name = col.name)
@@ -388,7 +399,7 @@ private fun GridHeader(
 private fun GridRow(
     row: ImmutableList<Any?>,
     columns: ImmutableList<ColumnInfo>,
-    hScroll: androidx.compose.foundation.ScrollState,
+    horizontalScroll: androidx.compose.foundation.ScrollState,
     isEdited: Boolean,
     editedBorderColor: Color,
     editedBgColor: Color,
@@ -416,23 +427,23 @@ private fun GridRow(
         Row(
             modifier = Modifier
                 .padding(start = EDITED_BORDER_WIDTH.dp)
-                .horizontalScroll(hScroll)
+                .horizontalScroll(horizontalScroll)
                 .background(if (isEdited) editedBgColor else Color.Transparent),
         ) {
-            row.forEachIndexed { colIdx, value ->
-                val col = columns.getOrNull(colIdx) ?: return@forEachIndexed
-                val isActiveEdit = editingCell?.first == rowIndex && editingCell.second == col.name
-                val editable = hasPk && !col.isPrimaryKey
+            row.forEachIndexed { columnIndex, value ->
+                val column = columns.getOrNull(columnIndex) ?: return@forEachIndexed
+                val isActiveEdit = editingCell?.first == rowIndex && editingCell.second == column.name
+                val editable = hasPk && !column.isPrimaryKey
                 DataCell(
                     text = if (isActiveEdit) editValue.text else value?.toString() ?: "null",
-                    isPrimaryKey = col.isPrimaryKey,
+                    isPrimaryKey = column.isPrimaryKey,
                     isNull = value == null && !isActiveEdit,
                     isEditing = isActiveEdit,
                     editValue = editValue,
                     onEditValueChange = onEditValueChange,
                     onCommitEdit = onCommitEdit,
                     modifier = if (editable && !isActiveEdit) {
-                        Modifier.clickable { onCellClick(col.name) }
+                        Modifier.clickable { onCellClick(column.name) }
                     } else {
                         Modifier
                     },

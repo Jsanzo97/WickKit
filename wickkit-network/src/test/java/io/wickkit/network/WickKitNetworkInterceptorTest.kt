@@ -46,7 +46,13 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `returns response from chain when no mock matches`() {
         val request = Request.Builder().url("https://api.example.com/users").build()
-        val chain = FakeChain(request) { fakeResponse(it, 200, """{"id":1}""") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 200,
+                body = """{"id":1}""",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -56,7 +62,13 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `preserves status code from chain response`() {
         val request = Request.Builder().url("https://api.example.com/users/999").build()
-        val chain = FakeChain(request) { fakeResponse(it, 404, """{"error":"not found"}""") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 404,
+                body = """{"error":"not found"}""",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -70,9 +82,13 @@ class WickKitNetworkInterceptorTest {
             .header("Authorization", "Bearer token")
             .build()
         var interceptedRequest: Request? = null
-        val chain = FakeChain(request) { req ->
-            interceptedRequest = req
-            fakeResponse(req, 200, "[]")
+        val chain = FakeChain(request = request) { chainRequest ->
+            interceptedRequest = chainRequest
+            fakeResponse(
+                request = chainRequest,
+                code = 200,
+                body = "[]",
+            )
         }
 
         interceptor.intercept(chain)
@@ -88,7 +104,7 @@ class WickKitNetworkInterceptorTest {
     @Test(expected = IOException::class)
     fun `rethrows IOException from chain`() {
         val request = Request.Builder().url("https://api.example.com/users").build()
-        val chain = FakeChain(request) { throw IOException("Connection refused") }
+        val chain = FakeChain(request = request) { throw IOException("Connection refused") }
 
         interceptor.intercept(chain)
     }
@@ -96,7 +112,7 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `IOException message is preserved on rethrow`() {
         val request = Request.Builder().url("https://api.example.com/users").build()
-        val chain = FakeChain(request) { throw IOException("timeout after 30s") }
+        val chain = FakeChain(request = request) { throw IOException("timeout after 30s") }
 
         val thrown = runCatching { interceptor.intercept(chain) }.exceptionOrNull()
 
@@ -109,7 +125,7 @@ class WickKitNetworkInterceptorTest {
             .url("https://api.example.com/users")
             .post("{}".toRequestBody("application/json".toMediaType()))
             .build()
-        val chain = FakeChain(request) { throw IOException("Network unreachable") }
+        val chain = FakeChain(request = request) { throw IOException("Network unreachable") }
 
         interceptor.intercept(chain)
     }
@@ -130,7 +146,7 @@ class WickKitNetworkInterceptorTest {
             ),
         )
         val request = Request.Builder().url("https://api.example.com/users").build()
-        val chain = FakeChain(request) { error("chain.proceed must not be called for mock") }
+        val chain = FakeChain(request = request) { error("chain.proceed must not be called for mock") }
 
         val result = interceptor.intercept(chain)
 
@@ -141,10 +157,16 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `mock response has correct status code`() {
         MockRuleManager.add(
-            MockRule(id = 0, urlPattern = "/missing", method = null, statusCode = 404, responseBody = null),
+            MockRule(
+                id = 0,
+                urlPattern = "/missing",
+                method = null,
+                statusCode = 404,
+                responseBody = null,
+            ),
         )
         val request = Request.Builder().url("https://api.example.com/missing").build()
-        val chain = FakeChain(request) { error("chain must not be called") }
+        val chain = FakeChain(request = request) { error("chain must not be called") }
 
         val result = interceptor.intercept(chain)
 
@@ -154,10 +176,16 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `mock response with null body returns empty body`() {
         MockRuleManager.add(
-            MockRule(id = 0, urlPattern = "/ping", method = null, statusCode = 204, responseBody = null),
+            MockRule(
+                id = 0,
+                urlPattern = "/ping",
+                method = null,
+                statusCode = 204,
+                responseBody = null,
+            ),
         )
         val request = Request.Builder().url("https://api.example.com/ping").build()
-        val chain = FakeChain(request) { error("chain must not be called") }
+        val chain = FakeChain(request = request) { error("chain must not be called") }
 
         val result = interceptor.intercept(chain)
 
@@ -178,7 +206,7 @@ class WickKitNetworkInterceptorTest {
             ),
         )
         val request = Request.Builder().url("https://api.example.com/data").build()
-        val chain = FakeChain(request) { error("chain must not be called") }
+        val chain = FakeChain(request = request) { error("chain must not be called") }
 
         val result = interceptor.intercept(chain)
 
@@ -189,10 +217,16 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `mock with unrecognised status code still returns that code`() {
         MockRuleManager.add(
-            MockRule(id = 0, urlPattern = "/teapot", method = null, statusCode = 418, responseBody = "I'm a teapot"),
+            MockRule(
+                id = 0,
+                urlPattern = "/teapot",
+                method = null,
+                statusCode = 418,
+                responseBody = "I'm a teapot",
+            ),
         )
         val request = Request.Builder().url("https://api.example.com/teapot").build()
-        val chain = FakeChain(request) { error("chain must not be called") }
+        val chain = FakeChain(request = request) { error("chain must not be called") }
 
         val result = interceptor.intercept(chain)
 
@@ -202,10 +236,17 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `mock with delay does not prevent response`() {
         MockRuleManager.add(
-            MockRule(id = 0, urlPattern = "/slow", method = null, statusCode = 200, responseBody = "ok", delayMs = 1),
+            MockRule(
+                id = 0,
+                urlPattern = "/slow",
+                method = null,
+                statusCode = 200,
+                responseBody = "ok",
+                delayMs = 1,
+            ),
         )
         val request = Request.Builder().url("https://api.example.com/slow").build()
-        val chain = FakeChain(request) { error("chain must not be called") }
+        val chain = FakeChain(request = request) { error("chain must not be called") }
 
         val result = interceptor.intercept(chain)
 
@@ -225,7 +266,13 @@ class WickKitNetworkInterceptorTest {
             ),
         )
         val request = Request.Builder().url("https://api.example.com/data").build()
-        val chain = FakeChain(request) { fakeResponse(it, 503, "real") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 503,
+                body = "real",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -235,10 +282,22 @@ class WickKitNetworkInterceptorTest {
     @Test
     fun `mock only matches specified HTTP method`() {
         MockRuleManager.add(
-            MockRule(id = 0, urlPattern = "/users", method = "POST", statusCode = 201, responseBody = "{}"),
+            MockRule(
+                id = 0,
+                urlPattern = "/users",
+                method = "POST",
+                statusCode = 201,
+                responseBody = "{}",
+            ),
         )
         val request = Request.Builder().url("https://api.example.com/users").build()
-        val chain = FakeChain(request) { fakeResponse(it, 200, "real") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 200,
+                body = "real",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -260,7 +319,13 @@ class WickKitNetworkInterceptorTest {
             .url("https://api.example.com/upload")
             .post(body)
             .build()
-        val chain = FakeChain(request) { fakeResponse(it, 200, "ok") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 200,
+                body = "ok",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -274,7 +339,13 @@ class WickKitNetworkInterceptorTest {
             .url("https://api.example.com/upload")
             .post(bigBody)
             .build()
-        val chain = FakeChain(request) { fakeResponse(it, 200, "ok") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 200,
+                body = "ok",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -291,7 +362,13 @@ class WickKitNetworkInterceptorTest {
             .url("https://api.example.com/data")
             .post(failingBody)
             .build()
-        val chain = FakeChain(request) { fakeResponse(it, 200, "ok") }
+        val chain = FakeChain(request = request) {
+            fakeResponse(
+                request = it,
+                code = 200,
+                body = "ok",
+            )
+        }
 
         val result = interceptor.intercept(chain)
 
@@ -305,7 +382,7 @@ class WickKitNetworkInterceptorTest {
     @Test(expected = IOException::class)
     fun `IOException with null message is rethrown`() {
         val request = Request.Builder().url("https://api.example.com/users").build()
-        val chain = FakeChain(request) { throw IOException() }
+        val chain = FakeChain(request = request) { throw IOException() }
 
         interceptor.intercept(chain)
     }

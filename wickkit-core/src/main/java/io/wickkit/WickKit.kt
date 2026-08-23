@@ -26,8 +26,8 @@ object WickKit {
     private var notificationSetUp = false
 
     private val fragmentWatcher = object : FragmentManager.FragmentLifecycleCallbacks() {
-        override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
-            ObjectWatcher.watch(f)
+        override fun onFragmentDestroyed(fragmentManager: FragmentManager, fragment: Fragment) {
+            ObjectWatcher.watch(fragment)
         }
     }
 
@@ -39,27 +39,29 @@ object WickKit {
     }
 
     fun open(context: Context) {
-        if (isVisible) return
-        context.startActivity(
-            Intent(context, WickKitActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            },
-        )
+        if (!isVisible) {
+            context.startActivity(
+                Intent(context, WickKitActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+            )
+        }
     }
 
     private fun setupNotification(activity: Activity) {
-        if (notificationSetUp) return
-        notificationSetUp = true
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val granted = activity.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-            if (granted) {
-                WickKitNotification.show(activity.applicationContext)
+        if (!notificationSetUp) {
+            notificationSetUp = true
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val granted = activity.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+                    PackageManager.PERMISSION_GRANTED
+                if (granted) {
+                    WickKitNotification.show(activity.applicationContext)
+                } else {
+                    activity.startActivity(Intent(activity, WickKitPermissionActivity::class.java))
+                }
             } else {
-                activity.startActivity(Intent(activity, WickKitPermissionActivity::class.java))
+                WickKitNotification.show(activity.applicationContext)
             }
-        } else {
-            WickKitNotification.show(activity.applicationContext)
         }
     }
 
@@ -96,10 +98,10 @@ object WickKit {
         }
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
         override fun onActivityDestroyed(activity: Activity) {
-            if (activity is WickKitActivity) {
-                isVisible = false
-            } else if (activity !is WickKitPermissionActivity) {
-                ObjectWatcher.watch(activity)
+            when (activity) {
+                is WickKitActivity -> isVisible = false
+                is WickKitPermissionActivity -> Unit
+                else -> ObjectWatcher.watch(activity)
             }
         }
     }

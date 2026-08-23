@@ -5,50 +5,50 @@ import android.database.sqlite.SQLiteDatabase
 
 class DatabaseManager(path: String) : AutoCloseable {
 
-    private val db = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
+    private val database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
 
-    fun listTables(): List<String> = db.rawQuery(
+    fun listTables(): List<String> = database.rawQuery(
         "SELECT name FROM sqlite_master " +
             "WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'android_%' " +
             "ORDER BY name",
         null,
-    ).use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
+    ).use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getString(0)) } }
 
-    fun getRowCount(table: String): Long = db.rawQuery(
+    fun getRowCount(table: String): Long = database.rawQuery(
         "SELECT COUNT(*) FROM ${table.q()}",
         null,
-    ).use { c -> if (c.moveToFirst()) c.getLong(0) else 0L }
+    ).use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else 0L }
 
-    fun getColumns(table: String): List<ColumnInfo> = db.rawQuery(
+    fun getColumns(table: String): List<ColumnInfo> = database.rawQuery(
         "PRAGMA table_info(${table.q()})",
         null,
-    ).use { c ->
+    ).use { cursor ->
         buildList {
-            while (c.moveToNext()) {
+            while (cursor.moveToNext()) {
                 add(
                     ColumnInfo(
-                        name = c.str("name"),
-                        type = c.str("type").uppercase().ifEmpty { "TEXT" },
-                        isPrimaryKey = c.int("pk") > 0,
-                        notNull = c.int("notnull") > 0,
+                        name = cursor.columnString("name"),
+                        type = cursor.columnString("type").uppercase().ifEmpty { "TEXT" },
+                        isPrimaryKey = cursor.columnInt("pk") > 0,
+                        notNull = cursor.columnInt("notnull") > 0,
                     ),
                 )
             }
         }
     }
 
-    fun getRows(table: String, limit: Int = 300, offset: Int = 0): List<List<Any?>> = db.rawQuery(
+    fun getRows(table: String, limit: Int = 300, offset: Int = 0): List<List<Any?>> = database.rawQuery(
         "SELECT * FROM ${table.q()} LIMIT $limit OFFSET $offset",
         null,
-    ).use { c ->
+    ).use { cursor ->
         buildList {
-            while (c.moveToNext()) {
+            while (cursor.moveToNext()) {
                 add(
-                    (0 until c.columnCount).map { i ->
-                        when (c.getType(i)) {
-                            Cursor.FIELD_TYPE_INTEGER -> c.getLong(i)
-                            Cursor.FIELD_TYPE_FLOAT -> c.getDouble(i)
-                            Cursor.FIELD_TYPE_STRING -> c.getString(i)
+                    (0 until cursor.columnCount).map { columnIndex ->
+                        when (cursor.getType(columnIndex)) {
+                            Cursor.FIELD_TYPE_INTEGER -> cursor.getLong(columnIndex)
+                            Cursor.FIELD_TYPE_FLOAT -> cursor.getDouble(columnIndex)
+                            Cursor.FIELD_TYPE_STRING -> cursor.getString(columnIndex)
                             Cursor.FIELD_TYPE_BLOB -> "[BLOB]"
                             else -> null
                         }
@@ -64,24 +64,24 @@ class DatabaseManager(path: String) : AutoCloseable {
         originalRow: List<Any?>,
         edits: Map<String, String>,
     ) {
-        val pks = columns.filter { it.isPrimaryKey }
-        check(pks.isNotEmpty()) { "No primary key on table $table" }
-        val set = edits.keys.joinToString(", ") { "${it.q()} = ?" }
-        val where = pks.joinToString(" AND ") { "${it.name.q()} = ?" }
+        val primaryKeys = columns.filter { it.isPrimaryKey }
+        check(primaryKeys.isNotEmpty()) { "No primary key on table $table" }
+        val setClause = edits.keys.joinToString(", ") { "${it.q()} = ?" }
+        val whereClause = primaryKeys.joinToString(" AND ") { "${it.name.q()} = ?" }
         val allArgs = buildList<Any?> {
             addAll(edits.values)
             addAll(
-                pks.map { pk ->
-                    originalRow.getOrNull(columns.indexOfFirst { it.name == pk.name })?.toString()
+                primaryKeys.map { primaryKey ->
+                    originalRow.getOrNull(columns.indexOfFirst { it.name == primaryKey.name })?.toString()
                 },
             )
         }.toTypedArray()
-        db.execSQL("UPDATE ${table.q()} SET $set WHERE $where", allArgs)
+        database.execSQL("UPDATE ${table.q()} SET $setClause WHERE $whereClause", allArgs)
     }
 
-    override fun close() = db.close()
+    override fun close() = database.close()
 
     private fun String.q() = "\"$this\""
-    private fun Cursor.str(col: String) = getString(getColumnIndexOrThrow(col)) ?: ""
-    private fun Cursor.int(col: String) = getInt(getColumnIndexOrThrow(col))
+    private fun Cursor.columnString(columnName: String) = getString(getColumnIndexOrThrow(columnName)) ?: ""
+    private fun Cursor.columnInt(columnName: String) = getInt(getColumnIndexOrThrow(columnName))
 }

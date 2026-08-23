@@ -43,7 +43,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("feature", false).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "feature", FlagType.BOOLEAN, "true")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "feature",
+            type = FlagType.BOOLEAN,
+            value = "true",
+        )
 
         assertTrue(prefs.getBoolean("feature", false))
     }
@@ -53,7 +58,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putString("name", "original").commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "name", FlagType.STRING, "override")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "name",
+            type = FlagType.STRING,
+            value = "override",
+        )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         val backup = wickkitPrefs.getString("sp.backup.test_prefs.name", null)
@@ -65,8 +75,18 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putString("name", "original").commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "name", FlagType.STRING, "first_override")
-        WickKitFlagsManager.setSpOverride("test_prefs", "name", FlagType.STRING, "second_override")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "name",
+            type = FlagType.STRING,
+            value = "first_override",
+        )
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "name",
+            type = FlagType.STRING,
+            value = "second_override",
+        )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         val backup = wickkitPrefs.getString("sp.backup.test_prefs.name", null)
@@ -79,7 +99,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putInt("count", 5).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "count", FlagType.INT, "42")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "count",
+            type = FlagType.INT,
+            value = "42",
+        )
 
         assertEquals(42, prefs.getInt("count", 0))
     }
@@ -89,7 +114,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putLong("timeout", 1000L).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "timeout", FlagType.LONG, "5000")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "timeout",
+            type = FlagType.LONG,
+            value = "5000",
+        )
 
         assertEquals(5000L, prefs.getLong("timeout", 0L))
     }
@@ -99,7 +129,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putFloat("ratio", 0.5f).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "ratio", FlagType.FLOAT, "1.5")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "ratio",
+            type = FlagType.FLOAT,
+            value = "1.5",
+        )
 
         assertEquals(1.5f, prefs.getFloat("ratio", 0f), 0.001f)
     }
@@ -111,8 +146,13 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("feature", false).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "feature", FlagType.BOOLEAN, "true")
-        WickKitFlagsManager.clearSpOverride("test_prefs", "feature")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "feature",
+            type = FlagType.BOOLEAN,
+            value = "true",
+        )
+        WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "feature")
 
         assertFalse(prefs.getBoolean("feature", true))
     }
@@ -122,8 +162,13 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putString("key", "value").commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "key", FlagType.STRING, "override")
-        WickKitFlagsManager.clearSpOverride("test_prefs", "key")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "key",
+            type = FlagType.STRING,
+            value = "override",
+        )
+        WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "key")
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         assertFalse(wickkitPrefs.contains("sp.backup.test_prefs.key"))
@@ -136,7 +181,7 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putString("key", "value").commit()
 
-        WickKitFlagsManager.clearSpOverride("test_prefs", "key")
+        WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "key")
 
         assertEquals("value", prefs.getString("key", null))
     }
@@ -148,8 +193,13 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("feature", false).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "feature", FlagType.BOOLEAN, "true")
-        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "feature",
+            type = FlagType.BOOLEAN,
+            value = "true",
+        )
+        WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
 
         assertFalse(prefs.getBoolean("feature", true))
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
@@ -161,9 +211,14 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("feature", false).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "feature", FlagType.BOOLEAN, "true")
-        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
-        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "feature",
+            type = FlagType.BOOLEAN,
+            value = "true",
+        )
+        WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
+        WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
 
         assertTrue(prefs.getBoolean("feature", false))
     }
@@ -175,7 +230,7 @@ class WickKitFlagsManagerTest {
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         wickkitPrefs.edit().putString("sp.enabled.test_prefs.feature", "true").commit()
 
-        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
+        WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
 
         assertFalse(prefs.getBoolean("feature", false))
     }
@@ -187,7 +242,7 @@ class WickKitFlagsManagerTest {
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         wickkitPrefs.edit().putString("sp.enabled.test_prefs.feature", "false").commit()
 
-        WickKitFlagsManager.toggleSpOverride("test_prefs", "feature")
+        WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
 
         assertFalse(prefs.getBoolean("feature", false))
     }
@@ -196,76 +251,76 @@ class WickKitFlagsManagerTest {
 
     @Test
     fun `getBoolean returns remote value when no override`() {
-        assertFalse(WickKitFlagsManager.getBoolean("flag", false))
-        assertTrue(WickKitFlagsManager.getBoolean("flag", true))
+        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
+        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = true))
     }
 
     @Test
     fun `getBoolean returns override when active`() {
-        WickKitFlagsManager.setRcOverride("flag", "true")
+        WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
 
-        assertTrue(WickKitFlagsManager.getBoolean("flag", false))
+        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
     }
 
     @Test
     fun `getBoolean returns remote value when override disabled`() {
-        WickKitFlagsManager.setRcOverride("flag", "true")
+        WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.toggleRcOverride("flag")
 
-        assertFalse(WickKitFlagsManager.getBoolean("flag", false))
+        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
     }
 
     @Test
     fun `getString returns remote value when no override`() {
-        assertEquals("default", WickKitFlagsManager.getString("title", "default"))
+        assertEquals("default", WickKitFlagsManager.getString(key = "title", remoteValue = "default"))
     }
 
     @Test
     fun `getString returns override when active`() {
-        WickKitFlagsManager.setRcOverride("title", "hello")
+        WickKitFlagsManager.setRcOverride(key = "title", value = "hello")
 
-        assertEquals("hello", WickKitFlagsManager.getString("title", "default"))
+        assertEquals("hello", WickKitFlagsManager.getString(key = "title", remoteValue = "default"))
     }
 
     @Test
     fun `getLong returns remote value when no override`() {
-        assertEquals(3000L, WickKitFlagsManager.getLong("timeout", 3000L))
+        assertEquals(3000L, WickKitFlagsManager.getLong(key = "timeout", remoteValue = 3000L))
     }
 
     @Test
     fun `getLong returns override when active`() {
-        WickKitFlagsManager.setRcOverride("timeout", "5000")
+        WickKitFlagsManager.setRcOverride(key = "timeout", value = "5000")
 
-        assertEquals(5000L, WickKitFlagsManager.getLong("timeout", 0L))
+        assertEquals(5000L, WickKitFlagsManager.getLong(key = "timeout", remoteValue = 0L))
     }
 
     @Test
     fun `getDouble returns remote value when no override`() {
-        assertEquals(0.5, WickKitFlagsManager.getDouble("ratio", 0.5), 0.001)
+        assertEquals(0.5, WickKitFlagsManager.getDouble(key = "ratio", remoteValue = 0.5), 0.001)
     }
 
     @Test
     fun `getDouble returns override when active`() {
-        WickKitFlagsManager.setRcOverride("ratio", "0.75")
+        WickKitFlagsManager.setRcOverride(key = "ratio", value = "0.75")
 
-        assertEquals(0.75, WickKitFlagsManager.getDouble("ratio", 0.0), 0.001)
+        assertEquals(0.75, WickKitFlagsManager.getDouble(key = "ratio", remoteValue = 0.0), 0.001)
     }
 
     @Test
     fun `clearRcOverride makes getBoolean return remote value`() {
-        WickKitFlagsManager.setRcOverride("flag", "true")
+        WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.clearRcOverride("flag")
 
-        assertFalse(WickKitFlagsManager.getBoolean("flag", false))
+        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
     }
 
     @Test
     fun `toggleRcOverride re-enables a disabled override`() {
-        WickKitFlagsManager.setRcOverride("flag", "true")
+        WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.toggleRcOverride("flag") // disable
         WickKitFlagsManager.toggleRcOverride("flag") // re-enable
 
-        assertTrue(WickKitFlagsManager.getBoolean("flag", false))
+        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
     }
 
     // ── Remote Config entry building ───────────────────────────────────────────
@@ -275,7 +330,7 @@ class WickKitFlagsManagerTest {
         mockkObject(RemoteConfigBridge)
         every { RemoteConfigBridge.getAll() } returns mapOf("feature" to "remote_value")
 
-        WickKitFlagsManager.setRcOverride("feature", "override_value")
+        WickKitFlagsManager.setRcOverride(key = "feature", value = "override_value")
 
         val entry = WickKitFlagsManager.remoteConfigEntries.value.first()
         assertEquals("remote_value", entry.remoteValue)
@@ -303,7 +358,7 @@ class WickKitFlagsManagerTest {
         mockkObject(RemoteConfigBridge)
         every { RemoteConfigBridge.getAll() } returns mapOf("feature" to "remote_value")
 
-        WickKitFlagsManager.setRcOverride("feature", "override_value")
+        WickKitFlagsManager.setRcOverride(key = "feature", value = "override_value")
         WickKitFlagsManager.toggleRcOverride("feature")
 
         val entry = WickKitFlagsManager.remoteConfigEntries.value.first()
@@ -335,7 +390,12 @@ class WickKitFlagsManagerTest {
         prefs.edit().putString("key", "original").commit()
         WickKitFlagsManager.init(context)
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "key", FlagType.STRING, "override")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "key",
+            type = FlagType.STRING,
+            value = "override",
+        )
 
         val file = WickKitFlagsManager.sharedPreferencesFiles.value.find { it.name == "test_prefs" }
         assertNotNull(file)
@@ -357,7 +417,12 @@ class WickKitFlagsManagerTest {
 
     @Test
     fun `setSpOverride on missing key uses parameter type as backup type`() {
-        WickKitFlagsManager.setSpOverride("test_prefs", "new_key", FlagType.STRING, "hello")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "new_key",
+            type = FlagType.STRING,
+            value = "hello",
+        )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         assertEquals("STRING:", wickkitPrefs.getString("sp.backup.test_prefs.new_key", null))
@@ -368,7 +433,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putInt("count", 5).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "count", FlagType.INT, "not_a_number")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "count",
+            type = FlagType.INT,
+            value = "not_a_number",
+        )
 
         assertEquals(0, prefs.getInt("count", -1))
     }
@@ -378,7 +448,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putLong("timeout", 1000L).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "timeout", FlagType.LONG, "not_a_number")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "timeout",
+            type = FlagType.LONG,
+            value = "not_a_number",
+        )
 
         assertEquals(0L, prefs.getLong("timeout", -1L))
     }
@@ -388,7 +463,12 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putFloat("ratio", 0.5f).commit()
 
-        WickKitFlagsManager.setSpOverride("test_prefs", "ratio", FlagType.FLOAT, "not_a_number")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "ratio",
+            type = FlagType.FLOAT,
+            value = "not_a_number",
+        )
 
         assertEquals(0f, prefs.getFloat("ratio", -1f), 0.001f)
     }
@@ -398,7 +478,7 @@ class WickKitFlagsManagerTest {
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         wickkitPrefs.edit().putString("sp.enabled.test_prefs.key", "true").commit()
 
-        WickKitFlagsManager.clearSpOverride("test_prefs", "key")
+        WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "key")
 
         assertFalse(wickkitPrefs.contains("sp.enabled.test_prefs.key"))
     }
@@ -414,7 +494,12 @@ class WickKitFlagsManagerTest {
     @Test
     fun `setSpOverride is no-op when not initialized`() {
         clearAppContext()
-        WickKitFlagsManager.setSpOverride("test_prefs", "key", FlagType.STRING, "value")
+        WickKitFlagsManager.setSpOverride(
+            prefsName = "test_prefs",
+            key = "key",
+            type = FlagType.STRING,
+            value = "value",
+        )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
         assertFalse(wickkitPrefs.contains("sp.backup.test_prefs.key"))
@@ -423,19 +508,19 @@ class WickKitFlagsManagerTest {
     @Test
     fun `toggleSpOverride is no-op when not initialized`() {
         clearAppContext()
-        WickKitFlagsManager.toggleSpOverride("test_prefs", "key")
+        WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "key")
     }
 
     @Test
     fun `clearSpOverride is no-op when not initialized`() {
         clearAppContext()
-        WickKitFlagsManager.clearSpOverride("test_prefs", "key")
+        WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "key")
     }
 
     @Test
     fun `setRcOverride is no-op when not initialized`() {
         clearAppContext()
-        WickKitFlagsManager.setRcOverride("key", "value")
+        WickKitFlagsManager.setRcOverride(key = "key", value = "value")
 
         assertFalse(context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE).contains("rc.override.key"))
     }
@@ -456,7 +541,7 @@ class WickKitFlagsManagerTest {
     fun `getBoolean returns remote value when not initialized`() {
         clearAppContext()
 
-        assertFalse(WickKitFlagsManager.getBoolean("flag", false))
-        assertTrue(WickKitFlagsManager.getBoolean("flag", true))
+        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
+        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = true))
     }
 }

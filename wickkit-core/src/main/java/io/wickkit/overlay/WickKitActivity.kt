@@ -23,6 +23,7 @@ internal class WickKitActivity : ComponentActivity() {
     override fun finish() {
         super.finish()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
         }
     }
@@ -32,6 +33,7 @@ internal class WickKitActivity : ComponentActivity() {
             overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
             overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
         } else {
+            @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
         }
     }

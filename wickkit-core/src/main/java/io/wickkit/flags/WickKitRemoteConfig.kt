@@ -18,7 +18,10 @@ class WickKitRemoteConfig private constructor(
     }
 
     companion object {
-        fun wrap(context: Context, firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(firebaseRc, context)
+        fun wrap(context: Context, firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(
+            delegate = firebaseRc,
+            context = context,
+        )
     }
 
     fun getBoolean(key: String): Boolean = WickKitFlagsManager.getBoolean(

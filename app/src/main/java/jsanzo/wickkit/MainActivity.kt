@@ -202,10 +202,10 @@ class MainActivity : ComponentActivity() {
 private var logCounter = 0
 
 private fun generateSampleLogs() {
-    val n = ++logCounter
-    Timber.tag("UserAction").d("Button tapped — batch #$n")
-    Log.i("Network", "GET /api/items?page=$n → 200 OK (${(50..300).random()}ms)")
+    val batchNumber = ++logCounter
+    Timber.tag("UserAction").d("Button tapped — batch #$batchNumber")
+    Log.i("Network", "GET /api/items?page=$batchNumber → 200 OK (${(50..300).random()}ms)")
     Log.w("Database", "Slow query on items table: ${(200..800).random()}ms")
-    Log.e("Auth", "Token refresh failed on attempt $n")
-    println("System.out batch #$n")
+    Log.e("Auth", "Token refresh failed on attempt $batchNumber")
+    println("System.out batch #$batchNumber")
 }

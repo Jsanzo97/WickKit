@@ -96,7 +96,7 @@ private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
             onSearch = { search = it },
             onShowAllChange = { showAll = it },
             onClear = { WickKitLogManager.clear() },
-            onShare = { shareLogEntries(context, filtered) },
+            onShare = { shareLogEntries(context = context, entries = filtered) },
         )
         LevelFilterRow(
             enabledLevels = selectedLevels.toPersistentSet(),
@@ -109,7 +109,7 @@ private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
         } else {
             LogsList(
                 entries = filtered,
-                onLongClick = { entry -> copyEntryToClipboard(context, entry) },
+                onLongClick = { entry -> copyEntryToClipboard(context = context, entry = entry) },
             )
         }
     }
@@ -416,9 +416,9 @@ private fun shareLogEntries(context: Context, entries: ImmutableList<LogEntry>) 
 }
 
 private fun copyEntryToClipboard(context: Context, entry: LogEntry) {
-    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val text = "${entry.time} ${entry.level.label}/${entry.tag}: ${entry.message}"
-    cm.setPrimaryClip(ClipData.newPlainText("log", text))
+    clipboardManager.setPrimaryClip(ClipData.newPlainText("log", text))
     Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
 }
 
@@ -432,13 +432,55 @@ private fun LogLevel.badgeColor(): Color = when (this) {
 }
 
 private fun sampleEntries(): ImmutableList<LogEntry> = persistentListOf(
-    LogEntry(0, LogLevel.DEBUG, "MainActivity", "onCreate called", "10:23:44.001"),
-    LogEntry(1, LogLevel.INFO, "WickKit", "SDK initialized successfully", "10:23:44.120"),
-    LogEntry(2, LogLevel.VERBOSE, "ViewModelProvider", "Creating ViewModel: MainViewModel", "10:23:44.350"),
-    LogEntry(3, LogLevel.WARN, "OkHttp", "No network cache configured", "10:23:44.512"),
-    LogEntry(4, LogLevel.ERROR, "Retrofit", "HTTP 404 Not Found: GET /api/users/42", "10:23:45.001"),
-    LogEntry(5, LogLevel.DEBUG, "Navigation", "Navigating to HomeFragment", "10:23:45.230"),
-    LogEntry(6, LogLevel.INFO, "Database", "Room database opened successfully", "10:23:45.450"),
+    LogEntry(
+        id = 0,
+        level = LogLevel.DEBUG,
+        tag = "MainActivity",
+        message = "onCreate called",
+        time = "10:23:44.001",
+    ),
+    LogEntry(
+        id = 1,
+        level = LogLevel.INFO,
+        tag = "WickKit",
+        message = "SDK initialized successfully",
+        time = "10:23:44.120",
+    ),
+    LogEntry(
+        id = 2,
+        level = LogLevel.VERBOSE,
+        tag = "ViewModelProvider",
+        message = "Creating ViewModel: MainViewModel",
+        time = "10:23:44.350",
+    ),
+    LogEntry(
+        id = 3,
+        level = LogLevel.WARN,
+        tag = "OkHttp",
+        message = "No network cache configured",
+        time = "10:23:44.512",
+    ),
+    LogEntry(
+        id = 4,
+        level = LogLevel.ERROR,
+        tag = "Retrofit",
+        message = "HTTP 404 Not Found: GET /api/users/42",
+        time = "10:23:45.001",
+    ),
+    LogEntry(
+        id = 5,
+        level = LogLevel.DEBUG,
+        tag = "Navigation",
+        message = "Navigating to HomeFragment",
+        time = "10:23:45.230",
+    ),
+    LogEntry(
+        id = 6,
+        level = LogLevel.INFO,
+        tag = "Database",
+        message = "Room database opened successfully",
+        time = "10:23:45.450",
+    ),
 )
 
 @PreviewLightDark

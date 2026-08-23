@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.spotless) apply false
+    alias(libs.plugins.vanniktech.publish) apply false
     jacoco
 }
 
@@ -30,6 +31,8 @@ tasks.register<Copy>("installGitHooks") {
 }
 
 allprojects {
+    group = "io.github.jsanzo97"
+    version = appVersionName
     tasks.matching { it.name == "preBuild" }.configureEach {
         dependsOn(":installGitHooks")
     }

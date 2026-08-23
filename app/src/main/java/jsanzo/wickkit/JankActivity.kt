@@ -114,9 +114,9 @@ private fun SpinningCanvas(tick: Int) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val radius = size.width / 2f - 8.dp.toPx()
         val baseAngle = tick % CANVAS_SPOKES * (Math.PI / 180.0)
-        repeat(CANVAS_SPOKES) { i ->
-            val angle = baseAngle + i * (Math.PI / (CANVAS_SPOKES / 2.0))
-            val alpha = (i.toFloat() / CANVAS_SPOKES).coerceIn(0f, 1f)
+        repeat(CANVAS_SPOKES) { index ->
+            val angle = baseAngle + index * (Math.PI / (CANVAS_SPOKES / 2.0))
+            val alpha = (index.toFloat() / CANVAS_SPOKES).coerceIn(0f, 1f)
             drawLine(
                 color = Color(0xFF6200EE).copy(alpha = alpha * 0.6f),
                 start = center,

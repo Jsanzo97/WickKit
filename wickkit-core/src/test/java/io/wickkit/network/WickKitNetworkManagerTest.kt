@@ -22,7 +22,11 @@ class WickKitNetworkManagerTest {
 
     @Test
     fun `add stores entry with correct fields`() {
-        val entry = entry(id = 0L, method = "POST", url = "https://api.example.com/v1/users")
+        val entry = entry(
+            id = 0L,
+            method = "POST",
+            url = "https://api.example.com/v1/users",
+        )
         WickKitNetworkManager.add(entry)
         assertEquals(entry, WickKitNetworkManager.entries.value.single())
     }
@@ -45,13 +49,15 @@ class WickKitNetworkManagerTest {
 
     @Test
     fun `entries are capped at 500`() {
-        repeat(501) { i -> WickKitNetworkManager.add(entry(id = i.toLong())) }
+        repeat(501) { index -> WickKitNetworkManager.add(entry(id = index.toLong())) }
         assertEquals(500, WickKitNetworkManager.entries.value.size)
     }
 
     @Test
     fun `oldest entry is dropped when cap is exceeded`() {
-        repeat(500) { i -> WickKitNetworkManager.add(entry(id = i.toLong(), url = "https://example.com/$i")) }
+        repeat(500) { index ->
+            WickKitNetworkManager.add(entry(id = index.toLong(), url = "https://example.com/$index"))
+        }
         WickKitNetworkManager.add(entry(id = 500L, url = "https://example.com/newest"))
         val entries = WickKitNetworkManager.entries.value
         assertEquals(500, entries.size)
@@ -73,7 +79,13 @@ class WickKitNetworkManagerTest {
 
     @Test
     fun `null statusCode is preserved for error entries`() {
-        WickKitNetworkManager.add(entry(id = 0L, statusCode = null, error = "Timeout"))
+        WickKitNetworkManager.add(
+            entry(
+                id = 0L,
+                statusCode = null,
+                error = "Timeout",
+            ),
+        )
         assertFalse(WickKitNetworkManager.entries.value.single().statusCode != null)
     }
 

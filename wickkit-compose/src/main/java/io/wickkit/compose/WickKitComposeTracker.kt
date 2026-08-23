@@ -48,7 +48,15 @@ object WickKitComposeTracker {
             val rate = if (elapsedMs > 0L) (total - last) * 1_000f / elapsedMs else 0f
             val peak = maxOf(peakRates[name] ?: 0f, rate)
             peakRates[name] = peak
-            severityFor(rate)?.let { ComposableEntry(name, total, rate, peak, it) }
+            severityFor(rate)?.let { severity ->
+                ComposableEntry(
+                    name = name,
+                    totalCount = total,
+                    ratePerSecond = rate,
+                    peakRatePerSecond = peak,
+                    severity = severity,
+                )
+            }
         }.sortedByDescending { it.ratePerSecond }.toPersistentList()
     }
 

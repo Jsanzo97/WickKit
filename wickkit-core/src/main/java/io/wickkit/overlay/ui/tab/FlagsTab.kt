@@ -134,14 +134,14 @@ private fun FlagsContent() {
             remoteConfigExpanded = remoteConfigExpanded,
             onToggleRemoteConfigSection = { remoteConfigExpanded = !remoteConfigExpanded },
             onSetValue = { key, value ->
-                scope.launch(Dispatchers.IO) { WickKitFlagsManager.setRcOverride(key, value) }
+                scope.launch(Dispatchers.IO) { WickKitFlagsManager.setRcOverride(key = key, value = value) }
             },
             onToggleOverride = { entry ->
                 scope.launch(Dispatchers.IO) {
                     if (entry.overrideValue.isNotEmpty()) {
                         WickKitFlagsManager.toggleRcOverride(entry.key)
                     } else {
-                        WickKitFlagsManager.setRcOverride(entry.key, entry.remoteValue)
+                        WickKitFlagsManager.setRcOverride(key = entry.key, value = entry.remoteValue)
                     }
                 }
             },
@@ -307,21 +307,31 @@ private fun LazyListScope.sharedPreferencesEntries(file: SharedPreferencesFileSt
     if (file.entries.isEmpty()) {
         item(key = "empty_${file.name}") { FlagsEmptyRow("No values") }
     } else {
-        items(count = file.entries.size, key = { "sp_${file.name}_${file.entries[it].key}" }) { i ->
-            val entry = file.entries[i]
+        items(count = file.entries.size, key = { "sp_${file.name}_${file.entries[it].key}" }) { index ->
+            val entry = file.entries[index]
             SharedPreferencesEntryRow(
                 entry = entry,
                 onSetValue = { value ->
                     scope.launch(Dispatchers.IO) {
-                        WickKitFlagsManager.setSpOverride(file.name, entry.key, entry.type, value)
+                        WickKitFlagsManager.setSpOverride(
+                            prefsName = file.name,
+                            key = entry.key,
+                            type = entry.type,
+                            value = value,
+                        )
                     }
                 },
                 onToggleOverride = {
                     scope.launch(Dispatchers.IO) {
                         if (entry.hasOverride) {
-                            WickKitFlagsManager.toggleSpOverride(file.name, entry.key)
+                            WickKitFlagsManager.toggleSpOverride(prefsName = file.name, key = entry.key)
                         } else {
-                            WickKitFlagsManager.setSpOverride(file.name, entry.key, entry.type, entry.currentValue)
+                            WickKitFlagsManager.setSpOverride(
+                                prefsName = file.name,
+                                key = entry.key,
+                                type = entry.type,
+                                value = entry.currentValue,
+                            )
                         }
                     }
                 },
@@ -360,8 +370,8 @@ private fun LazyListScope.remoteConfigSection(
         item { FlagsEmptyRow("No active Remote Config parameters") }
         return
     }
-    items(count = entries.size, key = { "rc_${entries[it].key}" }) { i ->
-        val entry = entries[i]
+    items(count = entries.size, key = { "rc_${entries[it].key}" }) { index ->
+        val entry = entries[index]
         RemoteConfigEntryRow(
             entry = entry,
             onSetValue = { value -> onSetValue(entry.key, value) },

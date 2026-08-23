@@ -9,8 +9,8 @@ import org.gradle.api.Project
 class WickKitPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.plugins.withId("com.android.application") {
-            val android = target.extensions.getByType(AndroidComponentsExtension::class.java)
-            android.onVariants { variant ->
+            val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
+            androidComponents.onVariants { variant ->
                 variant.instrumentation.transformClassesWith(
                     WickKitTransform::class.java,
                     InstrumentationScope.PROJECT,

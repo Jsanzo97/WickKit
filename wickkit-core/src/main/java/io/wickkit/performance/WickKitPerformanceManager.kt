@@ -24,8 +24,8 @@ private const val MAX_FRAME_SAMPLES = 600
 
 internal object WickKitPerformanceManager {
 
-    private val _snapshot = MutableStateFlow(PerformanceSnapshot())
-    val snapshot: StateFlow<PerformanceSnapshot> = _snapshot
+    val snapshot: StateFlow<PerformanceSnapshot>
+        field = MutableStateFlow(PerformanceSnapshot())
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var lastRecompositionCount = 0L
@@ -65,7 +65,7 @@ internal object WickKitPerformanceManager {
         synchronized(frameLock) { frameDurations.clear() }
         lastFrameTimeNs = 0L
         isTracking = true
-        _snapshot.update {
+        snapshot.update {
             it.copy(
                 activityName = activity.javaClass.simpleName,
                 fps = null,
@@ -87,13 +87,13 @@ internal object WickKitPerformanceManager {
     fun onActivityPaused() {
         // isTracking stays true — Choreographer keeps running so the overlay shows live frame updates.
         val frameData = synchronized(frameLock) {
-            frameDurations.groupBy { it.toInt() }.map { (ms, list) -> ms to list.size }
+            frameDurations.groupBy { it.toInt() }.map { (durationMs, frames) -> durationMs to frames.size }
         }
         updateFrameStats(parseFrameData(frameData))
     }
 
     internal fun updateFrameStats(stats: FrameStats?) {
-        _snapshot.update { current ->
+        snapshot.update { current ->
             if (stats == null) {
                 current.copy(
                     fps = null,
@@ -130,7 +130,7 @@ internal object WickKitPerformanceManager {
         lastRecompositionCount = stats.recompositions
         lastPollTimeMs = now
 
-        _snapshot.update { current ->
+        snapshot.update { current ->
             current.copy(
                 recompositionCount = stats.recompositions,
                 recompositionsPerSecond = perSecond,
@@ -150,7 +150,7 @@ internal object WickKitPerformanceManager {
         lastFrameTimeNs = 0L
         lastRecompositionCount = 0L
         lastPollTimeMs = 0L
-        _snapshot.value = PerformanceSnapshot()
+        snapshot.value = PerformanceSnapshot()
     }
 
     @OptIn(InternalComposeApi::class)
@@ -159,9 +159,9 @@ internal object WickKitPerformanceManager {
             Recomposer.runningRecomposers.value.sumOf { it.changeCount }
         }.getOrElse { 0L }
         val runtime = Runtime.getRuntime()
-        val jvmUsed = (runtime.totalMemory() - runtime.freeMemory()) / 1024L / 1024L
-        val jvmMax = runtime.maxMemory() / 1024L / 1024L
-        val nativeHeap = Debug.getNativeHeapAllocatedSize() / 1024L / 1024L
+        val jvmUsedMb = (runtime.totalMemory() - runtime.freeMemory()) / 1024L / 1024L
+        val jvmMaxMb = runtime.maxMemory() / 1024L / 1024L
+        val nativeHeapMb = Debug.getNativeHeapAllocatedSize() / 1024L / 1024L
         val composableEntries = runCatching {
             WickKitComposeTracker.computeEntries()
         }.getOrElse {
@@ -171,9 +171,9 @@ internal object WickKitPerformanceManager {
             RuntimeStats(
                 recompositions = recompositions,
                 threads = Thread.activeCount(),
-                jvmUsedMb = jvmUsed,
-                jvmMaxMb = jvmMax,
-                nativeHeapMb = nativeHeap,
+                jvmUsedMb = jvmUsedMb,
+                jvmMaxMb = jvmMaxMb,
+                nativeHeapMb = nativeHeapMb,
                 composableEntries = composableEntries,
                 composableTrackingActive = WickKitComposeTracker.isPluginActive(),
             ),
@@ -182,7 +182,7 @@ internal object WickKitPerformanceManager {
 
     private fun collectLiveFrameStats() {
         val frameData = synchronized(frameLock) {
-            frameDurations.groupBy { it.toInt() }.map { (ms, list) -> ms to list.size }
+            frameDurations.groupBy { it.toInt() }.map { (durationMs, frames) -> durationMs to frames.size }
         }
         if (frameData.isNotEmpty()) updateFrameStats(parseFrameData(frameData))
     }

@@ -16,7 +16,9 @@ internal object RemoteConfigBridge {
         val clazz = Class.forName(RC_CLASS)
         val instance = clazz.getMethod("getInstance").invoke(null)
         val values = clazz.getMethod("getAll").invoke(instance) as Map<String, Any>
-        values.mapValues { (_, v) -> v.javaClass.getMethod("asString").invoke(v) as String }
+        values.mapValues { (_, configValue) ->
+            configValue.javaClass.getMethod("asString").invoke(configValue) as String
+        }
     } catch (_: Exception) {
         emptyMap()
     }

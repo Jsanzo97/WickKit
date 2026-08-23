@@ -23,15 +23,17 @@ class DatabaseManagerTest {
 
     @Before
     fun setUp() {
-        val ctx = RuntimeEnvironment.getApplication()
-        dbFile = ctx.getDatabasePath("inspector_test.db").also { it.parentFile?.mkdirs() }
+        val context = RuntimeEnvironment.getApplication()
+        dbFile = context.getDatabasePath("inspector_test.db").also { it.parentFile?.mkdirs() }
 
-        SQLiteDatabase.openOrCreateDatabase(dbFile, null).use { db ->
-            db.execSQL("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, score REAL)")
-            db.execSQL("CREATE TABLE products (id INTEGER PRIMARY KEY, label TEXT)")
-            db.execSQL("INSERT INTO users (name, score) VALUES ('Alice', 9.5)")
-            db.execSQL("INSERT INTO users (name, score) VALUES ('Bob', 7.0)")
-            db.execSQL("INSERT INTO products (id, label) VALUES (1, 'Widget')")
+        SQLiteDatabase.openOrCreateDatabase(dbFile, null).use { sqliteDatabase ->
+            sqliteDatabase.execSQL(
+                "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, score REAL)",
+            )
+            sqliteDatabase.execSQL("CREATE TABLE products (id INTEGER PRIMARY KEY, label TEXT)")
+            sqliteDatabase.execSQL("INSERT INTO users (name, score) VALUES ('Alice', 9.5)")
+            sqliteDatabase.execSQL("INSERT INTO users (name, score) VALUES ('Bob', 7.0)")
+            sqliteDatabase.execSQL("INSERT INTO products (id, label) VALUES (1, 'Widget')")
         }
         inspector = DatabaseManager(dbFile.absolutePath)
     }
@@ -73,14 +75,14 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRowCount returns zero for empty table`() {
-        val ctx = RuntimeEnvironment.getApplication()
-        val file = ctx.getDatabasePath("empty_count.db").also { it.parentFile?.mkdirs() }
+        val context = RuntimeEnvironment.getApplication()
+        val file = context.getDatabasePath("empty_count.db").also { it.parentFile?.mkdirs() }
         try {
-            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
-                db.execSQL("CREATE TABLE empty_t (id INTEGER PRIMARY KEY)")
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
+                sqliteDatabase.execSQL("CREATE TABLE empty_t (id INTEGER PRIMARY KEY)")
             }
-            DatabaseManager(file.absolutePath).use { insp ->
-                assertEquals(0L, insp.getRowCount("empty_t"))
+            DatabaseManager(file.absolutePath).use { manager ->
+                assertEquals(0L, manager.getRowCount("empty_t"))
             }
         } finally {
             file.delete()
@@ -115,15 +117,15 @@ class DatabaseManagerTest {
 
     @Test
     fun `getColumns defaults empty affinity to TEXT`() {
-        val ctx = RuntimeEnvironment.getApplication()
-        val file = ctx.getDatabasePath("typeless.db").also { it.parentFile?.mkdirs() }
+        val context = RuntimeEnvironment.getApplication()
+        val file = context.getDatabasePath("typeless.db").also { it.parentFile?.mkdirs() }
         try {
-            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
-                db.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, value)")
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
+                sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, value)")
             }
-            DatabaseManager(file.absolutePath).use { insp ->
-                val col = insp.getColumns("t").first { it.name == "value" }
-                assertEquals("TEXT", col.type)
+            DatabaseManager(file.absolutePath).use { manager ->
+                val column = manager.getColumns("t").first { it.name == "value" }
+                assertEquals("TEXT", column.type)
             }
         } finally {
             file.delete()
@@ -148,15 +150,15 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRows maps absent value to null`() {
-        val ctx = RuntimeEnvironment.getApplication()
-        val file = ctx.getDatabasePath("null_test.db").also { it.parentFile?.mkdirs() }
+        val context = RuntimeEnvironment.getApplication()
+        val file = context.getDatabasePath("null_test.db").also { it.parentFile?.mkdirs() }
         try {
-            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
-                db.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, val TEXT)")
-                db.execSQL("INSERT INTO t (id) VALUES (1)")
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
+                sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, val TEXT)")
+                sqliteDatabase.execSQL("INSERT INTO t (id) VALUES (1)")
             }
-            DatabaseManager(file.absolutePath).use { insp ->
-                val row = insp.getRows("t").single()
+            DatabaseManager(file.absolutePath).use { manager ->
+                val row = manager.getRows("t").single()
                 assertNull(row[1])
             }
         } finally {
@@ -166,15 +168,15 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRows maps BLOB column to placeholder string`() {
-        val ctx = RuntimeEnvironment.getApplication()
-        val file = ctx.getDatabasePath("blob_test.db").also { it.parentFile?.mkdirs() }
+        val context = RuntimeEnvironment.getApplication()
+        val file = context.getDatabasePath("blob_test.db").also { it.parentFile?.mkdirs() }
         try {
-            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
-                db.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, data BLOB)")
-                db.execSQL("INSERT INTO t (id, data) VALUES (1, X'DEADBEEF')")
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
+                sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, data BLOB)")
+                sqliteDatabase.execSQL("INSERT INTO t (id, data) VALUES (1, X'DEADBEEF')")
             }
-            DatabaseManager(file.absolutePath).use { insp ->
-                val row = insp.getRows("t").single()
+            DatabaseManager(file.absolutePath).use { manager ->
+                val row = manager.getRows("t").single()
                 assertEquals("[BLOB]", row[1])
             }
         } finally {
@@ -184,13 +186,17 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRows respects limit`() {
-        assertEquals(1, inspector.getRows("users", limit = 1).size)
+        assertEquals(1, inspector.getRows(table = "users", limit = 1).size)
     }
 
     @Test
     fun `getRows respects offset`() {
         val all = inspector.getRows("users")
-        val secondPage = inspector.getRows("users", limit = 1, offset = 1)
+        val secondPage = inspector.getRows(
+            table = "users",
+            limit = 1,
+            offset = 1,
+        )
         assertEquals(all[1][0], secondPage.single()[0])
     }
 
@@ -203,7 +209,12 @@ class DatabaseManagerTest {
         val cols = inspector.getColumns("users")
         val aliceRow = inspector.getRows("users").first { it[1] == "Alice" }
 
-        inspector.updateRow("users", cols, aliceRow, mapOf("name" to "Alicia"))
+        inspector.updateRow(
+            table = "users",
+            columns = cols,
+            originalRow = aliceRow,
+            edits = mapOf("name" to "Alicia"),
+        )
 
         val updated = inspector.getRows("users")
         assertTrue(updated.any { it[1] == "Alicia" })
@@ -213,17 +224,22 @@ class DatabaseManagerTest {
 
     @Test(expected = IllegalStateException::class)
     fun `updateRow throws when table has no primary key`() {
-        val ctx = RuntimeEnvironment.getApplication()
-        val file = ctx.getDatabasePath("no_pk.db").also { it.parentFile?.mkdirs() }
+        val context = RuntimeEnvironment.getApplication()
+        val file = context.getDatabasePath("no_pk.db").also { it.parentFile?.mkdirs() }
         try {
-            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
-                db.execSQL("CREATE TABLE data (value TEXT)")
-                db.execSQL("INSERT INTO data VALUES ('test')")
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
+                sqliteDatabase.execSQL("CREATE TABLE data (value TEXT)")
+                sqliteDatabase.execSQL("INSERT INTO data VALUES ('test')")
             }
-            DatabaseManager(file.absolutePath).use { insp ->
-                val cols = insp.getColumns("data")
-                val rows = insp.getRows("data")
-                insp.updateRow("data", cols, rows[0], mapOf("value" to "changed"))
+            DatabaseManager(file.absolutePath).use { manager ->
+                val cols = manager.getColumns("data")
+                val rows = manager.getRows("data")
+                manager.updateRow(
+                    table = "data",
+                    columns = cols,
+                    originalRow = rows[0],
+                    edits = mapOf("value" to "changed"),
+                )
             }
         } finally {
             file.delete()
