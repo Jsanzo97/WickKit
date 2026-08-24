@@ -4,7 +4,9 @@ import android.os.Process
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 internal object WickKitLogcat {
 
@@ -27,20 +29,27 @@ internal object WickKitLogcat {
     fun start() {
         val pid = Process.myPid()
         scope.launch {
-            runCatching {
-                val process = Runtime.getRuntime().exec(
-                    arrayOf("logcat", "--pid=$pid", "-v", "threadtime"),
+            var backoffMs = 1_000L
+            while (true) {
+                runCatching { readProcess(pid) }
+                delay(backoffMs.milliseconds)
+                backoffMs = (backoffMs * 2).coerceAtMost(30_000L)
+            }
+        }
+    }
+
+    private fun readProcess(pid: Int) {
+        val process = Runtime.getRuntime().exec(
+            arrayOf("logcat", "--pid=$pid", "-v", "threadtime"),
+        )
+        process.inputStream.bufferedReader().lineSequence().forEach { line ->
+            parseLine(line)?.let { (level, tag, message, time) ->
+                WickKitLogManager.add(
+                    level = level,
+                    tag = tag,
+                    message = message,
+                    time = time,
                 )
-                process.inputStream.bufferedReader().lineSequence().forEach { line ->
-                    parseLine(line)?.let { (level, tag, message, time) ->
-                        WickKitLogManager.add(
-                            level = level,
-                            tag = tag,
-                            message = message,
-                            time = time,
-                        )
-                    }
-                }
             }
         }
     }
