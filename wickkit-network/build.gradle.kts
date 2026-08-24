@@ -13,9 +13,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":wickkit-core"))
+    compileOnly(project(":wickkit-core"))
     compileOnly(libs.okhttp)
     compileOnly(libs.ktor.client.core)
+    testImplementation(project(":wickkit-core"))
     testImplementation(libs.okhttp)
     testImplementation(libs.ktor.client.core)
     testImplementation(libs.ktor.client.mock)
