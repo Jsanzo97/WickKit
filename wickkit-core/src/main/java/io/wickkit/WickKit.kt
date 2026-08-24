@@ -71,7 +71,11 @@ object WickKit {
                 activity.supportFragmentManager.registerFragmentLifecycleCallbacks(fragmentWatcher, true)
             }
         }
-        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityStarted(activity: Activity) {
+            if (activity !is WickKitActivity && activity !is WickKitPermissionActivity) {
+                WickKitPerformanceManager.onActivityStarted()
+            }
+        }
         override fun onActivityResumed(activity: Activity) {
             when (activity) {
                 is WickKitActivity -> isVisible = true
@@ -94,6 +98,7 @@ object WickKit {
             if (currentActivity?.get() === activity) currentActivity = null
             if (activity !is WickKitActivity && activity !is WickKitPermissionActivity) {
                 WickKitComposeTracker.reset()
+                WickKitPerformanceManager.onActivityStopped()
             }
         }
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit

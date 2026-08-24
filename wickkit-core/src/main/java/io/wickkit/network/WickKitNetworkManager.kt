@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.update
 
 object WickKitNetworkManager {
 
-    private const val MAX_ENTRIES = 500
+    private const val MAX_ENTRIES = 100
 
     internal val entries: StateFlow<ImmutableList<NetworkEntry>>
         field = MutableStateFlow<PersistentList<NetworkEntry>>(persistentListOf())

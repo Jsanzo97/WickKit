@@ -10,7 +10,7 @@ class WickKitPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.plugins.withId("com.android.application") {
             val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
-            androidComponents.onVariants { variant ->
+            androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
                 variant.instrumentation.transformClassesWith(
                     WickKitTransform::class.java,
                     InstrumentationScope.PROJECT,
