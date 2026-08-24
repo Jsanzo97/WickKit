@@ -2,6 +2,7 @@ package io.wickkit.overlay.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -31,7 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,14 +77,12 @@ private const val CLOSE_MS = 220L
 @Composable
 internal fun WickKitScreen(onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
-    var visible by remember { mutableStateOf(false) }
+    val visibleState = remember { MutableTransitionState(false).also { it.targetState = true } }
     var selectedTab by remember { mutableStateOf(WickKitTab.Logs) }
-
-    LaunchedEffect(Unit) { visible = true }
 
     fun animateClose() {
         scope.launch {
-            visible = false
+            visibleState.targetState = false
             delay(CLOSE_MS.milliseconds)
             onClose()
         }
@@ -94,7 +92,7 @@ internal fun WickKitScreen(onClose: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
-            visible = visible,
+            visibleState = visibleState,
             enter = fadeIn(animationSpec = tween(OPEN_MS)),
             exit = fadeOut(animationSpec = tween(CLOSE_MS.toInt())),
         ) {
@@ -107,7 +105,7 @@ internal fun WickKitScreen(onClose: () -> Unit) {
         }
 
         AnimatedVisibility(
-            visible = visible,
+            visibleState = visibleState,
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium),

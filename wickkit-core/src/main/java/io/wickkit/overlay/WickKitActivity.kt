@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.view.WindowCompat
 import io.wickkit.overlay.ui.WickKitScreen
 import io.wickkit.overlay.ui.WickKitTheme
 
@@ -13,6 +14,7 @@ internal class WickKitActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         disableSystemTransitions()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             WickKitTheme {
                 WickKitScreen(onClose = ::finish)
