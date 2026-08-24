@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -56,6 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.wickkit.core.R
 import io.wickkit.database.ColumnInfo
 import io.wickkit.database.DatabaseEntry
 import io.wickkit.database.DatabaseStatus
@@ -102,7 +104,10 @@ internal fun DatabaseTab() {
                 editingCell = editingCell,
                 editValue = editValue,
                 onBack = viewModel::navigateBack,
-                onFocusClear = focusManager::clearFocus,
+                onFocusClear = {
+                    focusManager.clearFocus()
+                    viewModel.cancelEdit()
+                },
                 onEditValueChange = { editValue = it },
                 onCellClick = { rowIndex, colName, text ->
                     if (editingCell != null) viewModel.onEditingCommitted(editValue.text)
@@ -128,7 +133,7 @@ private fun DatabaseListScreen(
         when {
             databases == null -> LoadingState()
 
-            databases.isEmpty() -> EmptyState("No databases found")
+            databases.isEmpty() -> EmptyState(stringResource(R.string.wk_database_empty_databases))
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(databases.size) { index ->
@@ -167,8 +172,16 @@ private fun DatabaseRow(databaseEntry: DatabaseEntry, onSelect: (DatabaseEntry) 
         }
         when (databaseEntry.status) {
             DatabaseStatus.Ok -> Unit
-            DatabaseStatus.Encrypted -> StatusBadge("Encrypted", MaterialTheme.colorScheme.error)
-            DatabaseStatus.Unsupported -> StatusBadge("Unsupported", MaterialTheme.colorScheme.onSurfaceVariant)
+
+            DatabaseStatus.Encrypted -> StatusBadge(
+                stringResource(R.string.wk_database_status_encrypted),
+                MaterialTheme.colorScheme.error,
+            )
+
+            DatabaseStatus.Unsupported -> StatusBadge(
+                stringResource(R.string.wk_database_status_unsupported),
+                MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -188,7 +201,7 @@ private fun TableListScreen(
         when {
             tables == null -> LoadingState()
 
-            tables.isEmpty() -> EmptyState("No tables found")
+            tables.isEmpty() -> EmptyState(stringResource(R.string.wk_database_empty_tables))
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(tables.size) { index ->
@@ -256,7 +269,7 @@ private fun TableDataBody(
 
             uiState.error != null -> EmptyState("Error: ${uiState.error}")
 
-            uiState.rows.isEmpty() -> EmptyState("Table is empty")
+            uiState.rows.isEmpty() -> EmptyState(stringResource(R.string.wk_database_empty_table))
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 stickyHeader {
@@ -458,7 +471,7 @@ private fun DataCell(
 @Composable
 private fun ScreenTitle() {
     Text(
-        text = "Databases",
+        text = stringResource(R.string.wk_database_title),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
         color = MaterialTheme.colorScheme.onSurface,
@@ -476,7 +489,7 @@ private fun ScreenToolbar(title: String, onBack: () -> Unit) {
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.wk_cd_back),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -517,7 +530,7 @@ private fun EmptyState(message: String) {
 private fun ReadOnlyBanner() {
     Surface(color = MaterialTheme.colorScheme.tertiaryContainer) {
         Text(
-            text = "Read-only — table has no primary key",
+            text = stringResource(R.string.wk_database_readonly_banner),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp),

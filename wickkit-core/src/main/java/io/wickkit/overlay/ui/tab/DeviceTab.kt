@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.overlay.ui.WickKitTheme
 import java.util.Locale
 import java.util.TimeZone
@@ -86,11 +87,11 @@ private fun DeviceInfoRow(label: String, value: String) {
 
 private fun buildDeviceInfo(context: Context): List<DeviceInfoSection> = listOf(
     buildAppSection(context),
-    buildDeviceSection(),
+    buildDeviceSection(context),
     buildDisplaySection(context),
     buildMemorySection(context),
-    buildStorageSection(),
-    buildLocaleSection(),
+    buildStorageSection(context),
+    buildLocaleSection(context),
 )
 
 private fun buildAppSection(context: Context): DeviceInfoSection {
@@ -106,23 +107,30 @@ private fun buildAppSection(context: Context): DeviceInfoSection {
         "${it.versionName} ($code)"
     } ?: "N/A"
     return DeviceInfoSection(
-        title = "App",
+        title = context.getString(R.string.wk_device_section_app),
         items = listOf(
-            "Package" to context.packageName,
-            "Version" to version,
-            "Build type" to if (isDebug) "debug" else "release",
+            context.getString(R.string.wk_device_label_package) to context.packageName,
+            context.getString(R.string.wk_device_label_version) to version,
+            context.getString(R.string.wk_device_label_build_type) to if (isDebug) {
+                context.getString(R.string.wk_device_value_debug)
+            } else {
+                context.getString(R.string.wk_device_value_release)
+            },
         ),
     )
 }
 
-private fun buildDeviceSection(): DeviceInfoSection = DeviceInfoSection(
-    title = "Device",
+private fun buildDeviceSection(context: Context): DeviceInfoSection = DeviceInfoSection(
+    title = context.getString(R.string.wk_device_section_device),
     items = listOf(
-        "Manufacturer" to Build.MANUFACTURER.replaceFirstChar { it.uppercase() },
-        "Model" to Build.MODEL,
-        "Android" to "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-        "ABI" to (Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown"),
-        "CPU cores" to "${Runtime.getRuntime().availableProcessors()}",
+        context.getString(R.string.wk_device_label_manufacturer) to
+            Build.MANUFACTURER.replaceFirstChar { it.uppercase() },
+        context.getString(R.string.wk_device_label_model) to Build.MODEL,
+        context.getString(R.string.wk_device_label_android) to
+            "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+        context.getString(R.string.wk_device_label_abi) to
+            (Build.SUPPORTED_ABIS.firstOrNull() ?: context.getString(R.string.wk_device_value_unknown)),
+        context.getString(R.string.wk_device_label_cpu_cores) to "${Runtime.getRuntime().availableProcessors()}",
     ),
 )
 
@@ -140,15 +148,21 @@ private fun buildDisplaySection(context: Context): DeviceInfoSection {
     val fontScale = "×%.1f".format(
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 1f, displayMetrics) / displayMetrics.density,
     )
-    val orientation = if (displayMetrics.widthPixels < displayMetrics.heightPixels) "portrait" else "landscape"
+    val orientation = if (displayMetrics.widthPixels < displayMetrics.heightPixels) {
+        context.getString(R.string.wk_device_value_portrait)
+    } else {
+        context.getString(R.string.wk_device_value_landscape)
+    }
     return DeviceInfoSection(
-        title = "Display",
+        title = context.getString(R.string.wk_device_section_display),
         items = listOf(
-            "Resolution" to "${displayMetrics.widthPixels} × ${displayMetrics.heightPixels} px",
-            "Density" to "${displayMetrics.densityDpi} dpi (×${displayMetrics.density})",
-            "Refresh rate" to refreshRate,
-            "Font scale" to fontScale,
-            "Orientation" to orientation,
+            context.getString(R.string.wk_device_label_resolution) to
+                "${displayMetrics.widthPixels} × ${displayMetrics.heightPixels} px",
+            context.getString(R.string.wk_device_label_density) to
+                "${displayMetrics.densityDpi} dpi (×${displayMetrics.density})",
+            context.getString(R.string.wk_device_label_refresh_rate) to refreshRate,
+            context.getString(R.string.wk_device_label_font_scale) to fontScale,
+            context.getString(R.string.wk_device_label_orientation) to orientation,
         ),
     )
 }
@@ -159,31 +173,36 @@ private fun buildMemorySection(context: Context): DeviceInfoSection {
         ActivityManager.MemoryInfo().also { info -> activityManager.getMemoryInfo(info) }
     }.getOrNull()
     return DeviceInfoSection(
-        title = "Memory",
+        title = context.getString(R.string.wk_device_section_memory),
         items = listOf(
-            "Max heap" to "${Runtime.getRuntime().maxMemory() / 1024 / 1024} MB",
-            "Total RAM" to (memoryInfo?.let { "${it.totalMem / 1024 / 1024} MB" } ?: "N/A"),
-            "Available RAM" to (memoryInfo?.let { "${it.availMem / 1024 / 1024} MB" } ?: "N/A"),
+            context.getString(R.string.wk_device_label_max_heap) to
+                "${Runtime.getRuntime().maxMemory() / 1024 / 1024} MB",
+            context.getString(R.string.wk_device_label_total_ram) to
+                (memoryInfo?.let { "${it.totalMem / 1024 / 1024} MB" } ?: "N/A"),
+            context.getString(R.string.wk_device_label_available_ram) to
+                (memoryInfo?.let { "${it.availMem / 1024 / 1024} MB" } ?: "N/A"),
         ),
     )
 }
 
-private fun buildStorageSection(): DeviceInfoSection {
+private fun buildStorageSection(context: Context): DeviceInfoSection {
     val statFs = runCatching { StatFs(Environment.getDataDirectory().path) }.getOrNull()
     return DeviceInfoSection(
-        title = "Storage (internal)",
+        title = context.getString(R.string.wk_device_section_storage),
         items = listOf(
-            "Free" to (statFs?.let { "${it.availableBytes / 1024 / 1024} MB" } ?: "N/A"),
-            "Total" to (statFs?.let { "${it.totalBytes / 1024 / 1024} MB" } ?: "N/A"),
+            context.getString(R.string.wk_device_label_storage_free) to
+                (statFs?.let { "${it.availableBytes / 1024 / 1024} MB" } ?: "N/A"),
+            context.getString(R.string.wk_device_label_storage_total) to
+                (statFs?.let { "${it.totalBytes / 1024 / 1024} MB" } ?: "N/A"),
         ),
     )
 }
 
-private fun buildLocaleSection(): DeviceInfoSection = DeviceInfoSection(
-    title = "Locale",
+private fun buildLocaleSection(context: Context): DeviceInfoSection = DeviceInfoSection(
+    title = context.getString(R.string.wk_device_section_locale),
     items = listOf(
-        "Language" to Locale.getDefault().toLanguageTag(),
-        "Timezone" to TimeZone.getDefault().id,
+        context.getString(R.string.wk_device_label_language) to Locale.getDefault().toLanguageTag(),
+        context.getString(R.string.wk_device_label_timezone) to TimeZone.getDefault().id,
     ),
 )
 

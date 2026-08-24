@@ -31,10 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.leaks.LeakEntry
 import io.wickkit.leaks.WickKitLeakManager
 import io.wickkit.overlay.ui.WickKitTheme
@@ -100,7 +102,7 @@ private fun LeaksToolbar(leakCount: Int, onClear: () -> Unit) {
     ) {
         Text(
             text = if (leakCount == 0) {
-                "No leaks detected"
+                stringResource(R.string.wk_leaks_no_leaks)
             } else {
                 "$leakCount leak${if (leakCount == 1) "" else "s"} detected"
             },
@@ -117,7 +119,7 @@ private fun LeaksToolbar(leakCount: Int, onClear: () -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Clear",
+                text = stringResource(R.string.wk_clear),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -210,13 +212,13 @@ private fun LeaksEmptyState() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "No leaks detected",
+                text = stringResource(R.string.wk_leaks_no_leaks),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Activities and Fragments are monitored automatically",
+                text = stringResource(R.string.wk_leaks_empty_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
             )

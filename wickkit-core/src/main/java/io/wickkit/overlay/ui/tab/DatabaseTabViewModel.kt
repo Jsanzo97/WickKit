@@ -142,6 +142,10 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
         _editingCell.value = rowIndex to colName
     }
 
+    fun cancelEdit() {
+        _editingCell.value = null
+    }
+
     fun onEditingCommitted(newText: String) {
         val cell = _editingCell.value ?: return
         val s = _screen.value as? DbScreen.TableData ?: return
