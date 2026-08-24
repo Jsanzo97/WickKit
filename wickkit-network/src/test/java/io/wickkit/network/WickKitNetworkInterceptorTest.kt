@@ -377,6 +377,30 @@ class WickKitNetworkInterceptorTest {
 
     // endregion
 
+    // region security
+
+    @Test
+    fun `mock with small delay completes and returns response`() {
+        MockRuleManager.add(
+            MockRule(
+                id = 0,
+                urlPattern = "/delayed",
+                method = null,
+                statusCode = 200,
+                responseBody = "ok",
+                delayMs = 50L,
+            ),
+        )
+        val request = Request.Builder().url("https://api.example.com/delayed").build()
+        val chain = FakeChain(request = request) { error("chain must not be called") }
+
+        val result = interceptor.intercept(chain)
+
+        assertEquals(200, result.code)
+    }
+
+    // endregion
+
     // region IOException null message
 
     @Test(expected = IOException::class)

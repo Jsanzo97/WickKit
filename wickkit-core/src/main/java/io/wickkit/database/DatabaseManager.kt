@@ -3,7 +3,7 @@ package io.wickkit.database
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 
-class DatabaseManager(path: String) : AutoCloseable {
+internal class DatabaseManager(path: String) : AutoCloseable {
 
     private val database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
 
@@ -81,7 +81,7 @@ class DatabaseManager(path: String) : AutoCloseable {
 
     override fun close() = database.close()
 
-    private fun String.q() = "\"$this\""
+    private fun String.q() = "\"${replace("\"", "\"\"")}\""
     private fun Cursor.columnString(columnName: String) = getString(getColumnIndexOrThrow(columnName)) ?: ""
     private fun Cursor.columnInt(columnName: String) = getInt(getColumnIndexOrThrow(columnName))
 }

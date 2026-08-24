@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -18,12 +19,14 @@ import io.wickkit.overlay.WickKitNotification
 import io.wickkit.overlay.WickKitPermissionActivity
 import io.wickkit.performance.WickKitPerformanceManager
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 object WickKit {
 
     internal var isVisible = false
     private var currentActivity: WeakReference<Activity>? = null
     private var notificationSetUp = false
+    private val initialized = AtomicBoolean(false)
 
     private val fragmentWatcher = object : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentDestroyed(fragmentManager: FragmentManager, fragment: Fragment) {
@@ -32,7 +35,10 @@ object WickKit {
     }
 
     internal fun init(context: Context) {
+        if (!initialized.compareAndSet(false, true)) return
         val app = context.applicationContext as? Application ?: return
+        val isDebug = app.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        if (!isDebug) return
         WickKitLogcat.start()
         WickKitPerformanceManager.start()
         app.registerActivityLifecycleCallbacks(activityTracker())

@@ -62,8 +62,9 @@ class WickKitKtorInterceptor private constructor() {
                 val responseBody = if (saveBodyInstalled) {
                     runCatching {
                         val text = call.response.bodyAsText()
-                        if (text.length > MAX_BODY_BYTES) {
-                            "[body too large: ${text.length} chars]"
+                        val byteSize = text.toByteArray(Charsets.UTF_8).size
+                        if (byteSize > MAX_BODY_BYTES) {
+                            "[body too large: $byteSize bytes]"
                         } else {
                             text
                         }

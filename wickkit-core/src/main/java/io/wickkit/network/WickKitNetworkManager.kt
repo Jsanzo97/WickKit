@@ -21,6 +21,6 @@ object WickKitNetworkManager {
     }
 
     internal fun clear() {
-        entries.value = persistentListOf()
+        entries.update { persistentListOf() }
     }
 }
