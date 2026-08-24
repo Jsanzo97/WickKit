@@ -13,5 +13,5 @@ android {
 }
 
 dependencies {
-    implementation(project(":wickkit-core"))
+    compileOnly(project(":wickkit-core"))
 }
