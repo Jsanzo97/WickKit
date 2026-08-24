@@ -21,7 +21,7 @@ Streams Logcat output in real time. Entries are color-coded by level (Verbose / 
 
 **How it works:** `WickKitLogcat` opens a `ProcessBuilder` to `logcat -v time` and parses each line into a typed `LogEntry` held in a `StateFlow`, capped at a fixed ring-buffer size so memory stays bounded.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/logs.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/logs-filtered.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/logs.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/logs-filtered.png" width="275">
 
 ---
 
@@ -34,8 +34,8 @@ The **Mocks** screen lets you define URL pattern rules (substring match) with a 
 
 > **Requires `wickkit-network`**. Without it the tab is always empty.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-details.png" width="275">
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-mocking.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-mocked.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-mock-rules.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-details.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-mocking.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-mocked.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-mock-rules.png" width="275">
 
 ---
 
@@ -46,7 +46,7 @@ Navigate into a database to see its tables with row counts, then into a table to
 
 **How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` opened in read-write mode to read columns, rows, and persist edits.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/database.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/database-edited.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database-edited.png" width="275">
 
 ---
 
@@ -61,7 +61,7 @@ Shows two sections side by side.
 
 > **`wickkit-flags` required for Firebase Remote Config integration.** SharedPreferences always works with `wickkit-core` alone.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/shared-preferences.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/remote-config.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/shared-preferences.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/remote-config.png" width="275">
 
 ---
 
@@ -70,7 +70,7 @@ Tracks potential memory leaks in Activities and Fragments. When an Activity or F
 
 **How it works:** `ObjectWatcher` is called from `ActivityLifecycleCallbacks.onActivityDestroyed` and from a `FragmentManager.FragmentLifecycleCallbacks.onFragmentDestroyed`. It schedules a `Handler` post to check whether the weak reference has been collected after a configurable delay.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/memory-leaks.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/memory-leaks.png" width="275">
 
 ---
 
@@ -85,7 +85,7 @@ Displays live runtime metrics grouped in three sections.
 
 **How it works:** `WickKitPerformanceManager` posts a repeating runnable on the `Choreographer` to count frames. Memory is read from `ActivityManager.MemoryInfo` and `Debug.getNativeHeapAllocatedSize()`. Compose recomposition tracking is done at bytecode level by the `wickkit-gradle-plugin`, which uses ASM to instrument every `@Composable` function and report calls to `WickKitComposeTracker`.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/performance.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/performance-issues.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/performance.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/performance-issues.png" width="275">
 
 ---
 
@@ -101,7 +101,7 @@ Static information about the device and the running app, organised in sections:
 | **Storage** | Total internal storage, available internal storage |
 | **Locale** | System language, timezone |
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/device-info.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/device-info.png" width="275">
 
 ---
 
@@ -121,7 +121,7 @@ Each button on the main screen triggers a specific scenario:
 | **Simulate Memory Leak** | Starts a `LeakedActivity` that immediately finishes but stores a static reference to itself, triggering a leak report in the Leaks tab after a few seconds |
 | **Simulate Performance Issues** | Opens a `JankActivity` that recomposes two composables every 16 ms and provides a button to intentionally block the main thread for 300 ms, producing measurable slow frames |
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/notification.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/test-app-home.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/test-app-performance.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/notification.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/test-app-home.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/test-app-performance.png" width="275">
 
 ---
 
