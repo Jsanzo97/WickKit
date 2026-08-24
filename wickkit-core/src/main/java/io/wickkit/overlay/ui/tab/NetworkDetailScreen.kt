@@ -32,11 +32,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.network.NetworkEntry
 import io.wickkit.overlay.ui.WickKitTheme
 import kotlinx.collections.immutable.ImmutableMap
@@ -63,12 +65,12 @@ internal fun NetworkDetailScreen(
 
             if (entry.requestHeaders.isNotEmpty()) {
                 HeadersSection(
-                    title = "Request Headers",
+                    title = stringResource(R.string.wk_network_request_headers),
                     headers = entry.requestHeaders.toPersistentMap(),
                 )
             }
             if (!entry.requestBody.isNullOrBlank()) {
-                BodySection(title = "Request Body", body = entry.requestBody)
+                BodySection(title = stringResource(R.string.wk_network_request_body), body = entry.requestBody)
             }
 
             if (entry.error != null) {
@@ -76,12 +78,12 @@ internal fun NetworkDetailScreen(
             } else {
                 if (entry.responseHeaders.isNotEmpty()) {
                     HeadersSection(
-                        title = "Response Headers",
+                        title = stringResource(R.string.wk_network_response_headers),
                         headers = entry.responseHeaders.toPersistentMap(),
                     )
                 }
                 if (!entry.responseBody.isNullOrBlank()) {
-                    BodySection(title = "Response Body", body = entry.responseBody)
+                    BodySection(title = stringResource(R.string.wk_network_response_body), body = entry.responseBody)
                 }
             }
         }
@@ -95,7 +97,7 @@ internal fun NetworkDetailScreen(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Mock this request",
+                text = stringResource(R.string.wk_network_mock_this_request),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -115,7 +117,7 @@ private fun DetailToolbar(method: String, url: String, onBack: () -> Unit) {
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.wk_cd_back),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -241,7 +243,7 @@ private fun BodySection(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Copy",
+                    text = stringResource(R.string.wk_copy),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -271,7 +273,7 @@ private fun BodySection(
 @Composable
 private fun ErrorSection(error: String) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionHeader(title = "Error")
+        SectionHeader(title = stringResource(R.string.wk_network_error_section))
         Text(
             text = error,
             style = MaterialTheme.typography.bodySmall,
@@ -306,7 +308,7 @@ private fun prettyJson(body: String): String = try {
 private fun copyToClipboard(context: Context, text: String) {
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboardManager.setPrimaryClip(ClipData.newPlainText("body", text))
-    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.wk_copied_to_clipboard), Toast.LENGTH_SHORT).show()
 }
 
 @PreviewLightDark

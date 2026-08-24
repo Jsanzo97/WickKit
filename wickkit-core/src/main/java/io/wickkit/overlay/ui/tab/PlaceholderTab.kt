@@ -22,8 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.overlay.ui.WickKitTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -45,7 +47,7 @@ internal fun PlaceholderTab(
             color = MaterialTheme.colorScheme.primaryContainer,
         ) {
             Text(
-                text = "Coming soon",
+                text = stringResource(R.string.wk_placeholder_coming_soon),
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
@@ -71,7 +73,7 @@ internal fun PlaceholderTab(
         Spacer(Modifier.height(28.dp))
 
         Text(
-            text = "Planned features",
+            text = stringResource(R.string.wk_placeholder_planned_features),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

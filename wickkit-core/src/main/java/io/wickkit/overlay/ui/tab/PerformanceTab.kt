@@ -27,12 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import io.wickkit.compose.ComposableEntry
 import io.wickkit.compose.RecomposeSeverity
+import io.wickkit.core.R
 import io.wickkit.overlay.ui.WickKitTheme
 import io.wickkit.performance.PerformanceSnapshot
 import io.wickkit.performance.WickKitPerformanceManager
@@ -152,7 +154,7 @@ private fun ComposeSectionHeader(sortByPeak: Boolean, onToggleSort: () -> Unit) 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "COMPOSE",
+            text = stringResource(R.string.wk_perf_section_compose).uppercase(),
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
@@ -164,7 +166,11 @@ private fun ComposeSectionHeader(sortByPeak: Boolean, onToggleSort: () -> Unit) 
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             Text(
-                text = if (sortByPeak) "Peak ↓" else "Rate ↓",
+                text = if (sortByPeak) {
+                    stringResource(R.string.wk_perf_sort_peak)
+                } else {
+                    stringResource(R.string.wk_perf_sort_rate)
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -180,7 +186,7 @@ private fun ComposablesEmptyRow() {
             .padding(horizontal = 16.dp, vertical = 20.dp),
     ) {
         Text(
-            text = "No problematic composables detected",
+            text = stringResource(R.string.wk_perf_composables_empty),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -195,7 +201,7 @@ private fun ComposablesInactiveRow() {
             .padding(horizontal = 16.dp, vertical = 20.dp),
     ) {
         Text(
-            text = "Per-composable tracking inactive — apply the WickKit Gradle plugin to enable",
+            text = stringResource(R.string.wk_perf_composables_inactive),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

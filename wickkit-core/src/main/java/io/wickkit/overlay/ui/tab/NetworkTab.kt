@@ -44,10 +44,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.network.MockRule
 import io.wickkit.network.MockRuleManager
 import io.wickkit.network.NetworkEntry
@@ -226,7 +228,7 @@ private fun RequestsToolbar(
         ) {
             if (search.isEmpty()) {
                 Text(
-                    text = "Search by URL…",
+                    text = stringResource(R.string.wk_network_search_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                 )
@@ -242,7 +244,8 @@ private fun RequestsToolbar(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        val mocksLabel = if (activeRulesCount > 0) "Mocks ($activeRulesCount)" else "Mocks"
+        val mocksBase = stringResource(R.string.wk_network_mocks)
+        val mocksLabel = if (activeRulesCount > 0) "$mocksBase ($activeRulesCount)" else mocksBase
         Box(
             modifier = Modifier
                 .height(ToolbarHeight)
@@ -277,7 +280,7 @@ private fun RequestsToolbar(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Clear",
+                text = stringResource(R.string.wk_clear),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -476,14 +479,18 @@ private fun NetworkEmptyState(hasEntries: Boolean) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = if (hasEntries) "No requests match the filter" else "No requests captured yet",
+                text = if (hasEntries) {
+                    stringResource(R.string.wk_network_empty_filtered)
+                } else {
+                    stringResource(R.string.wk_network_empty_title)
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
             if (!hasEntries) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Add WickKitNetworkInterceptor to your OkHttpClient",
+                    text = stringResource(R.string.wk_network_empty_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                 )
@@ -535,12 +542,12 @@ private fun MocksToolbar(onBack: () -> Unit, onAddNew: () -> Unit) {
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.wk_cd_back),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         Text(
-            text = "Mock Rules",
+            text = stringResource(R.string.wk_network_mock_rules_title),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
@@ -555,7 +562,7 @@ private fun MocksToolbar(onBack: () -> Unit, onAddNew: () -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "+ Add Rule",
+                text = stringResource(R.string.wk_network_add_rule),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -605,7 +612,7 @@ private fun MockRuleRow(
         IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Delete rule",
+                contentDescription = stringResource(R.string.wk_cd_delete_rule),
                 tint = Color(0xFFEF5350),
             )
         }
@@ -617,13 +624,13 @@ private fun MocksEmptyState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "No mock rules yet",
+                text = stringResource(R.string.wk_network_mocks_empty_title),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Tap a request → \"Mock this request\" to create one",
+                text = stringResource(R.string.wk_network_mocks_empty_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
             )

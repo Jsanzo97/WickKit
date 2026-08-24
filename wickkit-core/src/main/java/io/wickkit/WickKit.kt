@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 object WickKit {
 
     internal var isVisible = false
+    private var overlayStarting = false
     private var currentActivity: WeakReference<Activity>? = null
     private var notificationSetUp = false
     private val initialized = AtomicBoolean(false)
@@ -46,6 +47,7 @@ object WickKit {
 
     fun open(context: Context) {
         if (!isVisible) {
+            overlayStarting = true
             context.startActivity(
                 Intent(context, WickKitActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -84,7 +86,11 @@ object WickKit {
         }
         override fun onActivityResumed(activity: Activity) {
             when (activity) {
-                is WickKitActivity -> isVisible = true
+                is WickKitActivity -> {
+                    isVisible = true
+                    overlayStarting = false
+                    WickKitPerformanceManager.onOverlayOpened()
+                }
 
                 is WickKitPermissionActivity -> Unit
 
@@ -102,7 +108,8 @@ object WickKit {
         }
         override fun onActivityStopped(activity: Activity) {
             if (currentActivity?.get() === activity) currentActivity = null
-            if (activity !is WickKitActivity && activity !is WickKitPermissionActivity) {
+            val isSystemActivity = activity is WickKitActivity || activity is WickKitPermissionActivity
+            if (!isSystemActivity && !isVisible && !overlayStarting) {
                 WickKitComposeTracker.reset()
                 WickKitPerformanceManager.onActivityStopped()
             }
@@ -110,8 +117,14 @@ object WickKit {
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
         override fun onActivityDestroyed(activity: Activity) {
             when (activity) {
-                is WickKitActivity -> isVisible = false
+                is WickKitActivity -> {
+                    isVisible = false
+                    overlayStarting = false
+                    WickKitPerformanceManager.onOverlayClosed()
+                }
+
                 is WickKitPermissionActivity -> Unit
+
                 else -> ObjectWatcher.watch(activity)
             }
         }

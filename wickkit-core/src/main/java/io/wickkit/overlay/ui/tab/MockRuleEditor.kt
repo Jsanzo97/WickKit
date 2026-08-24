@@ -40,10 +40,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.network.MockRule
 import io.wickkit.network.NetworkEntry
 import io.wickkit.overlay.ui.WickKitTheme
@@ -111,8 +113,8 @@ internal fun MockRuleEditor(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             EditorTextField(
-                label = "URL Pattern",
-                hint = "e.g. /api/v1/users",
+                label = stringResource(R.string.wk_mock_field_url_pattern),
+                hint = stringResource(R.string.wk_mock_field_url_hint),
                 value = urlPattern,
                 onValueChange = { urlPattern = it },
             )
@@ -124,7 +126,7 @@ internal fun MockRuleEditor(
             )
 
             EditorTextField(
-                label = "Status Code",
+                label = stringResource(R.string.wk_mock_field_status_code),
                 hint = "200",
                 value = statusCode,
                 onValueChange = { statusCode = it },
@@ -141,7 +143,7 @@ internal fun MockRuleEditor(
             )
 
             EditorTextField(
-                label = "Delay (ms)",
+                label = stringResource(R.string.wk_mock_field_delay),
                 hint = "0",
                 value = delayMs,
                 onValueChange = { delayMs = it },
@@ -168,12 +170,16 @@ private fun EditorToolbar(
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.wk_cd_back),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         Text(
-            text = if (isEditing) "Edit Mock Rule" else "New Mock Rule",
+            text = if (isEditing) {
+                stringResource(R.string.wk_mock_edit_title)
+            } else {
+                stringResource(R.string.wk_mock_new_title)
+            },
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
@@ -188,7 +194,7 @@ private fun EditorToolbar(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Save",
+                text = stringResource(R.string.wk_save),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onPrimary,
             )
@@ -203,7 +209,7 @@ private fun MethodSelectorRow(
     enabled: Boolean = true,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        FieldLabel(text = "Method")
+        FieldLabel(text = stringResource(R.string.wk_mock_field_method))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MethodSelectorChip(
                 label = "ALL",
@@ -310,10 +316,10 @@ private fun BodyTextField(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FieldLabel(text = "Response Body (JSON)")
+            FieldLabel(text = stringResource(R.string.wk_mock_field_response_body))
             if (hasError) {
                 Text(
-                    text = "Invalid format",
+                    text = stringResource(R.string.wk_mock_invalid_format),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFFEF5350),
                 )

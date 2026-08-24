@@ -35,6 +35,8 @@ internal object WickKitPerformanceManager {
     @Volatile private var isTracking = false
 
     @Volatile private var appInForeground = false
+
+    @Volatile private var overlayOpen = false
     private val frameDurations = ArrayDeque<Long>(MAX_FRAME_SAMPLES)
     private val frameLock = Any()
     private var lastFrameTimeNs = 0L
@@ -57,7 +59,7 @@ internal object WickKitPerformanceManager {
         scope.launch {
             while (true) {
                 delay(POLL_INTERVAL_MS.milliseconds)
-                if (appInForeground) {
+                if (appInForeground || overlayOpen) {
                     collectAndUpdateRuntimeStats()
                     if (isTracking) collectLiveFrameStats()
                 }
@@ -72,6 +74,14 @@ internal object WickKitPerformanceManager {
     fun onActivityStopped() {
         isTracking = false
         appInForeground = false
+    }
+
+    fun onOverlayOpened() {
+        overlayOpen = true
+    }
+
+    fun onOverlayClosed() {
+        overlayOpen = false
     }
 
     fun onActivityResumed(activity: Activity) {

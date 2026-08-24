@@ -47,10 +47,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.logs.LogEntry
 import io.wickkit.logs.LogLevel
 import io.wickkit.logs.LogNoise
@@ -142,7 +144,7 @@ private fun LogsToolbar(
         ) {
             if (search.isEmpty()) {
                 Text(
-                    text = "Search logs… or use tag:OkHttp",
+                    text = stringResource(R.string.wk_logs_search_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                 )
@@ -169,7 +171,7 @@ private fun LogsToolbar(
         ) {
             Icon(
                 imageVector = Icons.Filled.Share,
-                contentDescription = "Share logs",
+                contentDescription = stringResource(R.string.wk_cd_share_logs),
                 modifier = Modifier.fillMaxSize(),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
@@ -183,7 +185,7 @@ private fun LogsToolbar(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Clear",
+                text = stringResource(R.string.wk_clear),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -200,7 +202,10 @@ private fun AppAllToggle(showAll: Boolean, onShowAllChange: (Boolean) -> Unit) {
             .background(MaterialTheme.colorScheme.surface),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        listOf(false to "App", true to "All").forEach { (isAll, label) ->
+        listOf(
+            false to stringResource(R.string.wk_logs_filter_app),
+            true to stringResource(R.string.wk_logs_filter_all),
+        ).forEach { (isAll, label) ->
             val active = showAll == isAll
             Box(
                 modifier = Modifier
@@ -383,14 +388,18 @@ private fun LogsEmptyState(hasEntries: Boolean) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = if (hasEntries) "No logs match the filter" else "No logs yet",
+                text = if (hasEntries) {
+                    stringResource(R.string.wk_logs_empty_filtered)
+                } else {
+                    stringResource(R.string.wk_logs_empty_title)
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
             if (!hasEntries) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Logs will appear here as your app runs",
+                    text = stringResource(R.string.wk_logs_empty_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                 )
@@ -419,7 +428,7 @@ private fun copyEntryToClipboard(context: Context, entry: LogEntry) {
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val text = "${entry.time} ${entry.level.label}/${entry.tag}: ${entry.message}"
     clipboardManager.setPrimaryClip(ClipData.newPlainText("log", text))
-    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.wk_copied_to_clipboard), Toast.LENGTH_SHORT).show()
 }
 
 @Composable
