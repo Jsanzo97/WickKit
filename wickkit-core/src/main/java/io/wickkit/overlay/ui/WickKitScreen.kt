@@ -1,7 +1,9 @@
 package io.wickkit.overlay.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -31,7 +33,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,10 +45,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.overlay.ui.tab.DatabaseTab
 import io.wickkit.overlay.ui.tab.DeviceTab
 import io.wickkit.overlay.ui.tab.FlagsTab
@@ -59,14 +62,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-private enum class WickKitTab(val label: String) {
-    Logs("Logs"),
-    Network("Network"),
-    Database("Database"),
-    Flags("Flags"),
-    Leaks("Leaks"),
-    Performance("Performance"),
-    Device("Device"),
+private enum class WickKitTab(@StringRes val labelRes: Int) {
+    Logs(R.string.wk_tab_logs),
+    Network(R.string.wk_tab_network),
+    Database(R.string.wk_tab_database),
+    Flags(R.string.wk_tab_flags),
+    Leaks(R.string.wk_tab_leaks),
+    Performance(R.string.wk_tab_performance),
+    Device(R.string.wk_tab_device),
 }
 
 private const val SCRIM_ALPHA = 0.65f
@@ -77,14 +80,12 @@ private const val CLOSE_MS = 220L
 @Composable
 internal fun WickKitScreen(onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
-    var visible by remember { mutableStateOf(false) }
+    val visibleState = remember { MutableTransitionState(false).also { it.targetState = true } }
     var selectedTab by remember { mutableStateOf(WickKitTab.Logs) }
-
-    LaunchedEffect(Unit) { visible = true }
 
     fun animateClose() {
         scope.launch {
-            visible = false
+            visibleState.targetState = false
             delay(CLOSE_MS.milliseconds)
             onClose()
         }
@@ -94,7 +95,7 @@ internal fun WickKitScreen(onClose: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
-            visible = visible,
+            visibleState = visibleState,
             enter = fadeIn(animationSpec = tween(OPEN_MS)),
             exit = fadeOut(animationSpec = tween(CLOSE_MS.toInt())),
         ) {
@@ -107,7 +108,7 @@ internal fun WickKitScreen(onClose: () -> Unit) {
         }
 
         AnimatedVisibility(
-            visible = visible,
+            visibleState = visibleState,
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium),
@@ -191,7 +192,7 @@ private fun PanelHeader(onClose: () -> Unit) {
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "Debug Panel",
+                text = stringResource(R.string.wk_debug_panel_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -200,7 +201,7 @@ private fun PanelHeader(onClose: () -> Unit) {
         IconButton(onClick = onClose) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.wk_cd_close),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -234,7 +235,7 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = tab.label,
+                            text = stringResource(tab.labelRes),
                             modifier = Modifier.padding(horizontal = 4.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = if (isSelected) selectedColor else unselectedColor,

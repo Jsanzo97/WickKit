@@ -1,5 +1,6 @@
 package io.wickkit.overlay.ui.tab
 
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import io.wickkit.core.R
 import io.wickkit.leaks.LeakEntry
 import io.wickkit.overlay.ui.WickKitTheme
 
@@ -38,6 +42,7 @@ internal fun LeakDetailScreen(entry: LeakEntry, onBack: () -> Unit) {
         else -> "Object"
     }
 
+    val context = LocalContext.current
     Column(modifier = Modifier.fillMaxSize()) {
         LeakDetailHeader(
             simpleClass = simpleClass,
@@ -46,22 +51,37 @@ internal fun LeakDetailScreen(entry: LeakEntry, onBack: () -> Unit) {
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item { LeakSectionHeader("Object") }
-            item { LeakInfoRow(label = "Class", value = simpleClass) }
+            item { LeakSectionHeader(stringResource(R.string.wk_leak_section_object)) }
+            item { LeakInfoRow(label = stringResource(R.string.wk_leak_label_class), value = simpleClass) }
             if (packagePath.isNotEmpty()) {
-                item { LeakInfoRow(label = "Package", value = packagePath) }
+                item { LeakInfoRow(label = stringResource(R.string.wk_leak_label_package), value = packagePath) }
             }
-            item { LeakInfoRow(label = "Type", value = objectType) }
+            item { LeakInfoRow(label = stringResource(R.string.wk_leak_label_type), value = objectType) }
 
-            item { LeakSectionHeader("Detection") }
-            item { LeakInfoRow(label = "Instances leaked", value = "${entry.instanceCount}") }
-            item { LeakInfoRow(label = "First detected", value = entry.firstDetectedAt) }
+            item { LeakSectionHeader(stringResource(R.string.wk_leak_section_detection)) }
+            item {
+                LeakInfoRow(
+                    label = stringResource(R.string.wk_leak_label_instances),
+                    value = "${entry.instanceCount}",
+                )
+            }
+            item {
+                LeakInfoRow(
+                    label = stringResource(R.string.wk_leak_label_first_detected),
+                    value = entry.firstDetectedAt,
+                )
+            }
             if (entry.instanceCount > 1) {
-                item { LeakInfoRow(label = "Latest detected", value = entry.detectedAt) }
+                item {
+                    LeakInfoRow(
+                        label = stringResource(R.string.wk_leak_label_latest_detected),
+                        value = entry.detectedAt,
+                    )
+                }
             }
 
-            item { LeakSectionHeader("Common causes") }
-            items(leakHints(objectType)) { hint ->
+            item { LeakSectionHeader(stringResource(R.string.wk_leak_section_causes)) }
+            items(leakHints(context, objectType)) { hint ->
                 LeakHintRow(hint = hint)
             }
         }
@@ -83,7 +103,7 @@ private fun LeakDetailHeader(
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.wk_cd_back),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -164,25 +184,25 @@ private fun LeakHintRow(hint: String) {
     }
 }
 
-private fun leakHints(objectType: String): List<String> = when (objectType) {
+private fun leakHints(context: Context, objectType: String): List<String> = when (objectType) {
     "Activity" -> listOf(
-        "Static field or singleton holding a reference to this Activity",
-        "Anonymous Runnable or listener posted to a background Handler",
-        "ViewModel using Activity context instead of Application context",
-        "Non-static inner class capturing a reference to the outer Activity",
+        context.getString(R.string.wk_leak_hint_activity_1),
+        context.getString(R.string.wk_leak_hint_activity_2),
+        context.getString(R.string.wk_leak_hint_activity_3),
+        context.getString(R.string.wk_leak_hint_activity_4),
     )
 
     "Fragment" -> listOf(
-        "View binding reference not cleared in onDestroyView()",
-        "Listener or callback registered in onCreateView() but never unregistered",
-        "ViewModel holding a reference to the Fragment or its View",
-        "Non-static inner class capturing a reference to the outer Fragment",
+        context.getString(R.string.wk_leak_hint_fragment_1),
+        context.getString(R.string.wk_leak_hint_fragment_2),
+        context.getString(R.string.wk_leak_hint_fragment_3),
+        context.getString(R.string.wk_leak_hint_fragment_4),
     )
 
     else -> listOf(
-        "Static field holding a strong reference to this object",
-        "Object registered as a listener without being unregistered",
-        "Long-running coroutine or thread capturing this object in its closure",
+        context.getString(R.string.wk_leak_hint_object_1),
+        context.getString(R.string.wk_leak_hint_object_2),
+        context.getString(R.string.wk_leak_hint_object_3),
     )
 }
 

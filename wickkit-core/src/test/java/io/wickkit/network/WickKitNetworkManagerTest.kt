@@ -48,19 +48,19 @@ class WickKitNetworkManagerTest {
     }
 
     @Test
-    fun `entries are capped at 500`() {
-        repeat(501) { index -> WickKitNetworkManager.add(entry(id = index.toLong())) }
-        assertEquals(500, WickKitNetworkManager.entries.value.size)
+    fun `entries are capped at 100`() {
+        repeat(101) { index -> WickKitNetworkManager.add(entry(id = index.toLong())) }
+        assertEquals(100, WickKitNetworkManager.entries.value.size)
     }
 
     @Test
     fun `oldest entry is dropped when cap is exceeded`() {
-        repeat(500) { index ->
+        repeat(100) { index ->
             WickKitNetworkManager.add(entry(id = index.toLong(), url = "https://example.com/$index"))
         }
-        WickKitNetworkManager.add(entry(id = 500L, url = "https://example.com/newest"))
+        WickKitNetworkManager.add(entry(id = 100L, url = "https://example.com/newest"))
         val entries = WickKitNetworkManager.entries.value
-        assertEquals(500, entries.size)
+        assertEquals(100, entries.size)
         assertEquals("https://example.com/1", entries.first().url)
         assertEquals("https://example.com/newest", entries.last().url)
     }

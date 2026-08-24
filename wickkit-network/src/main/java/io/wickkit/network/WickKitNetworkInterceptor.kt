@@ -87,7 +87,7 @@ class WickKitNetworkInterceptor : Interceptor {
         requestBody: String?,
     ): Response {
         val requestHeaders = request.headers.toFlatMap()
-        if (rule.delayMs > 0) Thread.sleep(rule.delayMs)
+        if (rule.delayMs > 0) Thread.sleep(rule.delayMs.coerceAtMost(MAX_DELAY_MS))
         val contentType = "application/json; charset=utf-8".toMediaType()
         val mockBody = (rule.responseBody ?: "").toResponseBody(contentType)
         val response = Response.Builder()
@@ -137,6 +137,7 @@ class WickKitNetworkInterceptor : Interceptor {
 
     private companion object {
         private const val MAX_BODY_BYTES = 50 * 1024L
+        private const val MAX_DELAY_MS = 30_000L
         private val STATUS_MESSAGES = mapOf(
             200 to "OK", 201 to "Created", 204 to "No Content",
             301 to "Moved Permanently", 302 to "Found", 304 to "Not Modified",

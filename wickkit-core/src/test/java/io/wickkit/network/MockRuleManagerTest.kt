@@ -23,6 +23,31 @@ class MockRuleManagerTest {
         assertTrue(MockRuleManager.rules.value.isEmpty())
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun `add throws when urlPattern is blank`() {
+        MockRuleManager.add(rule(urlPattern = ""))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `add throws when urlPattern is whitespace only`() {
+        MockRuleManager.add(rule(urlPattern = "   "))
+    }
+
+    @Test
+    fun `add ignores rule when MAX_RULES cap is reached`() {
+        repeat(50) { MockRuleManager.add(rule(urlPattern = "/pattern-$it")) }
+        MockRuleManager.add(rule(urlPattern = "/overflow"))
+        assertEquals(50, MockRuleManager.rules.value.size)
+        assertTrue(MockRuleManager.rules.value.none { it.urlPattern == "/overflow" })
+    }
+
+    @Test
+    fun `findMatch does not match blank urlPattern even if stored directly via toggle`() {
+        val blankRule = MockRule(id = 0L, urlPattern = "", method = null, statusCode = 200, responseBody = null)
+        runCatching { MockRuleManager.add(blankRule) }
+        assertNull(MockRuleManager.findMatch(url = "https://api.example.com/anything", method = "GET"))
+    }
+
     @Test
     fun `add stores rule with correct fields`() {
         MockRuleManager.add(rule(urlPattern = "/api/users", statusCode = 404))

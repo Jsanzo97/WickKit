@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import java.io.File
 
-object DatabaseDiscovery {
+internal object DatabaseDiscovery {
 
     fun findDatabases(context: Context): List<DatabaseEntry> = context.getDatabasePath("_").parentFile
         ?.listFiles()
@@ -25,8 +25,13 @@ object DatabaseDiscovery {
             ).close()
             DatabaseStatus.Ok
         }.getOrElse { throwable ->
-            when (throwable) {
-                is SQLiteException -> DatabaseStatus.Encrypted
+            when {
+                throwable is SQLiteException &&
+                    throwable.message?.contains("file is not a database", ignoreCase = true) == true ->
+                    DatabaseStatus.Encrypted
+
+                throwable is SQLiteException -> DatabaseStatus.Unsupported
+
                 else -> DatabaseStatus.Unsupported
             }
         }

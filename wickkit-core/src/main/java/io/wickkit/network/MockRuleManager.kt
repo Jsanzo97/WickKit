@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicLong
 
 object MockRuleManager {
 
+    private const val MAX_RULES = 50
+
     private val idCounter = AtomicLong(0)
 
     internal val rules: StateFlow<ImmutableList<MockRule>>
@@ -18,12 +20,20 @@ object MockRuleManager {
 
     fun findMatch(url: String, method: String): MockRule? = rules.value.firstOrNull { rule ->
         rule.isEnabled &&
+            rule.urlPattern.isNotBlank() &&
             (rule.method == null || rule.method.equals(method, ignoreCase = true)) &&
             url.contains(rule.urlPattern, ignoreCase = true)
     }
 
     fun add(rule: MockRule) {
-        rules.update { it.adding(rule.copy(id = idCounter.getAndIncrement())) }
+        require(rule.urlPattern.isNotBlank()) { "urlPattern must not be blank" }
+        rules.update { current ->
+            if (current.size >= MAX_RULES) {
+                current
+            } else {
+                current.adding(rule.copy(id = idCounter.getAndIncrement()))
+            }
+        }
     }
 
     fun remove(id: Long) {
@@ -31,17 +41,17 @@ object MockRuleManager {
     }
 
     fun clear() {
-        rules.value = persistentListOf()
+        rules.update { persistentListOf() }
     }
 
-    internal fun toggle(id: Long) {
+    fun toggle(id: Long) {
         rules.update { current ->
             current.map { if (it.id == id) it.copy(isEnabled = !it.isEnabled) else it }
                 .toPersistentList()
         }
     }
 
-    internal fun update(rule: MockRule) {
+    fun update(rule: MockRule) {
         rules.update { current ->
             current.map { if (it.id == rule.id) rule else it }.toPersistentList()
         }

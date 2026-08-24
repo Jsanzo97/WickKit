@@ -47,6 +47,7 @@ private val classExcludes = listOf(
 )
 
 tasks.register<JacocoReport>("jacocoTestReport") {
+    description = "Create jacoco test report"
     dependsOn("testDebugUnitTest")
 
     reports {

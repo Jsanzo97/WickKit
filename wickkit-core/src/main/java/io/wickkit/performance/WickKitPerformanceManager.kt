@@ -33,6 +33,10 @@ internal object WickKitPerformanceManager {
 
     // Choreographer tracks vsync intervals on the main thread; frameDurations is guarded by frameLock.
     @Volatile private var isTracking = false
+
+    @Volatile private var appInForeground = false
+
+    @Volatile private var overlayOpen = false
     private val frameDurations = ArrayDeque<Long>(MAX_FRAME_SAMPLES)
     private val frameLock = Any()
     private var lastFrameTimeNs = 0L
@@ -55,10 +59,29 @@ internal object WickKitPerformanceManager {
         scope.launch {
             while (true) {
                 delay(POLL_INTERVAL_MS.milliseconds)
-                collectAndUpdateRuntimeStats()
-                if (isTracking) collectLiveFrameStats()
+                if (appInForeground || overlayOpen) {
+                    collectAndUpdateRuntimeStats()
+                    if (isTracking) collectLiveFrameStats()
+                }
             }
         }
+    }
+
+    fun onActivityStarted() {
+        appInForeground = true
+    }
+
+    fun onActivityStopped() {
+        isTracking = false
+        appInForeground = false
+    }
+
+    fun onOverlayOpened() {
+        overlayOpen = true
+    }
+
+    fun onOverlayClosed() {
+        overlayOpen = false
     }
 
     fun onActivityResumed(activity: Activity) {
@@ -146,6 +169,7 @@ internal object WickKitPerformanceManager {
 
     fun reset() {
         isTracking = false
+        appInForeground = false
         synchronized(frameLock) { frameDurations.clear() }
         lastFrameTimeNs = 0L
         lastRecompositionCount = 0L

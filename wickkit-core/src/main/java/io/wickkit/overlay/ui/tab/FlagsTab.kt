@@ -34,7 +34,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +43,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -54,26 +53,21 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.wickkit.core.R
 import io.wickkit.flags.FlagType
 import io.wickkit.flags.RemoteConfigEntry
 import io.wickkit.flags.SharedPreferencesEntry
 import io.wickkit.flags.SharedPreferencesFileState
 import io.wickkit.flags.WickKitFlagsManager
 import io.wickkit.overlay.ui.WickKitTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
 @Composable
 internal fun FlagsTab() {
-    val context = LocalContext.current
+    val viewModel: FlagsTabViewModel = viewModel()
     val focusManager = LocalFocusManager.current
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) { WickKitFlagsManager.init(context) }
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,15 +75,24 @@ internal fun FlagsTab() {
     ) {
         FlagsScreenTitle()
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        FlagsContent()
+        FlagsContent(
+            onSetSpOverride = viewModel::setSpOverride,
+            onToggleSpOverride = viewModel::toggleSpOverride,
+            onSetRcOverride = viewModel::setRcOverride,
+            onToggleRcOverride = viewModel::toggleRcOverride,
+        )
     }
 }
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
 @Composable
-private fun FlagsContent() {
-    val scope = rememberCoroutineScope()
+private fun FlagsContent(
+    onSetSpOverride: (prefsName: String, key: String, type: FlagType, value: String) -> Unit,
+    onToggleSpOverride: (prefsName: String, entry: SharedPreferencesEntry) -> Unit,
+    onSetRcOverride: (key: String, value: String) -> Unit,
+    onToggleRcOverride: (RemoteConfigEntry) -> Unit,
+) {
     val sharedPreferencesFiles by WickKitFlagsManager.sharedPreferencesFiles.collectAsState()
     val remoteConfigEntries by WickKitFlagsManager.remoteConfigEntries.collectAsState()
     var sharedPreferencesExpanded by remember { mutableStateOf(false) }
@@ -100,14 +103,14 @@ private fun FlagsContent() {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             FlagsSectionHeader(
-                title = "SharedPreferences",
+                title = stringResource(R.string.wk_flags_section_sp),
                 overrideCount = sharedPreferencesOverrideCount,
                 isExpanded = sharedPreferencesExpanded,
                 onToggle = { sharedPreferencesExpanded = !sharedPreferencesExpanded },
             )
         }
         if (sharedPreferencesExpanded) {
-            if (sharedPreferencesFiles.isEmpty()) item { FlagsEmptyRow("No SharedPreferences found") }
+            if (sharedPreferencesFiles.isEmpty()) item { FlagsEmptyRow(stringResource(R.string.wk_flags_empty_sp)) }
             sharedPreferencesFiles.forEach { file ->
                 val isFileExpanded = file.name in expandedFiles
                 item(key = "file_${file.name}") {
@@ -117,15 +120,17 @@ private fun FlagsContent() {
                         overriddenCount = file.entries.count { it.isOverrideEnabled },
                         isExpanded = isFileExpanded,
                         onToggle = {
-                            expandedFiles = if (isFileExpanded) {
-                                expandedFiles - file.name
-                            } else {
-                                expandedFiles + file.name
-                            }
+                            expandedFiles = if (isFileExpanded) expandedFiles - file.name else expandedFiles + file.name
                         },
                     )
                 }
-                if (isFileExpanded) sharedPreferencesEntries(file, scope)
+                if (isFileExpanded) {
+                    sharedPreferencesEntries(
+                        file = file,
+                        onSetValue = { key, type, value -> onSetSpOverride(file.name, key, type, value) },
+                        onToggleOverride = { entry -> onToggleSpOverride(file.name, entry) },
+                    )
+                }
             }
         }
         item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -133,18 +138,8 @@ private fun FlagsContent() {
             entries = remoteConfigEntries,
             remoteConfigExpanded = remoteConfigExpanded,
             onToggleRemoteConfigSection = { remoteConfigExpanded = !remoteConfigExpanded },
-            onSetValue = { key, value ->
-                scope.launch(Dispatchers.IO) { WickKitFlagsManager.setRcOverride(key = key, value = value) }
-            },
-            onToggleOverride = { entry ->
-                scope.launch(Dispatchers.IO) {
-                    if (entry.overrideValue.isNotEmpty()) {
-                        WickKitFlagsManager.toggleRcOverride(entry.key)
-                    } else {
-                        WickKitFlagsManager.setRcOverride(key = entry.key, value = entry.remoteValue)
-                    }
-                }
-            },
+            onSetValue = onSetRcOverride,
+            onToggleOverride = onToggleRcOverride,
         )
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
@@ -303,38 +298,20 @@ private fun SharedPreferencesEntryValueRow(entry: SharedPreferencesEntry) {
 
 // ─── SP items section ─────────────────────────────────────────────────────────
 
-private fun LazyListScope.sharedPreferencesEntries(file: SharedPreferencesFileState, scope: CoroutineScope) {
+private fun LazyListScope.sharedPreferencesEntries(
+    file: SharedPreferencesFileState,
+    onSetValue: (key: String, type: FlagType, value: String) -> Unit,
+    onToggleOverride: (entry: SharedPreferencesEntry) -> Unit,
+) {
     if (file.entries.isEmpty()) {
-        item(key = "empty_${file.name}") { FlagsEmptyRow("No values") }
+        item(key = "empty_${file.name}") { FlagsEmptyRow(stringResource(R.string.wk_flags_empty_sp_file)) }
     } else {
         items(count = file.entries.size, key = { "sp_${file.name}_${file.entries[it].key}" }) { index ->
             val entry = file.entries[index]
             SharedPreferencesEntryRow(
                 entry = entry,
-                onSetValue = { value ->
-                    scope.launch(Dispatchers.IO) {
-                        WickKitFlagsManager.setSpOverride(
-                            prefsName = file.name,
-                            key = entry.key,
-                            type = entry.type,
-                            value = value,
-                        )
-                    }
-                },
-                onToggleOverride = {
-                    scope.launch(Dispatchers.IO) {
-                        if (entry.hasOverride) {
-                            WickKitFlagsManager.toggleSpOverride(prefsName = file.name, key = entry.key)
-                        } else {
-                            WickKitFlagsManager.setSpOverride(
-                                prefsName = file.name,
-                                key = entry.key,
-                                type = entry.type,
-                                value = entry.currentValue,
-                            )
-                        }
-                    }
-                },
+                onSetValue = { value -> onSetValue(entry.key, entry.type, value) },
+                onToggleOverride = { onToggleOverride(entry) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
         }
@@ -354,7 +331,7 @@ private fun LazyListScope.remoteConfigSection(
     val remoteConfigOverrideCount = if (isAvailable) entries.count { it.isOverrideEnabled } else 0
     item {
         FlagsSectionHeader(
-            title = "Firebase Remote Config",
+            title = stringResource(R.string.wk_flags_section_rc),
             overrideCount = remoteConfigOverrideCount,
             available = isAvailable,
             isExpanded = remoteConfigExpanded,
@@ -363,11 +340,11 @@ private fun LazyListScope.remoteConfigSection(
     }
     if (!remoteConfigExpanded) return
     if (!isAvailable) {
-        item { FlagsEmptyRow("Firebase Remote Config not found in this app") }
+        item { FlagsEmptyRow(stringResource(R.string.wk_flags_rc_unavailable)) }
         return
     }
     if (entries.isEmpty()) {
-        item { FlagsEmptyRow("No active Remote Config parameters") }
+        item { FlagsEmptyRow(stringResource(R.string.wk_flags_rc_empty)) }
         return
     }
     items(count = entries.size, key = { "rc_${entries[it].key}" }) { index ->
@@ -570,7 +547,7 @@ private fun FlagsBoolEditor(current: String, onSelect: (String) -> Unit) {
 @Composable
 private fun FlagsScreenTitle() {
     Text(
-        text = "Flags",
+        text = stringResource(R.string.wk_flags_title),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
         color = MaterialTheme.colorScheme.onSurface,
@@ -623,7 +600,10 @@ private fun FlagsSectionHeader(
             color = titleColor,
         )
         if (!available) {
-            FlagsBadge(text = "Not available", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            FlagsBadge(
+                text = stringResource(R.string.wk_flags_not_available),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         } else if (overrideCount > 0) {
             FlagsBadge(text = "$overrideCount active", color = MaterialTheme.colorScheme.primary)
         }

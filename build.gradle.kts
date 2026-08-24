@@ -21,6 +21,7 @@ val appVersionCode: Int by lazy {
 }
 
 tasks.register<Copy>("installGitHooks") {
+    description = "Copy hooks from config to .git"
     from(layout.projectDirectory.dir("config/git-hooks"))
     into(layout.projectDirectory.dir(".git/hooks"))
     filePermissions {
@@ -39,6 +40,7 @@ allprojects {
 }
 
 tasks.register<JacocoReport>("jacocoRootReport") {
+    description = "Create jacoco test report"
     dependsOn(subprojects.mapNotNull { it.tasks.findByName("jacocoTestReport") })
 
     reports {
