@@ -202,7 +202,7 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
         if (current.isLoading) {
             _tableUiState.value = result.fold(
                 onSuccess = { (cols, rows) -> TableUiState(columns = cols, rows = rows, isLoading = false) },
-                onFailure = { t -> TableUiState(isLoading = false, error = t.message ?: "Unknown error") },
+                onFailure = { TableUiState(isLoading = false, error = "Unable to read table data") },
             )
         } else {
             result.getOrNull()?.let { (freshColumns, freshRows) ->

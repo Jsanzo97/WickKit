@@ -1,8 +1,8 @@
 package io.wickkit.database
 
-enum class DatabaseStatus { Ok, Encrypted, Unsupported }
+internal enum class DatabaseStatus { Ok, Encrypted, Unsupported }
 
-data class DatabaseEntry(
+internal data class DatabaseEntry(
     val name: String,
     val path: String,
     val sizeBytes: Long,

@@ -26,7 +26,7 @@ object WickKitFlagsManager {
     internal val remoteConfigEntries: StateFlow<ImmutableList<RemoteConfigEntry>>
         field = MutableStateFlow<ImmutableList<RemoteConfigEntry>>(persistentListOf())
 
-    val isRemoteConfigAvailable: Boolean get() = RemoteConfigBridge.isAvailable()
+    internal val isRemoteConfigAvailable: Boolean get() = RemoteConfigBridge.isAvailable()
 
     internal fun init(context: Context) {
         appContext = context.applicationContext
