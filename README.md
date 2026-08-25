@@ -2,13 +2,13 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.jsanzo97/wickkit-core?label=Maven%20Central&labelColor=4CAF50&color=555555)](https://central.sonatype.com/search?namespace=io.github.jsanzo97)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4.10-555555?logo=kotlin&logoColor=white&labelColor=7F52FF)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-9.3.1-555555?logo=android&logoColor=white&labelColor=3DDC84)](https://developer.android.com/build)
+[![AGP](https://img.shields.io/badge/AGP-9.3.2-555555?logo=android&logoColor=white&labelColor=3DDC84)](https://developer.android.com/build)
 [![API](https://img.shields.io/badge/API-21%2B-555555?labelColor=2ea44f)](https://developer.android.com/about/versions/lollipop)
 [![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.08.00-555555?labelColor=4285F4)](https://developer.android.com/jetpack/compose/bom)
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
-WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Zero configuration needed: the SDK self-initializes via a `ContentProvider`.
+WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open within a session, as well as any active search text and filters in the Logs, Network, and Flags tabs — re-opening the overlay always picks up exactly where you left off. The overlay UI is available in English, Spanish, French, German, and Italian.
 
 No more switching to Logcat, no more attaching a profiler, no more writing one-off debug screens. WickKit keeps everything in one persistent panel that stays out of the way in production via a no-op stub.
 
@@ -17,41 +17,41 @@ No more switching to Logcat, no more attaching a profiler, no more writing one-o
 ## Tabs
 
 ### Logs
-Streams Logcat output in real time. Entries are color-coded by level (Verbose / Debug / Info / Warn / Error) and filterable by level chip or by text. The search field accepts plain text or a `tag:` prefix to narrow by tag (e.g. `tag:OkHttp`). The **App / All** toggle suppresses noisy system tags automatically. Long-press any entry to copy it to the clipboard; the share button exports the current filtered view as plain text.
+Streams Logcat output in real time. Entries are color-coded by level (Verbose / Debug / Info / Warn / Error) and filterable by level chip or by text. The search field accepts plain text or a `tag:` prefix to narrow by tag (e.g. `tag:OkHttp`). The **App / All** toggle suppresses noisy system tags automatically. Long-press any entry to copy it to the clipboard; the share button exports the current filtered view as plain text. Search text, selected level, and the App/All toggle are preserved when you close and reopen the overlay.
 
 **How it works:** `WickKitLogcat` opens a `ProcessBuilder` to `logcat -v time` and parses each line into a typed `LogEntry` held in a `StateFlow`, capped at a fixed ring-buffer size so memory stays bounded.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/logs.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/logs-filtered.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/logs.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/logs-filtered.png" width="275">
 
 ---
 
 ### Network
 Lists every HTTP request captured since the session started: method badge, status code, URL, duration, and timestamp. Tap a row to see the full detail screen (request headers, request body, response headers, response body). Long-press a row — or tap **Mock this request** from the detail screen — to pre-fill a mock rule for that URL.
 
-The **Mocks** screen lets you define URL pattern rules (substring match) with a method filter, a custom status code, a response body, and an optional artificial delay. Rules can be individually toggled on or off without deleting them. Active rules are counted on the toolbar button.
+The **Mocks** screen lets you define URL pattern rules (substring match) with a method filter, a custom status code, a response body, and an optional artificial delay. Rules can be individually toggled on or off without deleting them. Active rules are counted on the toolbar button. The active search text and method filter are preserved when you close and reopen the overlay.
 
 **How it works:** `WickKitNetworkInterceptor` (OkHttp) and `WickKitKtorInterceptor` (Ktor) capture requests and push `NetworkEntry` objects into `WickKitNetworkManager`, a `StateFlow`-backed ring buffer. Mock interception runs before the real network call when a matching enabled rule exists.
 
 > **Requires `wickkit-network`**. Without it the tab is always empty.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-details.png" width="275">
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-mocking.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-mocked.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/network-mock-rules.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-details.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-mocking.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-mocked.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/network-mock-rules.png" width="275">
 
 ---
 
 ### Database
 Browses every SQLite database found in the app's private data directory. The list shows each database name and its file size. Databases protected by SQLCipher or other encryption are marked as encrypted and cannot be opened.
 
-Navigate into a database to see its tables with row counts, then into a table to view the data in a horizontally scrollable grid. Cells in tables that have a primary key are editable inline — tap to start editing, confirm with the keyboard **Done** action. Edits are written back via a raw `UPDATE` SQL statement and the row is highlighted to confirm the change.
+Navigate into a database to see its tables with row counts, then into a table to view the data in a horizontally scrollable grid. Cells are editable inline — tap to start editing, confirm with the keyboard **Done** action. All tables are editable, including those without a declared primary key (WickKit uses SQLite's implicit `rowid` as the edit anchor, hidden from the UI). Edits are written back via a raw `UPDATE` SQL statement and the row is highlighted to confirm the change.
 
-**How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` opened in read-write mode to read columns, rows, and persist edits.
+**How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` in read-write mode. When Room, SQLDelight, or any other SQLite library has already opened the database, WickKit reuses that same connection (via `WickKitDatabaseRegistry`, populated by an ASM bytecode transform at build time) so that WickKit edits trigger Room's `InvalidationTracker` and update any active `Flow` in the app.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/database.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/database-edited.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database-edited.png" width="275">
 
 ---
 
 ### Flags
-Shows two sections side by side.
+Shows two sections with a unified search bar at the top. Type any text to filter both SharedPreferences entries and Remote Config entries simultaneously by key name — no need to know which section a key belongs to. The search text is preserved when you close and reopen the overlay.
 
 **SharedPreferences** — enumerates every `.xml` file in the app's shared-prefs directory. Each file expands to show all key-value pairs with their type (Boolean / Int / Long / Float / String / StringSet). Values are editable inline and written back immediately via the standard SharedPreferences editor.
 
@@ -61,7 +61,7 @@ Shows two sections side by side.
 
 > **`wickkit-flags` required for Firebase Remote Config integration.** SharedPreferences always works with `wickkit-core` alone.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/shared-preferences.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/remote-config.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/shared-preferences.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/remote-config.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/flags-search.png" width="275">
 
 ---
 
@@ -70,7 +70,7 @@ Tracks potential memory leaks in Activities and Fragments. When an Activity or F
 
 **How it works:** `ObjectWatcher` is called from `ActivityLifecycleCallbacks.onActivityDestroyed` and from a `FragmentManager.FragmentLifecycleCallbacks.onFragmentDestroyed`. It schedules a `Handler` post to check whether the weak reference has been collected after a configurable delay.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/memory-leaks.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/memory-leaks.png" width="275">
 
 ---
 
@@ -85,7 +85,7 @@ Displays live runtime metrics grouped in three sections.
 
 **How it works:** `WickKitPerformanceManager` posts a repeating runnable on the `Choreographer` to count frames. Memory is read from `ActivityManager.MemoryInfo` and `Debug.getNativeHeapAllocatedSize()`. Compose recomposition tracking is done at bytecode level by the `wickkit-gradle-plugin`, which uses ASM to instrument every `@Composable` function and report calls to `WickKitComposeTracker`.
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/performance.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/performance-issues.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/performance.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/performance-issues.png" width="275">
 
 ---
 
@@ -101,7 +101,7 @@ Static information about the device and the running app, organised in sections:
 | **Storage** | Total internal storage, available internal storage |
 | **Locale** | System language, timezone |
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/device-info.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/device-info.png" width="275">
 
 ---
 
@@ -121,7 +121,7 @@ Each button on the main screen triggers a specific scenario:
 | **Simulate Memory Leak** | Starts a `LeakedActivity` that immediately finishes but stores a static reference to itself, triggering a leak report in the Leaks tab after a few seconds |
 | **Simulate Performance Issues** | Opens a `JankActivity` that recomposes two composables every 16 ms and provides a button to intentionally block the main thread for 300 ms, producing measurable slow frames |
 
-<img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/notification.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/test-app-home.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/feature/develop/screenshots/test-app-performance.png" width="275">
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/notification.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/test-app-home.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/test-app-performance.png" width="275">
 
 ---
 
@@ -133,8 +133,8 @@ Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImp
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.1")
 }
 ```
 
@@ -144,9 +144,9 @@ This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The N
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.0")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.1.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.1")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.1.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.1")
 }
 ```
 
@@ -168,9 +168,9 @@ val client = HttpClient {
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.0")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.1.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.1")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.1.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.1")
 }
 ```
 
@@ -183,12 +183,32 @@ val rc = WickKitRemoteConfig.wrap(context, FirebaseRemoteConfig.getInstance())
 
 ### With Compose recomposition tracking
 
-Apply the Gradle plugin in the module where your composables live:
+The plugin instruments every `@Composable` function at build time so the Performance tab can show per-composable recomposition rates. It only runs on the debug variant.
+
+**Single-module project** — apply in the module where your composables live:
 
 ```kotlin
 // module-level build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.1.0"
+    id("io.github.jsanzo97.wickkit") version "1.1.1"
+}
+```
+
+**Multi-module project** — apply once at the root and it propagates automatically to every Android submodule:
+
+```kotlin
+// root build.gradle.kts
+plugins {
+    id("io.github.jsanzo97.wickkit") version "1.1.1"
+}
+```
+
+To exclude a specific module from instrumentation:
+
+```kotlin
+// feature-analytics/build.gradle.kts
+wickKit {
+    enabled = false
 }
 ```
 
@@ -196,27 +216,27 @@ Add the Compose no-op stub for release:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.1.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.1.0")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.1.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.1.1")
 }
 ```
 
 ### Full setup
 
 ```kotlin
-// module-level build.gradle.kts
+// root or module-level build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.1.0"
+    id("io.github.jsanzo97.wickkit") version "1.1.1"
 }
 
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.0")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.1.0")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.1.0")
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.1.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.1.1")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.1.1")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.1.1")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.1.1")
 
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.1.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.1.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.1.1")
 }
 ```
 
@@ -232,6 +252,22 @@ No further setup is required. The SDK initializes automatically via `WickKitInit
 | `wickkit-flags` | Flags tab shows SharedPreferences only. Firebase Remote Config section is hidden. |
 | `wickkit-compose` + Gradle plugin | Performance tab shows FPS and Memory. Compose section shows a message explaining the plugin is not applied. |
 | `wickkit-core` | Nothing works — core is the foundation and is required by all other modules. |
+
+---
+
+## Localization
+
+The overlay UI adapts to the device language automatically. Supported locales:
+
+| Language | Locale |
+|---|---|
+| English | `en` (default) |
+| Spanish | `es` |
+| French | `fr` |
+| German | `de` |
+| Italian | `it` |
+
+Devices configured to any other locale fall back to English. Technical terms (`SharedPreferences`, `Firebase Remote Config`, `OkHttp`, `Compose`, `ABI`, `RAM`) are kept in English across all languages.
 
 ---
 

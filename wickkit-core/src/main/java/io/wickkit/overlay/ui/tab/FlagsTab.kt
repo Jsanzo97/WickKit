@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -21,6 +22,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.HorizontalDivider
@@ -30,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -61,6 +65,12 @@ import io.wickkit.flags.SharedPreferencesEntry
 import io.wickkit.flags.SharedPreferencesFileState
 import io.wickkit.flags.WickKitFlagsManager
 import io.wickkit.overlay.ui.WickKitTheme
+
+private val ToolbarHeight = 36.dp
+
+private object FlagsTabState {
+    var search: String = ""
+}
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
@@ -97,51 +107,105 @@ private fun FlagsContent(
     val remoteConfigEntries by WickKitFlagsManager.remoteConfigEntries.collectAsState()
     var sharedPreferencesExpanded by remember { mutableStateOf(false) }
     var remoteConfigExpanded by remember { mutableStateOf(false) }
-    var expandedFiles by remember { mutableStateOf(emptySet<String>()) }
+    val expandedFilesState = remember { mutableStateOf(emptySet<String>()) }
+    var search by remember { mutableStateOf(FlagsTabState.search) }
+    val isSearching = search.isNotEmpty()
     val sharedPreferencesOverrideCount = sharedPreferencesFiles.flatMap { it.entries }.count { it.isOverrideEnabled }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item {
-            FlagsSectionHeader(
-                title = stringResource(R.string.wk_flags_section_sp),
-                overrideCount = sharedPreferencesOverrideCount,
-                isExpanded = sharedPreferencesExpanded,
-                onToggle = { sharedPreferencesExpanded = !sharedPreferencesExpanded },
+    LaunchedEffect(isSearching) {
+        if (isSearching) {
+            sharedPreferencesExpanded = true
+            remoteConfigExpanded = true
+            expandedFilesState.value = sharedPreferencesFiles.map { it.name }.toSet()
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        FlagsSearchBar(query = search, onQueryChange = {
+            search = it
+            FlagsTabState.search = it
+        })
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        ) {
+            item {
+                FlagsSectionHeader(
+                    title = stringResource(R.string.wk_flags_section_sp),
+                    overrideCount = sharedPreferencesOverrideCount,
+                    isExpanded = sharedPreferencesExpanded,
+                    onToggle = { sharedPreferencesExpanded = !sharedPreferencesExpanded },
+                )
+            }
+            if (sharedPreferencesExpanded) {
+                sharedPreferencesSection(
+                    files = sharedPreferencesFiles,
+                    search = search,
+                    expandedFilesState = expandedFilesState,
+                    onSetValue = onSetSpOverride,
+                    onToggleOverride = onToggleSpOverride,
+                )
+            }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+            remoteConfigSection(
+                entries = if (isSearching) {
+                    remoteConfigEntries.filter { it.key.contains(search, ignoreCase = true) }
+                } else {
+                    remoteConfigEntries
+                },
+                remoteConfigExpanded = remoteConfigExpanded,
+                onToggleRemoteConfigSection = { remoteConfigExpanded = !remoteConfigExpanded },
+                onSetValue = onSetRcOverride,
+                onToggleOverride = onToggleRcOverride,
+            )
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
+    }
+}
+
+private fun LazyListScope.sharedPreferencesSection(
+    files: List<SharedPreferencesFileState>,
+    search: String,
+    expandedFilesState: MutableState<Set<String>>,
+    onSetValue: (prefsName: String, key: String, type: FlagType, value: String) -> Unit,
+    onToggleOverride: (prefsName: String, entry: SharedPreferencesEntry) -> Unit,
+) {
+    val isSearching = search.isNotEmpty()
+    if (files.isEmpty()) {
+        item { FlagsEmptyRow(stringResource(R.string.wk_flags_empty_sp)) }
+        return
+    }
+    files.forEach { file ->
+        val fileEntries: List<SharedPreferencesEntry> = if (isSearching) {
+            file.entries.filter { it.key.contains(search, ignoreCase = true) }
+        } else {
+            file.entries
+        }
+        if (isSearching && fileEntries.isEmpty()) return@forEach
+        val expandedFiles = expandedFilesState.value
+        val isFileExpanded = file.name in expandedFiles
+        item(key = "file_${file.name}") {
+            SharedPreferencesFileHeader(
+                name = file.name,
+                entryCount = file.entries.size,
+                overriddenCount = file.entries.count { it.isOverrideEnabled },
+                isExpanded = isFileExpanded,
+                onToggle = {
+                    val next = if (isFileExpanded) expandedFiles - file.name else expandedFiles + file.name
+                    expandedFilesState.value = next
+                },
             )
         }
-        if (sharedPreferencesExpanded) {
-            if (sharedPreferencesFiles.isEmpty()) item { FlagsEmptyRow(stringResource(R.string.wk_flags_empty_sp)) }
-            sharedPreferencesFiles.forEach { file ->
-                val isFileExpanded = file.name in expandedFiles
-                item(key = "file_${file.name}") {
-                    SharedPreferencesFileHeader(
-                        name = file.name,
-                        entryCount = file.entries.size,
-                        overriddenCount = file.entries.count { it.isOverrideEnabled },
-                        isExpanded = isFileExpanded,
-                        onToggle = {
-                            expandedFiles = if (isFileExpanded) expandedFiles - file.name else expandedFiles + file.name
-                        },
-                    )
-                }
-                if (isFileExpanded) {
-                    sharedPreferencesEntries(
-                        file = file,
-                        onSetValue = { key, type, value -> onSetSpOverride(file.name, key, type, value) },
-                        onToggleOverride = { entry -> onToggleSpOverride(file.name, entry) },
-                    )
-                }
-            }
+        if (isFileExpanded) {
+            sharedPreferencesEntries(
+                file = file,
+                entries = fileEntries,
+                onSetValue = { key, type, value -> onSetValue(file.name, key, type, value) },
+                onToggleOverride = { entry -> onToggleOverride(file.name, entry) },
+            )
         }
-        item { Spacer(modifier = Modifier.height(8.dp)) }
-        remoteConfigSection(
-            entries = remoteConfigEntries,
-            remoteConfigExpanded = remoteConfigExpanded,
-            onToggleRemoteConfigSection = { remoteConfigExpanded = !remoteConfigExpanded },
-            onSetValue = onSetRcOverride,
-            onToggleOverride = onToggleRcOverride,
-        )
-        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
@@ -300,14 +364,15 @@ private fun SharedPreferencesEntryValueRow(entry: SharedPreferencesEntry) {
 
 private fun LazyListScope.sharedPreferencesEntries(
     file: SharedPreferencesFileState,
+    entries: List<SharedPreferencesEntry>,
     onSetValue: (key: String, type: FlagType, value: String) -> Unit,
     onToggleOverride: (entry: SharedPreferencesEntry) -> Unit,
 ) {
-    if (file.entries.isEmpty()) {
+    if (entries.isEmpty()) {
         item(key = "empty_${file.name}") { FlagsEmptyRow(stringResource(R.string.wk_flags_empty_sp_file)) }
     } else {
-        items(count = file.entries.size, key = { "sp_${file.name}_${file.entries[it].key}" }) { index ->
-            val entry = file.entries[index]
+        items(count = entries.size, key = { "sp_${file.name}_${entries[it].key}" }) { index ->
+            val entry = entries[index]
             SharedPreferencesEntryRow(
                 entry = entry,
                 onSetValue = { value -> onSetValue(entry.key, entry.type, value) },
@@ -543,6 +608,62 @@ private fun FlagsBoolEditor(current: String, onSelect: (String) -> Unit) {
 }
 
 // ─── Shared components ────────────────────────────────────────────────────────
+
+@Composable
+private fun FlagsSearchBar(query: String, onQueryChange: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(ToolbarHeight)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 8.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (query.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.wk_flags_search_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                )
+            }
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (query.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .size(ToolbarHeight)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(interactionSource = null, indication = null) { onQueryChange("") }
+                    .padding(6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun FlagsScreenTitle() {

@@ -5,7 +5,19 @@ import android.database.sqlite.SQLiteDatabase
 
 internal class DatabaseManager(path: String) : AutoCloseable {
 
-    private val database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
+    private val owned: Boolean
+    private val database: SQLiteDatabase
+
+    init {
+        val registered = WickKitDatabaseRegistry.find(path)
+        if (registered != null) {
+            database = registered
+            owned = false
+        } else {
+            database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
+            owned = true
+        }
+    }
 
     fun listTables(): List<String> = database.rawQuery(
         "SELECT name FROM sqlite_master " +
@@ -19,7 +31,7 @@ internal class DatabaseManager(path: String) : AutoCloseable {
         null,
     ).use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else 0L }
 
-    fun getColumns(table: String): List<ColumnInfo> = database.rawQuery(
+    private fun rawColumns(table: String): List<ColumnInfo> = database.rawQuery(
         "PRAGMA table_info(${table.q()})",
         null,
     ).use { cursor ->
@@ -37,23 +49,35 @@ internal class DatabaseManager(path: String) : AutoCloseable {
         }
     }
 
-    fun getRows(table: String, limit: Int = 300, offset: Int = 0): List<List<Any?>> = database.rawQuery(
-        "SELECT * FROM ${table.q()} LIMIT $limit OFFSET $offset",
-        null,
-    ).use { cursor ->
-        buildList {
-            while (cursor.moveToNext()) {
-                add(
-                    (0 until cursor.columnCount).map { columnIndex ->
-                        when (cursor.getType(columnIndex)) {
-                            Cursor.FIELD_TYPE_INTEGER -> cursor.getLong(columnIndex)
-                            Cursor.FIELD_TYPE_FLOAT -> cursor.getDouble(columnIndex)
-                            Cursor.FIELD_TYPE_STRING -> cursor.getString(columnIndex)
-                            Cursor.FIELD_TYPE_BLOB -> "[BLOB]"
-                            else -> null
-                        }
-                    },
-                )
+    fun getColumns(table: String): List<ColumnInfo> {
+        val cols = rawColumns(table)
+        return if (cols.any { it.isPrimaryKey }) {
+            cols
+        } else {
+            listOf(ColumnInfo("rowid", "INTEGER", isPrimaryKey = true, notNull = true, isRowId = true)) + cols
+        }
+    }
+
+    fun getRows(table: String, limit: Int = 300, offset: Int = 0): List<List<Any?>> {
+        val selectClause = if (rawColumns(table).any { it.isPrimaryKey }) "*" else "rowid, *"
+        return database.rawQuery(
+            "SELECT $selectClause FROM ${table.q()} LIMIT $limit OFFSET $offset",
+            null,
+        ).use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) {
+                    add(
+                        (0 until cursor.columnCount).map { columnIndex ->
+                            when (cursor.getType(columnIndex)) {
+                                Cursor.FIELD_TYPE_INTEGER -> cursor.getLong(columnIndex)
+                                Cursor.FIELD_TYPE_FLOAT -> cursor.getDouble(columnIndex)
+                                Cursor.FIELD_TYPE_STRING -> cursor.getString(columnIndex)
+                                Cursor.FIELD_TYPE_BLOB -> "[BLOB]"
+                                else -> null
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -79,7 +103,9 @@ internal class DatabaseManager(path: String) : AutoCloseable {
         database.execSQL("UPDATE ${table.q()} SET $setClause WHERE $whereClause", allArgs)
     }
 
-    override fun close() = database.close()
+    override fun close() {
+        if (owned) database.close()
+    }
 
     private fun String.q() = "\"${replace("\"", "\"\"")}\""
     private fun Cursor.columnString(columnName: String) = getString(getColumnIndexOrThrow(columnName)) ?: ""

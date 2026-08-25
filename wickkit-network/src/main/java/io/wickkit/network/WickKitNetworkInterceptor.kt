@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicLong
 
 class WickKitNetworkInterceptor : Interceptor {
 
-    private val idCounter = AtomicLong(0)
     private val timeFormat = object : ThreadLocal<SimpleDateFormat>() {
         override fun initialValue() = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
     }
@@ -136,6 +135,7 @@ class WickKitNetworkInterceptor : Interceptor {
     private fun statusMessage(code: Int): String = STATUS_MESSAGES[code] ?: ""
 
     private companion object {
+        private val idCounter = AtomicLong(0)
         private const val MAX_BODY_BYTES = 50 * 1024L
         private const val MAX_DELAY_MS = 30_000L
         private val STATUS_MESSAGES = mapOf(

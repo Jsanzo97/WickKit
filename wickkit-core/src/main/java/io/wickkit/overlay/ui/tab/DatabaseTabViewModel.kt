@@ -35,8 +35,6 @@ internal data class TableUiState(
 
 internal typealias CellKey = Pair<Int, String>
 
-internal fun TableUiState.showsReadOnlyBanner(hasPk: Boolean) = !hasPk && !isLoading && error == null
-
 internal fun rowKey(columns: List<ColumnInfo>, row: List<Any?>): String = columns.filter {
     it.isPrimaryKey
 }.joinToString("|") { col ->
