@@ -68,6 +68,10 @@ import io.wickkit.overlay.ui.WickKitTheme
 
 private val ToolbarHeight = 36.dp
 
+private object FlagsTabState {
+    var search: String = ""
+}
+
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
 @Composable
@@ -104,13 +108,16 @@ private fun FlagsContent(
     var sharedPreferencesExpanded by remember { mutableStateOf(false) }
     var remoteConfigExpanded by remember { mutableStateOf(false) }
     val expandedFilesState = remember { mutableStateOf(emptySet<String>()) }
-    var search by remember { mutableStateOf("") }
+    var search by remember { mutableStateOf(FlagsTabState.search) }
     val isSearching = search.isNotEmpty()
     val sharedPreferencesOverrideCount = sharedPreferencesFiles.flatMap { it.entries }.count { it.isOverrideEnabled }
     val rcExpanded = (isSearching && WickKitFlagsManager.isRemoteConfigAvailable) || remoteConfigExpanded
 
     Column(modifier = Modifier.fillMaxSize()) {
-        FlagsSearchBar(query = search, onQueryChange = { search = it })
+        FlagsSearchBar(query = search, onQueryChange = {
+            search = it
+            FlagsTabState.search = it
+        })
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         LazyColumn(
             modifier = Modifier
