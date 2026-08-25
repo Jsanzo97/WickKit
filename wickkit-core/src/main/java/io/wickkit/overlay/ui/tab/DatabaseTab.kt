@@ -251,7 +251,6 @@ private fun TableDataBody(
     onCellClick: (rowIndex: Int, colName: String, text: String) -> Unit,
     onCommitEdit: () -> Unit,
 ) {
-    val hasPk = uiState.columns.any { it.isPrimaryKey }
     val horizontalScroll = rememberScrollState()
     val editedBorderColor = MaterialTheme.colorScheme.primary
     val editedBgColor = MaterialTheme.colorScheme.primary.copy(alpha = EDITED_BG_ALPHA)
@@ -263,7 +262,6 @@ private fun TableDataBody(
     ) {
         ScreenToolbar(title = table, onBack = onBack)
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        if (uiState.showsReadOnlyBanner(hasPk)) ReadOnlyBanner()
         when {
             uiState.isLoading -> LoadingState()
 
@@ -284,7 +282,6 @@ private fun TableDataBody(
                         isEdited = key in uiState.editedRowKeys,
                         editedBorderColor = editedBorderColor,
                         editedBgColor = editedBgColor,
-                        hasPk = hasPk,
                         editingCell = editingCell,
                         editValue = editValue,
                         rowIndex = rowIndex,
@@ -318,7 +315,7 @@ private fun GridHeader(
                 .padding(start = EDITED_BORDER_WIDTH.dp)
                 .horizontalScroll(horizontalScroll),
         ) {
-            columns.forEach { col ->
+            columns.filter { !it.isRowId }.forEach { col ->
                 HeaderCell(name = col.name)
             }
         }
@@ -334,7 +331,6 @@ private fun GridRow(
     isEdited: Boolean,
     editedBorderColor: Color,
     editedBgColor: Color,
-    hasPk: Boolean,
     editingCell: CellKey?,
     editValue: TextFieldValue,
     rowIndex: Int,
@@ -363,8 +359,9 @@ private fun GridRow(
         ) {
             row.forEachIndexed { columnIndex, value ->
                 val column = columns.getOrNull(columnIndex) ?: return@forEachIndexed
+                if (column.isRowId) return@forEachIndexed
                 val isActiveEdit = editingCell?.first == rowIndex && editingCell.second == column.name
-                val editable = hasPk && !column.isPrimaryKey
+                val editable = !column.isPrimaryKey
                 DataCell(
                     text = if (isActiveEdit) editValue.text else value?.toString() ?: "null",
                     isPrimaryKey = column.isPrimaryKey,
@@ -522,20 +519,6 @@ private fun EmptyState(message: String) {
             text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun ReadOnlyBanner() {
-    Surface(color = MaterialTheme.colorScheme.tertiaryContainer) {
-        Text(
-            text = stringResource(R.string.wk_database_readonly_banner),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer,
         )
     }
 }

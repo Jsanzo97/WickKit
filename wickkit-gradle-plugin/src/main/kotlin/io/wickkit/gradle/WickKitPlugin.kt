@@ -15,6 +15,10 @@ class WickKitPlugin : Plugin<Project> {
                     WickKitTransform::class.java,
                     InstrumentationScope.PROJECT,
                 ) {}
+                variant.instrumentation.transformClassesWith(
+                    WickKitDatabaseTransform::class.java,
+                    InstrumentationScope.ALL,
+                ) {}
                 variant.instrumentation.setAsmFramesComputationMode(
                     FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS,
                 )

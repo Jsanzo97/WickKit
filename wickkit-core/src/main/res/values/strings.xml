@@ -65,12 +65,12 @@
     <string name="wk_database_empty_databases">No databases found</string>
     <string name="wk_database_empty_tables">No tables found</string>
     <string name="wk_database_empty_table">Table is empty</string>
-    <string name="wk_database_readonly_banner">Read-only — table has no primary key</string>
     <string name="wk_database_status_encrypted">Encrypted</string>
     <string name="wk_database_status_unsupported">Unsupported</string>
 
     <!-- Flags tab -->
     <string name="wk_flags_title">Flags</string>
+    <string name="wk_flags_search_hint">Search flags…</string>
     <string name="wk_flags_section_sp">SharedPreferences</string>
     <string name="wk_flags_section_rc">Firebase Remote Config</string>
     <string name="wk_flags_empty_sp">No SharedPreferences found</string>

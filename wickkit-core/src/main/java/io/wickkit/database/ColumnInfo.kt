@@ -5,4 +5,5 @@ internal data class ColumnInfo(
     val type: String,
     val isPrimaryKey: Boolean,
     val notNull: Boolean,
+    val isRowId: Boolean = false,
 )
