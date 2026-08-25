@@ -4,6 +4,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
+private const val ASM_API = Opcodes.ASM9
 private const val SQLITE_DATABASE = "android/database/sqlite/SQLiteDatabase"
 private const val SQLITE_DATABASE_DESC = "L$SQLITE_DATABASE;"
 private const val REGISTRY_OWNER = "io/wickkit/database/WickKitDatabaseRegistry"
