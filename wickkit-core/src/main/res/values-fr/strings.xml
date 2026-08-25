@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tab labels -->
+    <string name="wk_tab_logs">Logs</string>
+    <string name="wk_tab_network">Réseau</string>
+    <string name="wk_tab_database">Base de données</string>
+    <string name="wk_tab_flags">Flags</string>
+    <string name="wk_tab_leaks">Fuites</string>
+    <string name="wk_tab_performance">Performance</string>
+    <string name="wk_tab_device">Appareil</string>
+
+    <!-- Panel header -->
+    <string name="wk_debug_panel_subtitle">Panneau de débogage</string>
+
+    <!-- Common actions -->
+    <string name="wk_clear">Effacer</string>
+    <string name="wk_save">Enregistrer</string>
+    <string name="wk_copy">Copier</string>
+    <string name="wk_copied_to_clipboard">Copié dans le presse-papiers</string>
+
+    <!-- Common content descriptions -->
+    <string name="wk_cd_close">Fermer</string>
+    <string name="wk_cd_back">Retour</string>
+    <string name="wk_cd_share_logs">Partager les logs</string>
+    <string name="wk_cd_delete_rule">Supprimer la règle</string>
+
+    <!-- Logs tab -->
+    <string name="wk_logs_search_hint">Rechercher des logs… ou utilisez tag:OkHttp</string>
+    <string name="wk_logs_filter_app">App</string>
+    <string name="wk_logs_filter_all">Tout</string>
+    <string name="wk_logs_empty_filtered">Aucun log ne correspond au filtre</string>
+    <string name="wk_logs_empty_title">Aucun log pour l\'instant</string>
+    <string name="wk_logs_empty_subtitle">Les logs apparaîtront ici pendant l\'exécution de votre app</string>
+
+    <!-- Network tab -->
+    <string name="wk_network_search_hint">Rechercher par URL…</string>
+    <string name="wk_network_mocks">Mocks</string>
+    <string name="wk_network_mock_rules_title">Règles de mock</string>
+    <string name="wk_network_add_rule">+ Ajouter une règle</string>
+    <string name="wk_network_empty_filtered">Aucune requête ne correspond au filtre</string>
+    <string name="wk_network_empty_title">Aucune requête capturée pour l\'instant</string>
+    <string name="wk_network_empty_subtitle">Ajoutez WickKitNetworkInterceptor à votre OkHttpClient</string>
+    <string name="wk_network_mocks_empty_title">Aucune règle de mock pour l\'instant</string>
+    <string name="wk_network_mocks_empty_subtitle">Appuyez sur une requête → \"Mocker cette requête\" pour en créer une</string>
+    <string name="wk_network_mock_this_request">Mocker cette requête</string>
+    <string name="wk_network_request_headers">En-têtes de la requête</string>
+    <string name="wk_network_request_body">Corps de la requête</string>
+    <string name="wk_network_response_headers">En-têtes de la réponse</string>
+    <string name="wk_network_response_body">Corps de la réponse</string>
+    <string name="wk_network_error_section">Erreur</string>
+
+    <!-- Mock rule editor -->
+    <string name="wk_mock_edit_title">Modifier la règle de mock</string>
+    <string name="wk_mock_new_title">Nouvelle règle de mock</string>
+    <string name="wk_mock_field_url_pattern">Modèle d\'URL</string>
+    <string name="wk_mock_field_url_hint">ex. /api/v1/users</string>
+    <string name="wk_mock_field_status_code">Code de statut</string>
+    <string name="wk_mock_field_delay">Délai (ms)</string>
+    <string name="wk_mock_field_response_body">Corps de la réponse (JSON)</string>
+    <string name="wk_mock_field_method">Méthode</string>
+    <string name="wk_mock_invalid_format">Format invalide</string>
+
+    <!-- Database tab -->
+    <string name="wk_database_title">Bases de données</string>
+    <string name="wk_database_empty_databases">Aucune base de données trouvée</string>
+    <string name="wk_database_empty_tables">Aucune table trouvée</string>
+    <string name="wk_database_empty_table">La table est vide</string>
+    <string name="wk_database_status_encrypted">Chiffrée</string>
+    <string name="wk_database_status_unsupported">Non supportée</string>
+
+    <!-- Flags tab -->
+    <string name="wk_flags_title">Flags</string>
+    <string name="wk_flags_search_hint">Rechercher des flags…</string>
+    <string name="wk_flags_section_sp">SharedPreferences</string>
+    <string name="wk_flags_section_rc">Firebase Remote Config</string>
+    <string name="wk_flags_empty_sp">Aucune SharedPreference trouvée</string>
+    <string name="wk_flags_empty_sp_file">Aucune valeur</string>
+    <string name="wk_flags_rc_unavailable">Firebase Remote Config introuvable dans cette app</string>
+    <string name="wk_flags_rc_empty">Aucun paramètre Remote Config actif</string>
+    <string name="wk_flags_not_available">Non disponible</string>
+
+    <!-- Memory leaks tab -->
+    <string name="wk_leaks_no_leaks">Aucune fuite détectée</string>
+    <string name="wk_leaks_empty_subtitle">Les Activities et Fragments sont surveillés automatiquement</string>
+
+    <!-- Leak detail screen -->
+    <string name="wk_leak_section_object">Objet</string>
+    <string name="wk_leak_section_detection">Détection</string>
+    <string name="wk_leak_section_causes">Causes courantes</string>
+    <string name="wk_leak_label_class">Classe</string>
+    <string name="wk_leak_label_package">Package</string>
+    <string name="wk_leak_label_type">Type</string>
+    <string name="wk_leak_label_instances">Instances en fuite</string>
+    <string name="wk_leak_label_first_detected">Première détection</string>
+    <string name="wk_leak_label_latest_detected">Dernière détection</string>
+    <string name="wk_leak_hint_activity_1">Champ statique ou singleton retenant une référence à cette Activity</string>
+    <string name="wk_leak_hint_activity_2">Runnable anonyme ou listener posté dans un Handler en arrière-plan</string>
+    <string name="wk_leak_hint_activity_3">ViewModel utilisant le contexte de l\'Activity au lieu du contexte de l\'Application</string>
+    <string name="wk_leak_hint_activity_4">Classe interne non statique capturant une référence à l\'Activity externe</string>
+    <string name="wk_leak_hint_fragment_1">Référence de view binding non effacée dans onDestroyView()</string>
+    <string name="wk_leak_hint_fragment_2">Listener ou callback enregistré dans onCreateView() mais jamais désenregistré</string>
+    <string name="wk_leak_hint_fragment_3">ViewModel retenant une référence au Fragment ou à sa View</string>
+    <string name="wk_leak_hint_fragment_4">Classe interne non statique capturant une référence au Fragment externe</string>
+    <string name="wk_leak_hint_object_1">Champ statique retenant une référence forte à cet objet</string>
+    <string name="wk_leak_hint_object_2">Objet enregistré comme listener sans être désenregistré</string>
+    <string name="wk_leak_hint_object_3">Coroutine ou thread de longue durée capturant cet objet dans sa fermeture</string>
+
+    <!-- Performance tab -->
+    <string name="wk_perf_section_compose">Compose</string>
+    <string name="wk_perf_composables_empty">Aucun composable problématique détecté</string>
+    <string name="wk_perf_composables_inactive">Suivi par composable inactif — appliquez le plugin Gradle WickKit pour l\'activer</string>
+    <string name="wk_perf_sort_peak">Pic ↓</string>
+    <string name="wk_perf_sort_rate">Taux ↓</string>
+
+    <!-- Device tab -->
+    <string name="wk_device_section_app">App</string>
+    <string name="wk_device_section_device">Appareil</string>
+    <string name="wk_device_section_display">Écran</string>
+    <string name="wk_device_section_memory">Mémoire</string>
+    <string name="wk_device_section_storage">Stockage (interne)</string>
+    <string name="wk_device_section_locale">Région</string>
+    <string name="wk_device_label_package">Package</string>
+    <string name="wk_device_label_version">Version</string>
+    <string name="wk_device_label_build_type">Type de build</string>
+    <string name="wk_device_label_manufacturer">Fabricant</string>
+    <string name="wk_device_label_model">Modèle</string>
+    <string name="wk_device_label_android">Android</string>
+    <string name="wk_device_label_abi">ABI</string>
+    <string name="wk_device_label_cpu_cores">Cœurs CPU</string>
+    <string name="wk_device_label_resolution">Résolution</string>
+    <string name="wk_device_label_density">Densité</string>
+    <string name="wk_device_label_refresh_rate">Taux de rafraîchissement</string>
+    <string name="wk_device_label_font_scale">Échelle de police</string>
+    <string name="wk_device_label_orientation">Orientation</string>
+    <string name="wk_device_label_max_heap">Heap maximum</string>
+    <string name="wk_device_label_total_ram">RAM totale</string>
+    <string name="wk_device_label_available_ram">RAM disponible</string>
+    <string name="wk_device_label_storage_free">Libre</string>
+    <string name="wk_device_label_storage_total">Total</string>
+    <string name="wk_device_label_language">Langue</string>
+    <string name="wk_device_label_timezone">Fuseau horaire</string>
+    <string name="wk_device_value_debug">débogage</string>
+    <string name="wk_device_value_release">release</string>
+    <string name="wk_device_value_unknown">inconnu</string>
+    <string name="wk_device_value_portrait">portrait</string>
+    <string name="wk_device_value_landscape">paysage</string>
+
+    <!-- Placeholder tab -->
+    <string name="wk_placeholder_coming_soon">Bientôt disponible</string>
+    <string name="wk_placeholder_planned_features">Fonctionnalités prévues</string>
+</resources>
