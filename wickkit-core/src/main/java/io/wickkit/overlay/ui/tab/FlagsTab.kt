@@ -111,7 +111,14 @@ private fun FlagsContent(
     var search by remember { mutableStateOf(FlagsTabState.search) }
     val isSearching = search.isNotEmpty()
     val sharedPreferencesOverrideCount = sharedPreferencesFiles.flatMap { it.entries }.count { it.isOverrideEnabled }
-    val rcExpanded = (isSearching && WickKitFlagsManager.isRemoteConfigAvailable) || remoteConfigExpanded
+
+    LaunchedEffect(isSearching) {
+        if (isSearching) {
+            sharedPreferencesExpanded = true
+            remoteConfigExpanded = true
+            expandedFilesState.value = sharedPreferencesFiles.map { it.name }.toSet()
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         FlagsSearchBar(query = search, onQueryChange = {
@@ -128,11 +135,11 @@ private fun FlagsContent(
                 FlagsSectionHeader(
                     title = stringResource(R.string.wk_flags_section_sp),
                     overrideCount = sharedPreferencesOverrideCount,
-                    isExpanded = isSearching || sharedPreferencesExpanded,
-                    onToggle = { if (!isSearching) sharedPreferencesExpanded = !sharedPreferencesExpanded },
+                    isExpanded = sharedPreferencesExpanded,
+                    onToggle = { sharedPreferencesExpanded = !sharedPreferencesExpanded },
                 )
             }
-            if (isSearching || sharedPreferencesExpanded) {
+            if (sharedPreferencesExpanded) {
                 sharedPreferencesSection(
                     files = sharedPreferencesFiles,
                     search = search,
@@ -148,8 +155,8 @@ private fun FlagsContent(
                 } else {
                     remoteConfigEntries
                 },
-                remoteConfigExpanded = rcExpanded,
-                onToggleRemoteConfigSection = { if (!isSearching) remoteConfigExpanded = !remoteConfigExpanded },
+                remoteConfigExpanded = remoteConfigExpanded,
+                onToggleRemoteConfigSection = { remoteConfigExpanded = !remoteConfigExpanded },
                 onSetValue = onSetRcOverride,
                 onToggleOverride = onToggleRcOverride,
             )
@@ -178,7 +185,7 @@ private fun LazyListScope.sharedPreferencesSection(
         }
         if (isSearching && fileEntries.isEmpty()) return@forEach
         val expandedFiles = expandedFilesState.value
-        val isFileExpanded = isSearching || file.name in expandedFiles
+        val isFileExpanded = file.name in expandedFiles
         item(key = "file_${file.name}") {
             SharedPreferencesFileHeader(
                 name = file.name,
@@ -186,10 +193,8 @@ private fun LazyListScope.sharedPreferencesSection(
                 overriddenCount = file.entries.count { it.isOverrideEnabled },
                 isExpanded = isFileExpanded,
                 onToggle = {
-                    if (!isSearching) {
-                        val next = if (isFileExpanded) expandedFiles - file.name else expandedFiles + file.name
-                        expandedFilesState.value = next
-                    }
+                    val next = if (isFileExpanded) expandedFiles - file.name else expandedFiles + file.name
+                    expandedFilesState.value = next
                 },
             )
         }

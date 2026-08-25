@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
-    alias(libs.plugins.firebase.crashlytics.gradle)
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
@@ -64,6 +63,5 @@ dependencies {
     releaseImplementation(project(":wickkit-compose-no-op"))
     implementation(libs.okhttp)
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.remote.config)
 }
