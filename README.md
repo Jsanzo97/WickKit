@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
-WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Zero configuration needed: the SDK self-initializes via a `ContentProvider`.
+WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open within a session, so re-opening the overlay always lands you where you left off.
 
 No more switching to Logcat, no more attaching a profiler, no more writing one-off debug screens. WickKit keeps everything in one persistent panel that stays out of the way in production via a no-op stub.
 
@@ -42,16 +42,16 @@ The **Mocks** screen lets you define URL pattern rules (substring match) with a 
 ### Database
 Browses every SQLite database found in the app's private data directory. The list shows each database name and its file size. Databases protected by SQLCipher or other encryption are marked as encrypted and cannot be opened.
 
-Navigate into a database to see its tables with row counts, then into a table to view the data in a horizontally scrollable grid. Cells in tables that have a primary key are editable inline — tap to start editing, confirm with the keyboard **Done** action. Edits are written back via a raw `UPDATE` SQL statement and the row is highlighted to confirm the change.
+Navigate into a database to see its tables with row counts, then into a table to view the data in a horizontally scrollable grid. Cells are editable inline — tap to start editing, confirm with the keyboard **Done** action. All tables are editable, including those without a declared primary key (WickKit uses SQLite's implicit `rowid` as the edit anchor, hidden from the UI). Edits are written back via a raw `UPDATE` SQL statement and the row is highlighted to confirm the change.
 
-**How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` opened in read-write mode to read columns, rows, and persist edits.
+**How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` in read-write mode. When Room, SQLDelight, or any other SQLite library has already opened the database, WickKit reuses that same connection (via `WickKitDatabaseRegistry`, populated by an ASM bytecode transform at build time) so that WickKit edits trigger Room's `InvalidationTracker` and update any active `Flow` in the app.
 
 <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database-edited.png" width="275">
 
 ---
 
 ### Flags
-Shows two sections side by side.
+Shows two sections with a unified search bar at the top. Type any text to filter both SharedPreferences entries and Remote Config entries simultaneously by key name — no need to know which section a key belongs to.
 
 **SharedPreferences** — enumerates every `.xml` file in the app's shared-prefs directory. Each file expands to show all key-value pairs with their type (Boolean / Int / Long / Float / String / StringSet). Values are editable inline and written back immediately via the standard SharedPreferences editor.
 

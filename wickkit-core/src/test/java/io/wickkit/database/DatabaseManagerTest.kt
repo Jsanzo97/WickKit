@@ -222,24 +222,30 @@ class DatabaseManagerTest {
         assertTrue(updated.any { it[1] == "Bob" })
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `updateRow throws when table has no primary key`() {
+    @Test
+    fun `updateRow edits no-pk table via synthetic rowid`() {
         val context = RuntimeEnvironment.getApplication()
         val file = context.getDatabasePath("no_pk.db").also { it.parentFile?.mkdirs() }
         try {
-            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
-                sqliteDatabase.execSQL("CREATE TABLE data (value TEXT)")
-                sqliteDatabase.execSQL("INSERT INTO data VALUES ('test')")
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
+                db.execSQL("CREATE TABLE data (value TEXT)")
+                db.execSQL("INSERT INTO data VALUES ('original')")
+                db.execSQL("INSERT INTO data VALUES ('other')")
             }
             DatabaseManager(file.absolutePath).use { manager ->
                 val cols = manager.getColumns("data")
                 val rows = manager.getRows("data")
+                val targetRow = rows.first { row -> row.any { it == "original" } }
                 manager.updateRow(
                     table = "data",
                     columns = cols,
-                    originalRow = rows[0],
-                    edits = mapOf("value" to "changed"),
+                    originalRow = targetRow,
+                    edits = mapOf("value" to "updated"),
                 )
+                val result = manager.getRows("data")
+                assertTrue(result.any { row -> row.any { it == "updated" } })
+                assertFalse(result.any { row -> row.any { it == "original" } })
+                assertTrue(result.any { row -> row.any { it == "other" } })
             }
         } finally {
             file.delete()

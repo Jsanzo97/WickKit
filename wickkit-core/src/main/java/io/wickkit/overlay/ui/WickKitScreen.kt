@@ -62,6 +62,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
+private object WickKitOverlayState {
+    var lastTab: WickKitTab = WickKitTab.Logs
+}
+
 private enum class WickKitTab(@StringRes val labelRes: Int) {
     Logs(R.string.wk_tab_logs),
     Network(R.string.wk_tab_network),
@@ -81,7 +85,7 @@ private const val CLOSE_MS = 220L
 internal fun WickKitScreen(onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
     val visibleState = remember { MutableTransitionState(false).also { it.targetState = true } }
-    var selectedTab by remember { mutableStateOf(WickKitTab.Logs) }
+    var selectedTab by remember { mutableStateOf(WickKitOverlayState.lastTab) }
 
     fun animateClose() {
         scope.launch {
@@ -121,7 +125,10 @@ internal fun WickKitScreen(onClose: () -> Unit) {
         ) {
             DebugPanel(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = {
+                    selectedTab = it
+                    WickKitOverlayState.lastTab = it
+                },
                 onClose = ::animateClose,
             )
         }
