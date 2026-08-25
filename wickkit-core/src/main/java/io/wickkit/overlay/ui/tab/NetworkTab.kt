@@ -63,6 +63,11 @@ private val ToolbarHeight = 36.dp
 
 private val HTTP_METHODS = listOf("GET", "POST", "PUT", "DELETE", "PATCH")
 
+private object NetworkTabState {
+    var search: String = ""
+    var methodFilter: String? = null
+}
+
 private sealed interface NetworkScreen {
     data object Requests : NetworkScreen
     data class Detail(val entry: NetworkEntry) : NetworkScreen
@@ -160,8 +165,8 @@ private fun NetworkRequestsScreen(
     onMocksClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
-    var search by remember { mutableStateOf("") }
-    var methodFilter by remember { mutableStateOf<String?>(null) }
+    var search by remember { mutableStateOf(NetworkTabState.search) }
+    var methodFilter by remember { mutableStateOf<String?>(NetworkTabState.methodFilter) }
 
     val filtered = remember(entries, search, methodFilter) {
         entries.filter { entry ->
@@ -178,11 +183,17 @@ private fun NetworkRequestsScreen(
         RequestsToolbar(
             search = search,
             activeRulesCount = activeRulesCount,
-            onSearch = { search = it },
+            onSearch = {
+                search = it
+                NetworkTabState.search = it
+            },
             onMocksClick = onMocksClick,
             onClear = { WickKitNetworkManager.clear() },
         )
-        MethodFilterRow(selected = methodFilter, onSelect = { methodFilter = it })
+        MethodFilterRow(selected = methodFilter, onSelect = {
+            methodFilter = it
+            NetworkTabState.methodFilter = it
+        })
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
         if (filtered.isEmpty()) {

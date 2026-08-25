@@ -68,6 +68,11 @@ import kotlinx.collections.immutable.toPersistentSet
 
 private val ToolbarHeight = 36.dp
 
+private object LogsTabState {
+    var search: String = ""
+    var showAll: Boolean = false
+}
+
 @Composable
 internal fun LogsTab() {
     val entries by WickKitLogManager.entries.collectAsState()
@@ -76,8 +81,8 @@ internal fun LogsTab() {
 
 @Composable
 private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
-    var search by remember { mutableStateOf("") }
-    var showAll by remember { mutableStateOf(false) }
+    var search by remember { mutableStateOf(LogsTabState.search) }
+    var showAll by remember { mutableStateOf(LogsTabState.showAll) }
     val selectedLevels by WickKitLogManager.selectedLevels.collectAsState()
     val context = LocalContext.current
 
@@ -95,8 +100,14 @@ private fun LogsTabContent(entries: ImmutableList<LogEntry>) {
         LogsToolbar(
             search = search,
             showAll = showAll,
-            onSearch = { search = it },
-            onShowAllChange = { showAll = it },
+            onSearch = {
+                search = it
+                LogsTabState.search = it
+            },
+            onShowAllChange = {
+                showAll = it
+                LogsTabState.showAll = it
+            },
             onClear = { WickKitLogManager.clear() },
             onShare = { shareLogEntries(context = context, entries = filtered) },
         )
