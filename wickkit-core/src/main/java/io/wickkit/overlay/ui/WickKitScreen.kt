@@ -3,6 +3,8 @@ package io.wickkit.overlay.ui
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -10,9 +12,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,10 +50,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.wickkit.core.R
 import io.wickkit.overlay.ui.tab.DatabaseTab
@@ -58,9 +65,8 @@ import io.wickkit.overlay.ui.tab.LogsTab
 import io.wickkit.overlay.ui.tab.MemoryLeaksTab
 import io.wickkit.overlay.ui.tab.NetworkTab
 import io.wickkit.overlay.ui.tab.PerformanceTab
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.math.roundToInt
 
 private object WickKitOverlayState {
     var lastTab: WickKitTab = WickKitTab.Logs
@@ -80,26 +86,36 @@ private const val SCRIM_ALPHA = 0.65f
 private const val PANEL_HEIGHT_FRACTION = 0.88f
 private const val OPEN_MS = 280
 private const val CLOSE_MS = 220L
+private const val DISMISS_VELOCITY_THRESHOLD = 1_500f
+private const val DISMISS_FRACTION_THRESHOLD = 0.4f
 
 @Composable
 internal fun WickKitScreen(onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
-    val visibleState = remember { MutableTransitionState(false).also { it.targetState = true } }
+    val scrimVisible = remember { MutableTransitionState(false).also { it.targetState = true } }
+    val panelEntryState = remember { MutableTransitionState(false).also { it.targetState = true } }
+    val panelOffsetY = remember { Animatable(0f) }
+    var panelHeightPx by remember { mutableStateOf(0f) }
     var selectedTab by remember { mutableStateOf(WickKitOverlayState.lastTab) }
 
+    suspend fun close() {
+        scrimVisible.targetState = false
+        panelOffsetY.animateTo(
+            targetValue = panelHeightPx,
+            animationSpec = tween(CLOSE_MS.toInt()),
+        )
+        onClose()
+    }
+
     fun animateClose() {
-        scope.launch {
-            visibleState.targetState = false
-            delay(CLOSE_MS.milliseconds)
-            onClose()
-        }
+        scope.launch { close() }
     }
 
     BackHandler(onBack = ::animateClose)
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
-            visibleState = visibleState,
+            visibleState = scrimVisible,
             enter = fadeIn(animationSpec = tween(OPEN_MS)),
             exit = fadeOut(animationSpec = tween(CLOSE_MS.toInt())),
         ) {
@@ -112,16 +128,45 @@ internal fun WickKitScreen(onClose: () -> Unit) {
         }
 
         AnimatedVisibility(
-            visibleState = visibleState,
+            visibleState = panelEntryState,
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium),
             ),
-            exit = slideOutVertically(
-                targetOffsetY = { it },
-                animationSpec = tween(CLOSE_MS.toInt()),
-            ),
-            modifier = Modifier.align(Alignment.BottomCenter),
+            exit = ExitTransition.None,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .onSizeChanged { panelHeightPx = it.height.toFloat() }
+                .offset { IntOffset(x = 0, y = panelOffsetY.value.roundToInt()) }
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    enabled = panelEntryState.isIdle,
+                    state = rememberDraggableState { delta ->
+                        scope.launch {
+                            panelOffsetY.snapTo(
+                                targetValue = (panelOffsetY.value + delta).coerceAtLeast(0f),
+                            )
+                        }
+                    },
+                    onDragStopped = { velocity ->
+                        scope.launch {
+                            if (
+                                velocity > DISMISS_VELOCITY_THRESHOLD ||
+                                panelOffsetY.value > panelHeightPx * DISMISS_FRACTION_THRESHOLD
+                            ) {
+                                close()
+                            } else {
+                                panelOffsetY.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = spring(
+                                        dampingRatio = 0.8f,
+                                        stiffness = Spring.StiffnessMedium,
+                                    ),
+                                )
+                            }
+                        }
+                    },
+                ),
         ) {
             DebugPanel(
                 selectedTab = selectedTab,

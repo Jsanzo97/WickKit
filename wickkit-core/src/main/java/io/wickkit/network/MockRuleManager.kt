@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 object MockRuleManager {
 
-    private const val MAX_RULES = 50
+    internal const val MAX_RULES = 50
 
     private val idCounter = AtomicLong(0)
 
@@ -25,15 +25,18 @@ object MockRuleManager {
             url.contains(rule.urlPattern, ignoreCase = true)
     }
 
-    fun add(rule: MockRule) {
+    fun add(rule: MockRule): Boolean {
         require(rule.urlPattern.isNotBlank()) { "urlPattern must not be blank" }
+        var added = false
         rules.update { current ->
             if (current.size >= MAX_RULES) {
                 current
             } else {
+                added = true
                 current.adding(rule.copy(id = idCounter.getAndIncrement()))
             }
         }
+        return added
     }
 
     fun remove(id: Long) {

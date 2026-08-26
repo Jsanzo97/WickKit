@@ -19,6 +19,25 @@ import kotlin.time.Duration.Companion.milliseconds
 
 internal const val POLL_INTERVAL_MS = 2_000L
 
+private object DatabaseTabState {
+    var screen: DbScreen = DbScreen.DatabaseList
+    private val editedRowsByTable = mutableMapOf<String, Set<String>>()
+
+    fun getEditedRowKeys(
+        databasePath: String,
+        tableName: String,
+    ): Set<String> = editedRowsByTable["$databasePath/$tableName"] ?: emptySet()
+
+    fun setEditedRowKeys(databasePath: String, tableName: String, keys: Set<String>) {
+        val tableKey = "$databasePath/$tableName"
+        if (keys.isEmpty()) {
+            editedRowsByTable.remove(tableKey)
+        } else {
+            editedRowsByTable[tableKey] = keys
+        }
+    }
+}
+
 internal sealed interface DbScreen {
     data object DatabaseList : DbScreen
     data class TableList(val database: DatabaseEntry) : DbScreen
@@ -108,11 +127,13 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
     private var pollJob: Job? = null
 
     init {
+        _screen.value = DatabaseTabState.screen
         startPolling()
     }
 
     fun navigateTo(newScreen: DbScreen) {
         _screen.value = newScreen
+        DatabaseTabState.screen = newScreen
         when (newScreen) {
             DbScreen.DatabaseList -> Unit
 
@@ -152,9 +173,15 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
             val result = persistEdit(cell, _tableUiState.value, newText, s.database.path, s.table)
             if (result != null) {
                 val (key, refreshed) = result
+                val newEditedKeys = _tableUiState.value.editedRowKeys + key
                 _tableUiState.value = _tableUiState.value.copy(
                     rows = refreshed,
-                    editedRowKeys = _tableUiState.value.editedRowKeys + key,
+                    editedRowKeys = newEditedKeys,
+                )
+                DatabaseTabState.setEditedRowKeys(
+                    databasePath = s.database.path,
+                    tableName = s.table,
+                    keys = newEditedKeys,
                 )
             }
         }
@@ -203,12 +230,27 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
         val current = _tableUiState.value
         if (current.isLoading) {
             _tableUiState.value = result.fold(
-                onSuccess = { (cols, rows) -> TableUiState(columns = cols, rows = rows, isLoading = false) },
+                onSuccess = { (cols, rows) ->
+                    TableUiState(
+                        columns = cols,
+                        rows = rows,
+                        editedRowKeys = DatabaseTabState.getEditedRowKeys(
+                            databasePath = screen.database.path,
+                            tableName = screen.table,
+                        ),
+                        isLoading = false,
+                    )
+                },
                 onFailure = { TableUiState(isLoading = false, error = "Unable to read table data") },
             )
         } else {
             result.getOrNull()?.let { (freshColumns, freshRows) ->
                 val (mergedRows, survivingKeys) = mergeWithEdits(freshColumns, freshRows, current)
+                DatabaseTabState.setEditedRowKeys(
+                    databasePath = screen.database.path,
+                    tableName = screen.table,
+                    keys = survivingKeys,
+                )
                 _tableUiState.value = current.copy(
                     columns = freshColumns,
                     rows = mergedRows,

@@ -64,6 +64,7 @@ internal fun MockRuleEditor(
     prefillFrom: NetworkEntry?,
     onBack: () -> Unit,
     onSave: (MockRule) -> Unit,
+    canSave: Boolean = true,
 ) {
     val focusManager = LocalFocusManager.current
     val isFromEntry = prefillFrom != null
@@ -83,6 +84,7 @@ internal fun MockRuleEditor(
     ) {
         EditorToolbar(
             isEditing = rule != null,
+            canSave = canSave,
             onBack = onBack,
             onSave = {
                 if (responseBody.isNotBlank() && !isValidJson(responseBody)) {
@@ -160,6 +162,7 @@ private fun EditorToolbar(
     isEditing: Boolean,
     onBack: () -> Unit,
     onSave: () -> Unit,
+    canSave: Boolean = true,
 ) {
     Row(
         modifier = Modifier
@@ -188,8 +191,9 @@ private fun EditorToolbar(
             modifier = Modifier
                 .height(36.dp)
                 .clip(RoundedCornerShape(8.dp))
+                .alpha(if (canSave) 1f else 0.35f)
                 .background(MaterialTheme.colorScheme.primary)
-                .clickable(interactionSource = null, indication = null) { onSave() }
+                .clickable(enabled = canSave, interactionSource = null, indication = null) { onSave() }
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center,
         ) {

@@ -86,8 +86,14 @@ class WickKitNetworkInterceptor : Interceptor {
         requestBody: String?,
     ): Response {
         val requestHeaders = request.headers.toFlatMap()
-        if (rule.delayMs > 0) Thread.sleep(rule.delayMs.coerceAtMost(MAX_DELAY_MS))
-        val contentType = "application/json; charset=utf-8".toMediaType()
+        if (rule.delayMs > 0) {
+            try {
+                Thread.sleep(rule.delayMs.coerceAtMost(MAX_DELAY_MS))
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+        val contentType = (rule.responseHeaders["Content-Type"] ?: "application/json; charset=utf-8").toMediaType()
         val mockBody = (rule.responseBody ?: "").toResponseBody(contentType)
         val response = Response.Builder()
             .request(request)

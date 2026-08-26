@@ -34,6 +34,7 @@ class WickKitPlugin : Plugin<Project> {
         extension: WickKitExtension,
         isApp: Boolean,
     ) {
+        if (!isApp) return
         val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
         androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
             if (!extension.enabled.get()) {
@@ -41,14 +42,12 @@ class WickKitPlugin : Plugin<Project> {
             }
             variant.instrumentation.transformClassesWith(
                 WickKitTransform::class.java,
-                InstrumentationScope.PROJECT,
+                InstrumentationScope.ALL,
             ) {}
-            if (isApp) {
-                variant.instrumentation.transformClassesWith(
-                    WickKitDatabaseTransform::class.java,
-                    InstrumentationScope.ALL,
-                ) {}
-            }
+            variant.instrumentation.transformClassesWith(
+                WickKitDatabaseTransform::class.java,
+                InstrumentationScope.ALL,
+            ) {}
             variant.instrumentation.setAsmFramesComputationMode(
                 FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS,
             )

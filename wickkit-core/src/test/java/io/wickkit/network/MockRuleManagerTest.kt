@@ -34,9 +34,15 @@ class MockRuleManagerTest {
     }
 
     @Test
-    fun `add ignores rule when MAX_RULES cap is reached`() {
+    fun `add returns true when rule is stored successfully`() {
+        assertTrue(MockRuleManager.add(rule()))
+    }
+
+    @Test
+    fun `add returns false and ignores rule when MAX_RULES cap is reached`() {
         repeat(50) { MockRuleManager.add(rule(urlPattern = "/pattern-$it")) }
-        MockRuleManager.add(rule(urlPattern = "/overflow"))
+        val result = MockRuleManager.add(rule(urlPattern = "/overflow"))
+        assertFalse(result)
         assertEquals(50, MockRuleManager.rules.value.size)
         assertTrue(MockRuleManager.rules.value.none { it.urlPattern == "/overflow" })
     }
