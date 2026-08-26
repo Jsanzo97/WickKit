@@ -12,8 +12,10 @@ class WickKitRemoteConfig private constructor(
 ) {
 
     init {
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            WickKitFlagsManager.init(context.applicationContext)
+        if (!WickKitFlagsManager.isInitialized) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                WickKitFlagsManager.init(context.applicationContext)
+            }
         }
     }
 

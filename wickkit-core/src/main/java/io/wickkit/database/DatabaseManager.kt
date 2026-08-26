@@ -101,6 +101,7 @@ internal class DatabaseManager(path: String) : AutoCloseable {
             )
         }.toTypedArray()
         database.execSQL("UPDATE ${table.q()} SET $setClause WHERE $whereClause", allArgs)
+        WickKitSqlDelightRegistry.notifyTable(table)
     }
 
     override fun close() {

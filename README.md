@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
-WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open within a session, as well as any active search text and filters in the Logs, Network, and Flags tabs — re-opening the overlay always picks up exactly where you left off. The overlay UI is available in English, Spanish, French, German, and Italian.
+WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open and the exact screen you were on within each tab — re-opening the overlay always picks up exactly where you left off, including active search text and filters. The overlay UI is available in English, Spanish, French, German, and Italian.
 
 No more switching to Logcat, no more attaching a profiler, no more writing one-off debug screens. WickKit keeps everything in one persistent panel that stays out of the way in production via a no-op stub.
 
@@ -42,9 +42,19 @@ The **Mocks** screen lets you define URL pattern rules (substring match) with a 
 ### Database
 Browses every SQLite database found in the app's private data directory. The list shows each database name and its file size. Databases protected by SQLCipher or other encryption are marked as encrypted and cannot be opened.
 
-Navigate into a database to see its tables with row counts, then into a table to view the data in a horizontally scrollable grid. Cells are editable inline — tap to start editing, confirm with the keyboard **Done** action. All tables are editable, including those without a declared primary key (WickKit uses SQLite's implicit `rowid` as the edit anchor, hidden from the UI). Edits are written back via a raw `UPDATE` SQL statement and the row is highlighted to confirm the change.
+Navigate into a database to see its tables with row counts, then into a table to view the data in a horizontally scrollable grid. Cells are editable inline — tap to start editing, confirm with the keyboard **Done** action. All tables are editable, including those without a declared primary key (WickKit uses SQLite's implicit `rowid` as the edit anchor, hidden from the UI). Edits are written back via a raw `UPDATE` SQL statement and the row is highlighted to confirm the change. Row highlights are preserved when you close and reopen the overlay — a highlighted row stays marked until an external change reverts it in the database.
 
-**How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` in read-write mode. When Room, SQLDelight, or any other SQLite library has already opened the database, WickKit reuses that same connection (via `WickKitDatabaseRegistry`, populated by an ASM bytecode transform at build time) so that WickKit edits trigger Room's `InvalidationTracker` and update any active `Flow` in the app.
+**How it works:** `DatabaseDiscovery` scans `context.databasePath("")` to enumerate `.db` files. `DatabaseManager` wraps a `SQLiteDatabase` in read-write mode. When a supported ORM has already opened the database, WickKit reuses the same connection and notifies the ORM so that edits made in the overlay propagate live to the app's UI — no polling or restart needed.
+
+**Live update support by ORM:**
+
+| ORM | Live update in the app | Prerequisite |
+|---|---|---|
+| **Room** | ✅ | Query must return `Flow<...>` or `LiveData<...>` and be actively observed |
+| **SQLDelight** | ✅ | Query must use `.asFlow()` and be actively collected |
+| Raw `SQLiteDatabase` / other ORMs | ❌ | Edits are written to the database but the app's UI will not refresh automatically |
+
+WickKit plugs into each ORM's own notification mechanism: for Room it relies on `InvalidationTracker` (SQLite DDL triggers fired on any write to the shared connection); for SQLDelight it calls `notifyListeners(tableName)` on the driver via reflection after each edit. Both mechanisms are wired automatically by the Gradle plugin — no changes to app code are needed.
 
 <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/database-edited.png" width="275">
 
@@ -133,8 +143,8 @@ Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImp
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.2.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.2.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.0")
 }
 ```
 
@@ -144,9 +154,9 @@ This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The N
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.2.2")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.2.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.2.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.0")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.0")
 }
 ```
 
@@ -168,9 +178,9 @@ val client = HttpClient {
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.2.2")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.2.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.2.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.0")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.0")
 }
 ```
 
@@ -185,28 +195,21 @@ val rc = WickKitRemoteConfig.wrap(context, FirebaseRemoteConfig.getInstance())
 
 The plugin instruments every `@Composable` function at build time so the Performance tab can show per-composable recomposition rates. It only runs on the debug variant.
 
-**Single-module project** — apply in the module where your composables live:
+Apply the plugin in the **app module**. It uses `InstrumentationScope.ALL`, which covers the app module and all its dependency modules automatically — no need to apply the plugin to each module individually.
 
 ```kotlin
-// module-level build.gradle.kts
+// app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.2.2"
+    id("io.github.jsanzo97.wickkit") version "1.3.0"
 }
 ```
 
-**Multi-module project** — apply once at the root and it propagates automatically to every Android submodule:
+This works for both single-module and multi-module projects. Composables defined in feature modules, shared UI libraries, or any other dependency are all tracked automatically.
+
+To disable all instrumentation (e.g. for a specific build variant or CI environment):
 
 ```kotlin
-// root build.gradle.kts
-plugins {
-    id("io.github.jsanzo97.wickkit") version "1.2.2"
-}
-```
-
-To exclude a specific module from instrumentation:
-
-```kotlin
-// feature-analytics/build.gradle.kts
+// app/build.gradle.kts
 wickKit {
     enabled = false
 }
@@ -216,27 +219,27 @@ Add the Compose no-op stub for release:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.2.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.2.2")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.0")
 }
 ```
 
 ### Full setup
 
 ```kotlin
-// root or module-level build.gradle.kts
+// app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.2.2"
+    id("io.github.jsanzo97.wickkit") version "1.3.0"
 }
 
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.2.2")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.2.2")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.2.2")
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.2.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.0")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.0")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.0")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.0")
 
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.2.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.2.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.0")
 }
 ```
 

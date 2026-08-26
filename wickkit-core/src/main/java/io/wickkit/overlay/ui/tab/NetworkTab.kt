@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +67,7 @@ private val HTTP_METHODS = listOf("GET", "POST", "PUT", "DELETE", "PATCH")
 private object NetworkTabState {
     var search: String = ""
     var methodFilter: String? = null
+    var screen: NetworkScreen = NetworkScreen.Requests
 }
 
 private sealed interface NetworkScreen {
@@ -83,14 +85,19 @@ private sealed interface NetworkScreen {
 internal fun NetworkTab() {
     val entries by WickKitNetworkManager.entries.collectAsState()
     val rules by MockRuleManager.rules.collectAsState()
-    var screen: NetworkScreen by remember { mutableStateOf(NetworkScreen.Requests) }
+    var screen: NetworkScreen by remember { mutableStateOf(NetworkTabState.screen) }
+
+    LaunchedEffect(screen) {
+        NetworkTabState.screen = when (val s = screen) {
+            is NetworkScreen.MockEditor -> s.returnTo
+            else -> s
+        }
+    }
 
     BackHandler(enabled = screen !is NetworkScreen.Requests) {
         screen = when (val currentScreen = screen) {
-            is NetworkScreen.Detail -> NetworkScreen.Requests
-            NetworkScreen.Mocks -> NetworkScreen.Requests
             is NetworkScreen.MockEditor -> currentScreen.returnTo
-            NetworkScreen.Requests -> NetworkScreen.Requests
+            else -> NetworkScreen.Requests
         }
     }
 
@@ -145,10 +152,16 @@ internal fun NetworkTab() {
         is NetworkScreen.MockEditor -> MockRuleEditor(
             rule = currentScreen.rule,
             prefillFrom = currentScreen.prefillFrom,
+            canSave = currentScreen.rule != null || rules.size < MockRuleManager.MAX_RULES,
             onBack = { screen = currentScreen.returnTo },
             onSave = { rule ->
-                if (currentScreen.rule == null) MockRuleManager.add(rule) else MockRuleManager.update(rule)
-                screen = NetworkScreen.Mocks
+                val saved = if (currentScreen.rule == null) {
+                    MockRuleManager.add(rule)
+                } else {
+                    MockRuleManager.update(rule)
+                    true
+                }
+                if (saved) screen = NetworkScreen.Mocks
             },
         )
     }
