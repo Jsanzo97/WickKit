@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import io.wickkit.core.R
@@ -107,17 +108,21 @@ private fun LeakDetailHeader(
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = simpleClass,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 color = LeakDetailColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             if (packagePath.isNotEmpty()) {
                 Text(
                     text = packagePath,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -141,16 +146,18 @@ private fun LeakInfoRow(label: String, value: String) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
             Text(
                 text = label,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.padding(end = 16.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
             )
             Text(
                 text = value,
+                modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.onSurface,
             )
