@@ -16,6 +16,20 @@ private const val SYNTHETIC_FLAGS =
 
 internal class WickKitClassVisitor(next: ClassVisitor) : ClassVisitor(ASM_API, next) {
 
+    private var simpleClassName = ""
+
+    override fun visit(
+        version: Int,
+        access: Int,
+        name: String,
+        signature: String?,
+        superName: String?,
+        interfaces: Array<String>?,
+    ) {
+        simpleClassName = name.substringAfterLast('/')
+        super.visit(version, access, name, signature, superName, interfaces)
+    }
+
     override fun visitMethod(
         access: Int,
         name: String,
@@ -25,10 +39,10 @@ internal class WickKitClassVisitor(next: ClassVisitor) : ClassVisitor(ASM_API, n
     ): MethodVisitor? {
         val nextMethodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions)
         val shouldInstrument = access and SYNTHETIC_FLAGS == 0 &&
-            '$' !in name && !name.startsWith('<') &&
+            '$' !in name && '-' !in name && !name.startsWith('<') &&
             COMPOSER_DESC in descriptor
         return if (shouldInstrument && nextMethodVisitor != null) {
-            WickKitMethodVisitor(next = nextMethodVisitor, composableName = name)
+            WickKitMethodVisitor(next = nextMethodVisitor, composableName = "$simpleClassName.$name")
         } else {
             nextMethodVisitor
         }

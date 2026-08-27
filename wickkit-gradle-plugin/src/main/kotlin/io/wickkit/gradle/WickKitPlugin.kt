@@ -1,5 +1,6 @@
 package io.wickkit.gradle
 
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidComponentsExtension
@@ -35,6 +36,10 @@ class WickKitPlugin : Plugin<Project> {
         isApp: Boolean,
     ) {
         if (!isApp) return
+        val appPackage = target.extensions
+            .getByType(CommonExtension::class.java)
+            .namespace
+            ?: return
         val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
         androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
             if (!extension.enabled.get()) {
@@ -43,7 +48,9 @@ class WickKitPlugin : Plugin<Project> {
             variant.instrumentation.transformClassesWith(
                 WickKitTransform::class.java,
                 InstrumentationScope.ALL,
-            ) {}
+            ) { params ->
+                params.appPackage.set(appPackage)
+            }
             variant.instrumentation.transformClassesWith(
                 WickKitDatabaseTransform::class.java,
                 InstrumentationScope.ALL,

@@ -170,7 +170,7 @@ private fun LeakEntryRow(entry: LeakEntry, onClick: () -> Unit) {
             ) {
                 Text(
                     text = simpleClass,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                     color = LeakColor.copy(alpha = 0.9f),
                     maxLines = 1,
@@ -181,6 +181,7 @@ private fun LeakEntryRow(entry: LeakEntry, onClick: () -> Unit) {
                     text = entry.detectedAt,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    maxLines = 1,
                 )
             }
             if (packagePath.isNotEmpty()) {
