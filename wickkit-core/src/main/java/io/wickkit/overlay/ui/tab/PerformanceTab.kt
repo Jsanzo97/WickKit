@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -210,6 +208,9 @@ private fun ComposablesInactiveRow() {
 
 @Composable
 private fun ComposableEntryRow(entry: ComposableEntry) {
+    val dotIndex = entry.name.lastIndexOf('.')
+    val displayName = if (dotIndex >= 0) entry.name.substring(dotIndex + 1) else entry.name
+    val sourceClass = if (dotIndex >= 0) entry.name.substring(0, dotIndex).removeSuffix("Kt") else ""
     Column {
         Row(
             modifier = Modifier
@@ -218,14 +219,24 @@ private fun ComposableEntryRow(entry: ComposableEntry) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = entry.name,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = displayName,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (sourceClass.isNotEmpty() && sourceClass != displayName) {
+                    Text(
+                        text = sourceClass,
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "%.1f /s".format(entry.ratePerSecond),
@@ -233,7 +244,6 @@ private fun ComposableEntryRow(entry: ComposableEntry) {
                     color = severityColor(entry.severity),
                 )
                 if (entry.peakRatePerSecond > entry.ratePerSecond) {
-                    Spacer(modifier = Modifier.width(0.dp))
                     Text(
                         text = "↑ %.0f pk".format(entry.peakRatePerSecond),
                         style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
@@ -376,21 +386,21 @@ private fun sampleSnapshot() = PerformanceSnapshot(
     nativeHeapMb = 18L,
     composableEntries = persistentListOf(
         ComposableEntry(
-            name = "CheckoutButton",
+            name = "CheckoutScreenKt.CheckoutButton",
             totalCount = 1_204L,
             ratePerSecond = 62.0f,
             peakRatePerSecond = 87.3f,
             severity = RecomposeSeverity.RED,
         ),
         ComposableEntry(
-            name = "ProductCard",
+            name = "ProductCardKt.ProductCard",
             totalCount = 312L,
             ratePerSecond = 18.2f,
             peakRatePerSecond = 23.1f,
             severity = RecomposeSeverity.ORANGE,
         ),
         ComposableEntry(
-            name = "SearchBar",
+            name = "SearchBarKt.SearchBar",
             totalCount = 84L,
             ratePerSecond = 7.0f,
             peakRatePerSecond = 12.4f,

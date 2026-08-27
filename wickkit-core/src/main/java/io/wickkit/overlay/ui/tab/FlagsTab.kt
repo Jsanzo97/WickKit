@@ -50,6 +50,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -270,7 +271,7 @@ private fun SharedPreferencesEntryRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 32.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         Column(
             modifier = Modifier
@@ -330,32 +331,32 @@ private fun SharedPreferencesEntryRow(
 private fun SharedPreferencesEntryValueRow(entry: SharedPreferencesEntry) {
     val overrideColor = MaterialTheme.colorScheme.primary
     val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        val valueColor = if (entry.isOverrideEnabled) overrideColor else MaterialTheme.colorScheme.onSurface
+    val valueColor = if (entry.isOverrideEnabled) overrideColor else MaterialTheme.colorScheme.onSurface
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
-            text = entry.currentValue,
-            style = MaterialTheme.typography.bodySmall,
+            text = prettyPrintIfJson(entry.currentValue),
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             color = valueColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
-        FlagsBadge(text = entry.type.name, color = mutedColor)
-        if (entry.hasOverride) {
-            val label = if (entry.isOverrideEnabled) {
-                "orig: ${entry.backupValue}"
-            } else {
-                "override: ${entry.overrideValue}"
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            FlagsBadge(text = entry.type.name, color = mutedColor)
+            if (entry.hasOverride) {
+                val label = if (entry.isOverrideEnabled) {
+                    "orig: ${entry.backupValue}"
+                } else {
+                    "override: ${entry.overrideValue}"
+                }
+                Text(
+                    text = "← $label",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = mutedColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Text(
-                text = "← $label",
-                style = MaterialTheme.typography.labelSmall,
-                color = mutedColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
         }
     }
 }
@@ -441,7 +442,7 @@ private fun RemoteConfigEntryRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         Column(
             modifier = Modifier
@@ -493,22 +494,21 @@ private fun RemoteConfigEntryRow(
 @Composable
 private fun RemoteConfigEntryValueRow(entry: RemoteConfigEntry) {
     val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        val displayValue = if (entry.isOverrideEnabled) entry.overrideValue else entry.remoteValue
-        val valueColor = if (entry.isOverrideEnabled) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        }
+    val rawValue = if (entry.isOverrideEnabled) {
+        entry.overrideValue
+    } else {
+        entry.remoteValue
+    }
+    val valueColor = if (entry.isOverrideEnabled) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
-            text = displayValue,
-            style = MaterialTheme.typography.bodySmall,
+            text = prettyPrintIfJson(rawValue),
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             color = valueColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
         if (entry.isOverrideEnabled) {
             Text(
@@ -740,6 +740,21 @@ private fun FlagsBadge(text: String, color: Color) {
             style = MaterialTheme.typography.labelSmall,
             color = color,
         )
+    }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+private fun prettyPrintIfJson(value: String): String {
+    val trimmed = value.trim()
+    return try {
+        when {
+            trimmed.startsWith('{') -> org.json.JSONObject(trimmed).toString(2)
+            trimmed.startsWith('[') -> org.json.JSONArray(trimmed).toString(2)
+            else -> value
+        }
+    } catch (_: org.json.JSONException) {
+        value
     }
 }
 
