@@ -281,10 +281,8 @@ private fun SharedPreferencesEntryRow(
                         isBoolEditing = !isBoolEditing
                     } else if (!isEditing) {
                         isEditing = true
-                        editValue = TextFieldValue(
-                            entry.currentValue,
-                            selection = TextRange(entry.currentValue.length),
-                        )
+                        val initial = prettyPrintIfJson(entry.currentValue)
+                        editValue = TextFieldValue(initial, selection = TextRange(initial.length))
                     }
                 },
         ) {
@@ -452,7 +450,7 @@ private fun RemoteConfigEntryRow(
                         isBoolEditing = !isBoolEditing
                     } else if (!isEditing) {
                         isEditing = true
-                        val initial = entry.overrideValue.ifEmpty { entry.remoteValue }
+                        val initial = prettyPrintIfJson(entry.overrideValue.ifEmpty { entry.remoteValue })
                         editValue = TextFieldValue(initial, selection = TextRange(initial.length))
                     }
                 },
@@ -543,7 +541,8 @@ private fun FlagsInlineEdit(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            singleLine = true,
+            singleLine = false,
+            maxLines = 8,
             textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
