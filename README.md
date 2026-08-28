@@ -6,7 +6,7 @@
 [![API](https://img.shields.io/badge/API-21%2B-555555?labelColor=2ea44f)](https://developer.android.com/about/versions/lollipop)
 [![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.08.00-555555?labelColor=4285F4)](https://developer.android.com/jetpack/compose/bom)
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
+[![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit/develop?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
 WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open and the exact screen you were on within each tab — re-opening the overlay always picks up exactly where you left off, including active search text and filters. The overlay UI is available in English, Spanish, French, German, and Italian.
 
