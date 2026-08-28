@@ -3,18 +3,22 @@ package io.wickkit.database
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 
-internal class DatabaseManager(path: String) : AutoCloseable {
+internal class DatabaseManager(
+    path: String,
+    freshReadOnly: Boolean = false,
+) : AutoCloseable {
 
     private val owned: Boolean
     private val database: SQLiteDatabase
 
     init {
-        val registered = WickKitDatabaseRegistry.find(path)
+        val registered = if (freshReadOnly) null else WickKitDatabaseRegistry.find(path)
         if (registered != null) {
             database = registered
             owned = false
         } else {
-            database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
+            val flags = if (freshReadOnly) SQLiteDatabase.OPEN_READONLY else SQLiteDatabase.OPEN_READWRITE
+            database = SQLiteDatabase.openDatabase(path, null, flags)
             owned = true
         }
     }

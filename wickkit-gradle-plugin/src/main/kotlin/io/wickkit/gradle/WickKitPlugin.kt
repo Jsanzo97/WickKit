@@ -36,15 +36,15 @@ class WickKitPlugin : Plugin<Project> {
         isApp: Boolean,
     ) {
         if (!isApp) return
-        val appPackage = target.extensions
-            .getByType(CommonExtension::class.java)
-            .namespace
-            ?: return
         val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
         androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
             if (!extension.enabled.get()) {
                 return@onVariants
             }
+            val appPackage = target.extensions
+                .getByType(CommonExtension::class.java)
+                .namespace
+                ?: return@onVariants
             variant.instrumentation.transformClassesWith(
                 WickKitTransform::class.java,
                 InstrumentationScope.ALL,

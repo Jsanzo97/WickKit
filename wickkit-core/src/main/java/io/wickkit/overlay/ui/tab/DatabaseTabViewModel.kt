@@ -102,8 +102,10 @@ private suspend fun persistEdit(
                 originalRow = originalRow,
                 edits = mapOf(colName to newText),
             )
-            rowKey(columns = uiState.columns, row = originalRow) to manager.getRows(table)
         }
+        val key = rowKey(columns = uiState.columns, row = originalRow)
+        val rows = DatabaseManager(databasePath, freshReadOnly = true).use { it.getRows(table) }
+        key to rows
     }.getOrNull()
 }
 
@@ -125,6 +127,7 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
     val editingCell: StateFlow<CellKey?> = _editingCell.asStateFlow()
 
     private var pollJob: Job? = null
+    private var editInProgress = false
 
     init {
         _screen.value = DatabaseTabState.screen
@@ -169,20 +172,25 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
         val cell = _editingCell.value ?: return
         val s = _screen.value as? DbScreen.TableData ?: return
         _editingCell.value = null
+        editInProgress = true
         viewModelScope.launch {
-            val result = persistEdit(cell, _tableUiState.value, newText, s.database.path, s.table)
-            if (result != null) {
-                val (key, refreshed) = result
-                val newEditedKeys = _tableUiState.value.editedRowKeys + key
-                _tableUiState.value = _tableUiState.value.copy(
-                    rows = refreshed,
-                    editedRowKeys = newEditedKeys,
-                )
-                DatabaseTabState.setEditedRowKeys(
-                    databasePath = s.database.path,
-                    tableName = s.table,
-                    keys = newEditedKeys,
-                )
+            try {
+                val result = persistEdit(cell, _tableUiState.value, newText, s.database.path, s.table)
+                if (result != null) {
+                    val (key, refreshed) = result
+                    val newEditedKeys = _tableUiState.value.editedRowKeys + key
+                    _tableUiState.value = _tableUiState.value.copy(
+                        rows = refreshed,
+                        editedRowKeys = newEditedKeys,
+                    )
+                    DatabaseTabState.setEditedRowKeys(
+                        databasePath = s.database.path,
+                        tableName = s.table,
+                        keys = newEditedKeys,
+                    )
+                }
+            } finally {
+                editInProgress = false
             }
         }
     }
@@ -208,7 +216,7 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
 
             is DbScreen.TableList -> {
                 _tables.value = withContext(Dispatchers.IO) {
-                    DatabaseManager(s.database.path).use { manager ->
+                    DatabaseManager(s.database.path, freshReadOnly = true).use { manager ->
                         manager.listTables().map { it to manager.getRowCount(it) }
                     }
                 }
@@ -219,10 +227,10 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
     }
 
     private suspend fun pollTableData(screen: DbScreen.TableData) {
-        if (_editingCell.value != null) return
+        if (_editingCell.value != null || editInProgress) return
         val result = withContext(Dispatchers.IO) {
             runCatching {
-                DatabaseManager(screen.database.path).use { inspector ->
+                DatabaseManager(screen.database.path, freshReadOnly = true).use { inspector ->
                     inspector.getColumns(screen.table) to inspector.getRows(screen.table)
                 }
             }
