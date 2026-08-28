@@ -11,12 +11,19 @@ internal object SharedPrefsDiscovery {
         "WebViewChromiumPrefs",
     )
 
-    private val EXCLUDED_PREFIXES = listOf(
-        "frc_", // Firebase Remote Config local cache
-        "com.google.", // Google Play Services / Firebase SDK
-        "com.firebase.", // Firebase SDK
+    private val REVERSE_DOMAIN_PREFIXES = listOf(
+        "com.", "org.", "io.", "net.", "de.", "me.", "co.", "uk.", "fr.", "es.",
+    )
+
+    private val EXCLUDED_SIMPLE_PREFIXES = listOf(
+        "frc_", // Firebase Remote Config
         "firebase_", // Firebase SDK
-        "androidx.", // AndroidX internal prefs
+        "gtm_", // Google Tag Manager
+        "androidx_", // AndroidX internal (underscore variant)
+    )
+
+    private val EXCLUDED_SUFFIXES = listOf(
+        "_secure_prefs", // EncryptedSharedPreferences internal file
     )
 
     fun discoverNames(context: Context): List<String> {
@@ -25,7 +32,10 @@ internal object SharedPrefsDiscovery {
             ?.filter { it.extension == "xml" }
             ?.map { it.nameWithoutExtension }
             ?.filter { name ->
-                name !in EXCLUDED_EXACT && EXCLUDED_PREFIXES.none { name.startsWith(it) }
+                name !in EXCLUDED_EXACT &&
+                    REVERSE_DOMAIN_PREFIXES.none { name.startsWith(it) } &&
+                    EXCLUDED_SIMPLE_PREFIXES.none { name.startsWith(it) } &&
+                    EXCLUDED_SUFFIXES.none { name.endsWith(it) }
             }
             ?: emptyList()
     }
