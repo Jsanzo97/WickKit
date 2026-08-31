@@ -1,3 +1,5 @@
+max_report_age: off
+
 comment:
   layout: "reach,diff,flags,files"
   behavior: default
