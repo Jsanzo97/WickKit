@@ -7,14 +7,27 @@ import java.io.File
 
 internal object DatabaseDiscovery {
 
+    private val REVERSE_DOMAIN_PREFIXES = listOf(
+        "com.", "org.", "io.", "net.", "de.", "me.", "co.", "uk.", "fr.", "es.",
+    )
+
+    private val EXCLUDED_SIMPLE_PREFIXES = listOf(
+        "firebase", // Firebase SDK databases
+        "google_app_measurement", // Firebase Analytics
+        "gtm_", // Google Tag Manager
+    )
+
     fun findDatabases(context: Context): List<DatabaseEntry> = context.getDatabasePath("_").parentFile
         ?.listFiles()
-        ?.filter { it.isFile && !isAuxFile(it.name) }
+        ?.filter { it.isFile && !isAuxFile(it.name) && !isExcluded(it.nameWithoutExtension) }
         ?.map { toEntry(it) }
         ?.sortedBy { it.name }
         ?: emptyList()
 
     private fun isAuxFile(name: String) = name.endsWith("-wal") || name.endsWith("-shm") || name.endsWith("-journal")
+
+    private fun isExcluded(name: String) = REVERSE_DOMAIN_PREFIXES.any { name.startsWith(it) } ||
+        EXCLUDED_SIMPLE_PREFIXES.any { name.startsWith(it) }
 
     private fun toEntry(file: File): DatabaseEntry {
         val status = runCatching {
