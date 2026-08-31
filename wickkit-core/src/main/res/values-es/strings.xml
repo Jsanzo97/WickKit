@@ -5,7 +5,7 @@
     <string name="wk_tab_network">Red</string>
     <string name="wk_tab_database">Base de datos</string>
     <string name="wk_tab_flags">Flags</string>
-    <string name="wk_tab_leaks">Fugas</string>
+    <string name="wk_tab_leaks">Leaks</string>
     <string name="wk_tab_performance">Rendimiento</string>
     <string name="wk_tab_device">Dispositivo</string>
 

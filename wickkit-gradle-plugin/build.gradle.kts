@@ -23,6 +23,10 @@ gradlePlugin {
     }
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 dependencies {
     compileOnly(libs.android.gradle.plugin)
     compileOnly(libs.kotlin.gradle.plugin)

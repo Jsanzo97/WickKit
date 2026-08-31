@@ -6,7 +6,7 @@
 [![API](https://img.shields.io/badge/API-21%2B-555555?labelColor=2ea44f)](https://developer.android.com/about/versions/lollipop)
 [![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.08.00-555555?labelColor=4285F4)](https://developer.android.com/jetpack/compose/bom)
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
+[![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit/develop?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
 WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open and the exact screen you were on within each tab — re-opening the overlay always picks up exactly where you left off, including active search text and filters. The overlay UI is available in English, Spanish, French, German, and Italian.
 
@@ -143,8 +143,8 @@ Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImp
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.1")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.1")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
 }
 ```
 
@@ -154,9 +154,9 @@ This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The N
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.1")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.1")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.1")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
 }
 ```
 
@@ -178,9 +178,9 @@ val client = HttpClient {
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.1")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.1")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.1")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
 }
 ```
 
@@ -200,7 +200,7 @@ Apply the plugin in the **app module**. It uses `InstrumentationScope.ALL`, whic
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.3.1"
+    id("io.github.jsanzo97.wickkit") version "1.3.2"
 }
 ```
 
@@ -219,8 +219,8 @@ Add the Compose no-op stub for release:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.1")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.1")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.2")
 }
 ```
 
@@ -229,17 +229,17 @@ dependencies {
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.3.1"
+    id("io.github.jsanzo97.wickkit") version "1.3.2"
 }
 
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.1")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.1")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.1")
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.1")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.2")
 
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.1")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.2")
 }
 ```
 
