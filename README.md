@@ -135,6 +135,19 @@ Each button on the main screen triggers a specific scenario:
 
 ---
 
+## Requirements
+
+| Requirement | Minimum |
+|---|---|
+| Android Gradle Plugin | 9.x |
+| JDK (Gradle daemon) | 21 |
+| `minSdk` | 21 |
+| Kotlin | 2.x |
+
+The JDK 21 requirement applies only to the **Gradle daemon** that runs the build — it does not affect the runtime of the app or the devices it runs on. The Android library modules (`wickkit-core`, `wickkit-network`, etc.) are standard Android libraries and impose no additional JDK constraints on the consumer beyond what AGP 9.x already requires.
+
+---
+
 ## Installation
 
 Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImplementation` for the real modules and `releaseImplementation` for the no-op stubs so nothing reaches production.
@@ -143,8 +156,8 @@ Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImp
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
 }
 ```
 
@@ -154,9 +167,9 @@ This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The N
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.3")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
 }
 ```
 
@@ -178,9 +191,9 @@ val client = HttpClient {
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.3")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
 }
 ```
 
@@ -200,7 +213,7 @@ Apply the plugin in the **app module**. It uses `InstrumentationScope.ALL`, whic
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.3.2"
+    id("io.github.jsanzo97.wickkit") version "1.3.3"
 }
 ```
 
@@ -215,12 +228,28 @@ wickKit {
 }
 ```
 
+#### Multi-module projects with diverging package names
+
+The plugin decides which classes to instrument by comparing each class name against the `namespace` declared in the app module's `build.gradle.kts`. This covers most multi-module projects automatically, since feature and library modules typically share a common root package with the app.
+
+If your app module's namespace does not share a common prefix with some of your feature modules — for example, if the app namespace is `com.example.app` while composables live under `com.example.features` — add those roots explicitly via `packagePrefixes`:
+
+```kotlin
+// app/build.gradle.kts
+wickKit {
+    packagePrefixes.add("com.example.features")
+    packagePrefixes.add("com.example.shared")
+}
+```
+
+Each entry is a prefix match: `"com.example.features"` covers `com.example.features.checkout`, `com.example.features.profile`, and any other sub-package automatically. The app module's own namespace is always included regardless of what you configure here.
+
 Add the Compose no-op stub for release:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.3")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.3")
 }
 ```
 
@@ -229,17 +258,17 @@ dependencies {
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.3.2"
+    id("io.github.jsanzo97.wickkit") version "1.3.3"
 }
 
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.2")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.2")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.2")
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.2")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.3")
 
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.2")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.2")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.3")
 }
 ```
 

@@ -14,7 +14,10 @@ abstract class WickKitTransform : AsmClassVisitorFactory<WickKitTransformParamet
 
     override fun isInstrumentable(classData: ClassData): Boolean {
         val name = classData.className
-        val appPackage = parameters.get().appPackage.get()
-        return name.startsWith(appPackage) && '$' !in name
+        val params = parameters.get()
+        return '$' !in name && (
+            name.startsWith(params.appPackage.get()) ||
+                params.packagePrefixes.get().any { name.startsWith(it) }
+            )
     }
 }

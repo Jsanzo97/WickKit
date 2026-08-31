@@ -1,6 +1,7 @@
 package io.wickkit.compose
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -10,6 +11,10 @@ class WickKitComposeTrackerTest {
     @Before
     fun setUp() {
         WickKitComposeTracker.reset()
+        // reset() intentionally does not clear pluginActive; reflection ensures each test starts clean
+        val field = WickKitComposeTracker::class.java.getDeclaredField("pluginActive")
+        field.isAccessible = true
+        field.setBoolean(WickKitComposeTracker, false)
     }
 
     @Test
@@ -127,5 +132,23 @@ class WickKitComposeTrackerTest {
         val entries = WickKitComposeTracker.computeEntries(nowMs = 2_000L)
         assertEquals(1, entries.size)
         assertEquals(120L, entries[0].totalCount)
+    }
+
+    @Test
+    fun `isPluginActive is false before any recompose call`() {
+        assertFalse(WickKitComposeTracker.isPluginActive())
+    }
+
+    @Test
+    fun `isPluginActive becomes true after first onRecompose`() {
+        WickKitComposeTracker.onRecompose("SomeComposable")
+        assertTrue(WickKitComposeTracker.isPluginActive())
+    }
+
+    @Test
+    fun `isPluginActive remains true after reset`() {
+        WickKitComposeTracker.onRecompose("SomeComposable")
+        WickKitComposeTracker.reset()
+        assertTrue(WickKitComposeTracker.isPluginActive())
     }
 }
