@@ -3,9 +3,6 @@ max_report_age: false
 ignore:
   - "app/**"
 
-ignore:
-  - "app/**"
-
 comment:
   layout: "reach,diff,flags,files"
   behavior: default
