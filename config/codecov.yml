@@ -1,7 +1,4 @@
-max_report_age: false
-
-ignore:
-  - "app/**"
+max_report_age: off
 
 comment:
   layout: "reach,diff,flags,files"
