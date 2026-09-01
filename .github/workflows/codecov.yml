@@ -29,5 +29,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
-          config: config/codecov.yml
+          codecov_yml_path: config/codecov.yml
           fail_ci_if_error: false
