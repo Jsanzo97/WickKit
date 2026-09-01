@@ -1,5 +1,8 @@
 max_report_age: off
 
+ignore:
+  - "app/**"
+
 comment:
   layout: "reach,diff,flags,files"
   behavior: default
