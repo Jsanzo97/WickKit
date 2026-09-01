@@ -77,6 +77,18 @@ class DatabaseDiscoveryTest {
     }
 
     @Test
+    fun `findDatabases filters out files matching excluded simple prefixes`() {
+        File(databasesDirectory, "firebase_analytics.db").createNewFile()
+        File(databasesDirectory, "google_app_measurement.db").createNewFile()
+        File(databasesDirectory, "gtm_session.db").createNewFile()
+        SQLiteDatabase.openOrCreateDatabase(File(databasesDirectory, "app.db"), null).close()
+
+        val names = DatabaseDiscovery.findDatabases(context).map { it.name }
+
+        assertEquals(listOf("app.db"), names)
+    }
+
+    @Test
     fun `findDatabases records the correct file size`() {
         val file = File(databasesDirectory, "sized.db")
         SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->

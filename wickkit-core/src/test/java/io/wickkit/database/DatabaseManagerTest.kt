@@ -44,6 +44,33 @@ class DatabaseManagerTest {
         dbFile.delete()
     }
 
+    // region init — registered connection path
+
+    @Test
+    fun `uses registered database connection instead of opening a new one`() {
+        val context = RuntimeEnvironment.getApplication()
+        val file = context.getDatabasePath("registered_test.db").also { it.parentFile?.mkdirs() }
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { setup ->
+            setup.execSQL("CREATE TABLE items (id INTEGER PRIMARY KEY)")
+        }
+        val registeredDb = SQLiteDatabase.openOrCreateDatabase(file, null)
+        WickKitDatabaseRegistry.register(registeredDb)
+        try {
+            val manager = DatabaseManager(file.absolutePath)
+            assertTrue(manager.listTables().contains("items"))
+            manager.close()
+            assertTrue(registeredDb.isOpen)
+        } finally {
+            registeredDb.close()
+            file.delete()
+            val field = WickKitDatabaseRegistry::class.java.getDeclaredField("connections")
+            field.isAccessible = true
+            (field.get(WickKitDatabaseRegistry) as MutableList<*>).clear()
+        }
+    }
+
+    // endregion
+
     // region listTables
 
     @Test

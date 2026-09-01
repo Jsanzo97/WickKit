@@ -50,6 +50,7 @@ class WickKitPlugin : Plugin<Project> {
                 InstrumentationScope.ALL,
             ) { params ->
                 params.appPackage.set(appPackage)
+                params.packagePrefixes.set(extension.packagePrefixes)
             }
             variant.instrumentation.transformClassesWith(
                 WickKitDatabaseTransform::class.java,
