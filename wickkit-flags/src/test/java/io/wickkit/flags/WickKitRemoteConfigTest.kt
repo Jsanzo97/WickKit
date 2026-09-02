@@ -25,25 +25,25 @@ class WickKitRemoteConfigTest {
 
     @Test
     fun `getBoolean returns delegate value when no override`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(booleans = mapOf("flag" to true)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(booleans = mapOf("flag" to true)))
         assertEquals(true, rc.getBoolean("flag"))
     }
 
     @Test
     fun `getString returns delegate value when no override`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(strings = mapOf("theme" to "light")))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(strings = mapOf("theme" to "light")))
         assertEquals("light", rc.getString("theme"))
     }
 
     @Test
     fun `getLong returns delegate value when no override`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(longs = mapOf("timeout" to 30L)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(longs = mapOf("timeout" to 30L)))
         assertEquals(30L, rc.getLong("timeout"))
     }
 
     @Test
     fun `getDouble returns delegate value when no override`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(doubles = mapOf("rate" to 1.5)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(doubles = mapOf("rate" to 1.5)))
         assertEquals(1.5, rc.getDouble("rate"), 0.001)
     }
 
@@ -55,7 +55,6 @@ class WickKitRemoteConfigTest {
     fun `getBoolean applies rc override when enabled`() {
         WickKitFlagsManager.setRcOverride(key = "new_checkout", value = "true")
         val rc = WickKitRemoteConfig.wrap(
-            context = context,
             firebaseRc = FakeRc(booleans = mapOf("new_checkout" to false)),
         )
         assertEquals(true, rc.getBoolean("new_checkout"))
@@ -64,21 +63,21 @@ class WickKitRemoteConfigTest {
     @Test
     fun `getString applies rc override when enabled`() {
         WickKitFlagsManager.setRcOverride(key = "theme", value = "dark")
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(strings = mapOf("theme" to "light")))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(strings = mapOf("theme" to "light")))
         assertEquals("dark", rc.getString("theme"))
     }
 
     @Test
     fun `getLong applies rc override when enabled`() {
         WickKitFlagsManager.setRcOverride(key = "max_items", value = "99")
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(longs = mapOf("max_items" to 20L)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(longs = mapOf("max_items" to 20L)))
         assertEquals(99L, rc.getLong("max_items"))
     }
 
     @Test
     fun `getDouble applies rc override when enabled`() {
         WickKitFlagsManager.setRcOverride(key = "rate", value = "9.99")
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(doubles = mapOf("rate" to 1.0)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(doubles = mapOf("rate" to 1.0)))
         assertEquals(9.99, rc.getDouble("rate"), 0.001)
     }
 
@@ -90,7 +89,7 @@ class WickKitRemoteConfigTest {
     fun `getBoolean returns delegate value after override is cleared`() {
         WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.clearRcOverride("flag")
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
         assertEquals(false, rc.getBoolean("flag"))
     }
 
@@ -98,7 +97,7 @@ class WickKitRemoteConfigTest {
     fun `getBoolean returns delegate value after override is toggled off`() {
         WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.toggleRcOverride("flag")
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
         assertEquals(false, rc.getBoolean("flag"))
     }
 
@@ -107,7 +106,7 @@ class WickKitRemoteConfigTest {
         WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.toggleRcOverride("flag") // off
         WickKitFlagsManager.toggleRcOverride("flag") // on
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
         assertEquals(true, rc.getBoolean("flag"))
     }
 
@@ -117,25 +116,25 @@ class WickKitRemoteConfigTest {
 
     @Test
     fun `getBoolean returns false when delegate has no matching method`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = object {})
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = object {})
         assertEquals(false, rc.getBoolean("any"))
     }
 
     @Test
     fun `getString returns empty string when delegate has no matching method`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = object {})
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = object {})
         assertEquals("", rc.getString("any"))
     }
 
     @Test
     fun `getLong returns zero when delegate has no matching method`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = object {})
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = object {})
         assertEquals(0L, rc.getLong("any"))
     }
 
     @Test
     fun `getDouble returns zero when delegate has no matching method`() {
-        val rc = WickKitRemoteConfig.wrap(context = context, firebaseRc = object {})
+        val rc = WickKitRemoteConfig.wrap(firebaseRc = object {})
         assertEquals(0.0, rc.getDouble("any"), 0.0)
     }
 

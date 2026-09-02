@@ -67,9 +67,9 @@ Shows two sections with a unified search bar at the top. Type any text to filter
 
 **Remote Config** — shows the current value of every Firebase Remote Config key, plus the override value if one has been set. Typing a new value in the override field stores it locally so the next `getValue` call for that key returns the overridden value instead of the fetched one, without touching the real remote config.
 
-**How it works:** SharedPreferences files are read directly from the private directory. Remote Config wrapping is provided by `WickKitRemoteConfig.wrap(context, firebaseRc)`, which delegates all calls to the real object but intercepts `getValue`-style calls to check for local overrides first.
+**How it works:** SharedPreferences files are read directly from the private directory. Remote Config wrapping is provided by `WickKitRemoteConfig.wrap(firebaseRc)`, which delegates all calls to the real object but intercepts `getValue`-style calls to check for local overrides first.
 
-> **`wickkit-flags` required for Firebase Remote Config integration.** SharedPreferences always works with `wickkit-core` alone.
+> **`wickkit-flags` is required for the Flags tab.** Without it, the tab shows an instructional message — add `:wickkit-flags` to your debug dependencies to enable it.
 
 <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/shared-preferences.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/remote-config.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/flags-search.png" width="275">
 
@@ -183,7 +183,7 @@ dependencies {
 }
 ```
 
-This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The Network tab appears but stays empty (no interceptors). The Flags tab shows SharedPreferences only (no Firebase RC).
+This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The Network tab appears but stays empty (no interceptors). The Flags tab shows an instructional placeholder — add `wickkit-flags` to enable it.
 
 ### With network inspection
 
@@ -222,7 +222,7 @@ dependencies {
 Wrap your `FirebaseRemoteConfig` instance once at startup:
 
 ```kotlin
-val rc = WickKitRemoteConfig.wrap(context, FirebaseRemoteConfig.getInstance())
+val rc = WickKitRemoteConfig.wrap(FirebaseRemoteConfig.getInstance())
 // Use rc everywhere instead of the original instance
 ```
 
@@ -303,7 +303,7 @@ No further setup is required. The SDK initializes automatically via `WickKitInit
 | Missing module | Effect |
 |---|---|
 | `wickkit-network` | Network tab visible but always empty. No HTTP traffic is captured. |
-| `wickkit-flags` | Flags tab shows SharedPreferences only. Firebase Remote Config section is hidden. |
+| `wickkit-flags` | Flags tab shows an instructional message — no SharedPreferences or Remote Config inspection. |
 | `wickkit-compose` + Gradle plugin | Performance tab shows FPS and Memory. Compose section shows a message explaining the plugin is not applied. |
 | `wickkit-core` | Nothing works — core is the foundation and is required by all other modules. |
 
