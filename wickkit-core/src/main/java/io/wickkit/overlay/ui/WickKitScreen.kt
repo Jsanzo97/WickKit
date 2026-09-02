@@ -17,8 +17,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -53,11 +56,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.wickkit.core.R
+import io.wickkit.overlay.ui.tab.CrashesTab
 import io.wickkit.overlay.ui.tab.DatabaseTab
 import io.wickkit.overlay.ui.tab.DeviceTab
 import io.wickkit.overlay.ui.tab.FlagsTab
@@ -79,6 +82,7 @@ private enum class WickKitTab(@StringRes val labelRes: Int) {
     Database(R.string.wk_tab_database),
     Flags(R.string.wk_tab_flags),
     Leaks(R.string.wk_tab_leaks),
+    Crashes(R.string.wk_tab_crashes),
     Performance(R.string.wk_tab_performance),
     Threads(R.string.wk_tab_threads),
     Device(R.string.wk_tab_device),
@@ -207,6 +211,7 @@ private fun DebugPanel(
             WickKitTab.Database -> DatabaseTab()
             WickKitTab.Flags -> FlagsTab()
             WickKitTab.Leaks -> MemoryLeaksTab()
+            WickKitTab.Crashes -> CrashesTab()
             WickKitTab.Performance -> PerformanceTab()
             WickKitTab.Threads -> ThreadsTab()
             WickKitTab.Device -> DeviceTab()
@@ -269,34 +274,35 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
     val selectedColor = MaterialTheme.colorScheme.primary
     val unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     Column {
-        WickKitTab.entries.chunked(4).forEach { rowTabs ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                rowTabs.forEach { tab ->
-                    val isSelected = selected == tab
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSelect(tab) }
-                            .height(40.dp)
-                            .drawBehind {
-                                if (isSelected) {
-                                    drawRect(
-                                        color = indicatorColor,
-                                        topLeft = Offset(0f, size.height - 2.dp.toPx()),
-                                        size = Size(size.width, 2.dp.toPx()),
-                                    )
-                                }
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(tab.labelRes),
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (isSelected) selectedColor else unselectedColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            WickKitTab.entries.chunked(2).forEach { pair ->
+                Column(modifier = Modifier.width(IntrinsicSize.Max)) {
+                    pair.forEach { tab ->
+                        val isSelected = selected == tab
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .clickable { onSelect(tab) }
+                                .drawBehind {
+                                    if (isSelected) {
+                                        drawRect(
+                                            color = indicatorColor,
+                                            topLeft = Offset(0f, size.height - 2.dp.toPx()),
+                                            size = Size(size.width, 2.dp.toPx()),
+                                        )
+                                    }
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(tab.labelRes),
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (isSelected) selectedColor else unselectedColor,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }

@@ -162,6 +162,25 @@
     <string name="wk_device_value_portrait">portrait</string>
     <string name="wk_device_value_landscape">landscape</string>
 
+    <!-- Crashes tab -->
+    <string name="wk_tab_crashes">Crashes</string>
+    <string name="wk_crashes_events">events</string>
+    <string name="wk_crashes_badge_crash">CRASH</string>
+    <string name="wk_crashes_badge_anr">ANR</string>
+    <string name="wk_crashes_empty_title">No crashes or ANRs recorded</string>
+    <string name="wk_crashes_empty_subtitle">Crashes and ANRs will appear here after they occur</string>
+    <string name="wk_crashes_section_info">Info</string>
+    <string name="wk_crashes_section_stack_trace">Stack Trace</string>
+    <string name="wk_crashes_section_trace">Trace</string>
+    <string name="wk_crashes_label_exception">Exception</string>
+    <string name="wk_crashes_label_message">Message</string>
+    <string name="wk_crashes_label_thread">Thread</string>
+    <string name="wk_crashes_label_version">App Version</string>
+    <string name="wk_crashes_label_time">Time</string>
+    <string name="wk_crashes_label_description">Description</string>
+    <string name="wk_crashes_label_process">Process</string>
+    <string name="wk_crashes_no_trace">No trace available</string>
+
     <!-- Placeholder tab -->
     <string name="wk_placeholder_coming_soon">Coming soon</string>
     <string name="wk_placeholder_planned_features">Planned features</string>

@@ -32,12 +32,14 @@ import io.wickkit.WickKit
 import io.wickkit.network.WickKitNetworkInterceptor
 import jsanzo.wickkit.ui.theme.WickKitTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
 
@@ -108,6 +110,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("TooGenericExceptionThrown")
     @Composable
     private fun SampleContent(modifier: Modifier = Modifier) {
         val context = LocalContext.current
@@ -157,6 +160,14 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch(Dispatchers.IO) { spawnSampleThreads() }
                 Toast.makeText(context, "Sample threads spawned — check Threads tab", Toast.LENGTH_SHORT).show()
             }
+            SampleButton("Simulate Crash") {
+                Thread {
+                    throw RuntimeException("WickKit sample crash — reopen the app and check the Crashes tab")
+                }.apply {
+                    name = "wk-sample-crash"
+                    start()
+                }
+            }
         }
     }
 
@@ -182,7 +193,7 @@ private suspend fun spawnSampleThreads() {
             start()
         }
     }
-    val lock = Object()
+    val lock = Any()
     Thread {
         synchronized(lock) { Thread.sleep(30_000) }
     }.apply {
@@ -190,7 +201,7 @@ private suspend fun spawnSampleThreads() {
         isDaemon = true
         start()
     }
-    kotlinx.coroutines.delay(50)
+    delay(50.milliseconds)
     repeat(2) { index ->
         Thread {
             synchronized(lock) { Thread.sleep(30_000) }

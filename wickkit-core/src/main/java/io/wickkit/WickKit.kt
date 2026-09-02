@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import io.wickkit.compose.WickKitComposeTracker
+import io.wickkit.crashes.WickKitCrashManager
 import io.wickkit.leaks.ObjectWatcher
 import io.wickkit.logs.WickKitLogcat
 import io.wickkit.overlay.WickKitActivity
@@ -41,6 +42,7 @@ object WickKit {
         val app = context.applicationContext as? Application ?: return
         val isDebug = app.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         if (!isDebug) return
+        WickKitCrashManager.init(app)
         WickKitLogcat.start()
         WickKitPerformanceManager.start()
         WickKitThreadManager.start()
