@@ -7,10 +7,11 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.io.File
 
@@ -18,13 +19,14 @@ import java.io.File
 @Config(sdk = [34])
 class DatabaseManagerTest {
 
+    @get:Rule val tempDir = TemporaryFolder()
+
     private lateinit var dbFile: File
     private lateinit var inspector: DatabaseManager
 
     @Before
     fun setUp() {
-        val context = RuntimeEnvironment.getApplication()
-        dbFile = context.getDatabasePath("inspector_test.db").also { it.parentFile?.mkdirs() }
+        dbFile = File(tempDir.root, "inspector_test.db")
 
         SQLiteDatabase.openOrCreateDatabase(dbFile, null).use { sqliteDatabase ->
             sqliteDatabase.execSQL(
@@ -48,8 +50,7 @@ class DatabaseManagerTest {
 
     @Test
     fun `uses registered database connection instead of opening a new one`() {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath("registered_test.db").also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, "registered_test.db")
         SQLiteDatabase.openOrCreateDatabase(file, null).use { setup ->
             setup.execSQL("CREATE TABLE items (id INTEGER PRIMARY KEY)")
         }
@@ -102,8 +103,7 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRowCount returns zero for empty table`() {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath("empty_count.db").also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, "empty_count.db")
         try {
             SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
                 sqliteDatabase.execSQL("CREATE TABLE empty_t (id INTEGER PRIMARY KEY)")
@@ -144,8 +144,7 @@ class DatabaseManagerTest {
 
     @Test
     fun `getColumns defaults empty affinity to TEXT`() {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath("typeless.db").also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, "typeless.db")
         try {
             SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
                 sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, value)")
@@ -177,8 +176,7 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRows maps absent value to null`() {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath("null_test.db").also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, "null_test.db")
         try {
             SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
                 sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, val TEXT)")
@@ -195,8 +193,7 @@ class DatabaseManagerTest {
 
     @Test
     fun `getRows maps BLOB column to placeholder string`() {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath("blob_test.db").also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, "blob_test.db")
         try {
             SQLiteDatabase.openOrCreateDatabase(file, null).use { sqliteDatabase ->
                 sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY, data BLOB)")
@@ -251,8 +248,7 @@ class DatabaseManagerTest {
 
     @Test
     fun `updateRow edits no-pk table via synthetic rowid`() {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath("no_pk.db").also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, "no_pk.db")
         try {
             SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
                 db.execSQL("CREATE TABLE data (value TEXT)")

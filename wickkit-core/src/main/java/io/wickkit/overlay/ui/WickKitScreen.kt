@@ -65,6 +65,7 @@ import io.wickkit.overlay.ui.tab.LogsTab
 import io.wickkit.overlay.ui.tab.MemoryLeaksTab
 import io.wickkit.overlay.ui.tab.NetworkTab
 import io.wickkit.overlay.ui.tab.PerformanceTab
+import io.wickkit.overlay.ui.tab.ThreadsTab
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -79,6 +80,7 @@ private enum class WickKitTab(@StringRes val labelRes: Int) {
     Flags(R.string.wk_tab_flags),
     Leaks(R.string.wk_tab_leaks),
     Performance(R.string.wk_tab_performance),
+    Threads(R.string.wk_tab_threads),
     Device(R.string.wk_tab_device),
 }
 
@@ -206,6 +208,7 @@ private fun DebugPanel(
             WickKitTab.Flags -> FlagsTab()
             WickKitTab.Leaks -> MemoryLeaksTab()
             WickKitTab.Performance -> PerformanceTab()
+            WickKitTab.Threads -> ThreadsTab()
             WickKitTab.Device -> DeviceTab()
         }
     }

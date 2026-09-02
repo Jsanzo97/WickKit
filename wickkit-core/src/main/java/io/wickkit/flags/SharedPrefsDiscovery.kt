@@ -1,6 +1,5 @@
 package io.wickkit.flags
 
-import android.content.Context
 import java.io.File
 
 internal object SharedPrefsDiscovery {
@@ -26,17 +25,14 @@ internal object SharedPrefsDiscovery {
         "_secure_prefs", // EncryptedSharedPreferences internal file
     )
 
-    fun discoverNames(context: Context): List<String> {
-        val prefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
-        return prefsDir.listFiles()
-            ?.filter { it.extension == "xml" }
-            ?.map { it.nameWithoutExtension }
-            ?.filter { name ->
-                name !in EXCLUDED_EXACT &&
-                    REVERSE_DOMAIN_PREFIXES.none { name.startsWith(it) } &&
-                    EXCLUDED_SIMPLE_PREFIXES.none { name.startsWith(it) } &&
-                    EXCLUDED_SUFFIXES.none { name.endsWith(it) }
-            }
-            ?: emptyList()
-    }
+    fun discoverNames(prefsDir: File): List<String> = prefsDir.listFiles()
+        ?.filter { it.extension == "xml" }
+        ?.map { it.nameWithoutExtension }
+        ?.filter { name ->
+            name !in EXCLUDED_EXACT &&
+                REVERSE_DOMAIN_PREFIXES.none { name.startsWith(it) } &&
+                EXCLUDED_SIMPLE_PREFIXES.none { name.startsWith(it) } &&
+                EXCLUDED_SUFFIXES.none { name.endsWith(it) }
+        }
+        ?: emptyList()
 }

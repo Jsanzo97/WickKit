@@ -38,9 +38,16 @@ private val classExcludes = listOf(
     "io/wickkit/performance/FrameStats*",
     "io/wickkit/compose/ComposableEntry*",
     "io/wickkit/compose/RecomposeSeverity*",
+    // Data / value classes — threads tab
+    "io/wickkit/threads/ThreadEntry*",
+    // Android-lifecycle singletons: start() uses a hardcoded CoroutineScope; Choreographer
+    // frame callbacks and internal Compose/Android APIs are not testable in JVM unit tests.
+    // Core logic is covered via internal overloads (updateFrameStats, updateRuntimeStats,
+    // onActivityResumed(String), collectLiveFrameStats(frameData), buildEntries, refresh, clear).
+    "io/wickkit/performance/WickKitPerformanceManager*",
+    "io/wickkit/threads/WickKitThreadManager*",
     // Background coroutine infrastructure — requires TestScope injection to test
     "io/wickkit/leaks/ObjectWatcher*",
-    "io/wickkit/performance/WickKitPerformanceManager*",
     "io/wickkit/compose/WickKitComposeTracker*",
     // Firebase bridge — reflection-based, untestable without Firebase in classpath
     "io/wickkit/flags/RemoteConfigBridge*",

@@ -6,15 +6,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class WickKitDatabaseRegistryTest {
+
+    @get:Rule val tempDir = TemporaryFolder()
 
     private val openedDatabases = mutableListOf<SQLiteDatabase>()
 
@@ -35,8 +39,7 @@ class WickKitDatabaseRegistryTest {
     }
 
     private fun openDb(name: String): SQLiteDatabase {
-        val context = RuntimeEnvironment.getApplication()
-        val file = context.getDatabasePath(name).also { it.parentFile?.mkdirs() }
+        val file = File(tempDir.root, name)
         return SQLiteDatabase.openOrCreateDatabase(file, null).also { openedDatabases.add(it) }
     }
 

@@ -112,6 +112,23 @@
     <string name="wk_perf_sort_peak">Pico ↓</string>
     <string name="wk_perf_sort_rate">Tasa ↓</string>
 
+    <!-- Threads tab -->
+    <string name="wk_tab_threads">Hilos</string>
+    <string name="wk_threads_active">hilos activos</string>
+    <string name="wk_threads_blocked_warning">bloqueados</string>
+    <string name="wk_threads_empty_title">No se encontraron hilos</string>
+    <string name="wk_threads_empty_subtitle">Los datos de hilos aparecerán aquí en breve</string>
+    <string name="wk_threads_daemon">daemon</string>
+    <string name="wk_threads_user">usuario</string>
+    <string name="wk_threads_section_info">Hilo</string>
+    <string name="wk_threads_section_stack_trace">Stack Trace</string>
+    <string name="wk_threads_label_state">Estado</string>
+    <string name="wk_threads_label_type">Tipo</string>
+    <string name="wk_threads_label_priority">Prioridad</string>
+    <string name="wk_threads_label_group">Grupo</string>
+    <string name="wk_threads_label_stack_depth">Profundidad del stack</string>
+    <string name="wk_threads_no_stack_trace">Stack trace no disponible</string>
+
     <!-- Device tab -->
     <string name="wk_device_section_app">App</string>
     <string name="wk_device_section_device">Dispositivo</string>
