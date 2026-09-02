@@ -40,6 +40,13 @@ private val classExcludes = listOf(
     "io/wickkit/compose/RecomposeSeverity*",
     // Data / value classes — threads tab
     "io/wickkit/threads/ThreadEntry*",
+    // Data / value classes — crashes tab
+    "io/wickkit/crashes/CrashEntry*",
+    // Android-lifecycle singleton: init() launches a coroutine; installCrashHandler sets a
+    // process-wide handler; loadAnrEntries requires ApplicationExitInfo (not available in JVM tests).
+    // Core logic is covered via internal overloads (saveCrash, loadPersistedCrash, sortAndAssignIds,
+    // buildEntries, clear).
+    "io/wickkit/crashes/WickKitCrashManager*",
     // Android-lifecycle singletons: start() uses a hardcoded CoroutineScope; Choreographer
     // frame callbacks and internal Compose/Android APIs are not testable in JVM unit tests.
     // Core logic is covered via internal overloads (updateFrameStats, updateRuntimeStats,
