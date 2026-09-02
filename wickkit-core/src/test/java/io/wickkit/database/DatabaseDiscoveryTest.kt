@@ -1,14 +1,14 @@
 package io.wickkit.database
 
 import android.database.sqlite.SQLiteDatabase
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.io.File
 
@@ -16,24 +16,18 @@ import java.io.File
 @Config(sdk = [34])
 class DatabaseDiscoveryTest {
 
-    private lateinit var databasesDirectory: File
+    @get:Rule val tempDir = TemporaryFolder()
 
-    private val context get() = RuntimeEnvironment.getApplication()
+    private lateinit var databasesDirectory: File
 
     @Before
     fun setUp() {
-        databasesDirectory = context.getDatabasePath("_").parentFile!!.also { it.mkdirs() }
-        databasesDirectory.listFiles()?.forEach { it.delete() }
-    }
-
-    @After
-    fun tearDown() {
-        databasesDirectory.listFiles()?.forEach { it.delete() }
+        databasesDirectory = tempDir.newFolder("databases")
     }
 
     @Test
     fun `findDatabases returns empty list when directory is empty`() {
-        assertTrue(DatabaseDiscovery.findDatabases(context).isEmpty())
+        assertTrue(DatabaseDiscovery.findDatabases(databasesDirectory).isEmpty())
     }
 
     @Test
@@ -43,7 +37,7 @@ class DatabaseDiscoveryTest {
         File(databasesDirectory, "main.db-shm").createNewFile()
         File(databasesDirectory, "main.db-journal").createNewFile()
 
-        val result = DatabaseDiscovery.findDatabases(context)
+        val result = DatabaseDiscovery.findDatabases(databasesDirectory)
 
         assertEquals(1, result.size)
         assertEquals("main.db", result.single().name)
@@ -53,7 +47,7 @@ class DatabaseDiscoveryTest {
     fun `findDatabases marks valid SQLite file as Ok`() {
         SQLiteDatabase.openOrCreateDatabase(File(databasesDirectory, "valid.db"), null).close()
 
-        val entry = DatabaseDiscovery.findDatabases(context).single()
+        val entry = DatabaseDiscovery.findDatabases(databasesDirectory).single()
 
         assertEquals(DatabaseStatus.Ok, entry.status)
     }
@@ -62,7 +56,7 @@ class DatabaseDiscoveryTest {
     fun `findDatabases ignores subdirectories inside the databases folder`() {
         File(databasesDirectory, "subdir").mkdir()
 
-        assertTrue(DatabaseDiscovery.findDatabases(context).isEmpty())
+        assertTrue(DatabaseDiscovery.findDatabases(databasesDirectory).isEmpty())
     }
 
     @Test
@@ -71,7 +65,7 @@ class DatabaseDiscoveryTest {
             SQLiteDatabase.openOrCreateDatabase(File(databasesDirectory, name), null).close()
         }
 
-        val names = DatabaseDiscovery.findDatabases(context).map { it.name }
+        val names = DatabaseDiscovery.findDatabases(databasesDirectory).map { it.name }
 
         assertEquals(listOf("apple.db", "mango.db", "zebra.db"), names)
     }
@@ -83,7 +77,7 @@ class DatabaseDiscoveryTest {
         File(databasesDirectory, "gtm_session.db").createNewFile()
         SQLiteDatabase.openOrCreateDatabase(File(databasesDirectory, "app.db"), null).close()
 
-        val names = DatabaseDiscovery.findDatabases(context).map { it.name }
+        val names = DatabaseDiscovery.findDatabases(databasesDirectory).map { it.name }
 
         assertEquals(listOf("app.db"), names)
     }
@@ -95,7 +89,7 @@ class DatabaseDiscoveryTest {
             sqliteDatabase.execSQL("CREATE TABLE t (id INTEGER PRIMARY KEY)")
         }
 
-        val entry = DatabaseDiscovery.findDatabases(context).single()
+        val entry = DatabaseDiscovery.findDatabases(databasesDirectory).single()
 
         assertEquals(file.length(), entry.sizeBytes)
     }

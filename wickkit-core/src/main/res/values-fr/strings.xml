@@ -112,6 +112,23 @@
     <string name="wk_perf_sort_peak">Pic ↓</string>
     <string name="wk_perf_sort_rate">Taux ↓</string>
 
+    <!-- Threads tab -->
+    <string name="wk_tab_threads">Threads</string>
+    <string name="wk_threads_active">threads actifs</string>
+    <string name="wk_threads_blocked_warning">bloqués</string>
+    <string name="wk_threads_empty_title">Aucun thread trouvé</string>
+    <string name="wk_threads_empty_subtitle">Les données de threads apparaîtront ici</string>
+    <string name="wk_threads_daemon">daemon</string>
+    <string name="wk_threads_user">utilisateur</string>
+    <string name="wk_threads_section_info">Thread</string>
+    <string name="wk_threads_section_stack_trace">Stack Trace</string>
+    <string name="wk_threads_label_state">État</string>
+    <string name="wk_threads_label_type">Type</string>
+    <string name="wk_threads_label_priority">Priorité</string>
+    <string name="wk_threads_label_group">Groupe</string>
+    <string name="wk_threads_label_stack_depth">Profondeur du stack</string>
+    <string name="wk_threads_no_stack_trace">Stack trace non disponible</string>
+
     <!-- Device tab -->
     <string name="wk_device_section_app">App</string>
     <string name="wk_device_section_device">Appareil</string>

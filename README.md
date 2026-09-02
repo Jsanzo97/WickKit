@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit/develop?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
-WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with seven inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open and the exact screen you were on within each tab — re-opening the overlay always picks up exactly where you left off, including active search text and filters. The overlay UI is available in English, Spanish, French, German, and Italian.
+WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with eight inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open and the exact screen you were on within each tab — re-opening the overlay always picks up exactly where you left off, including active search text and filters. The overlay UI is available in English, Spanish, French, German, and Italian.
 
 No more switching to Logcat, no more attaching a profiler, no more writing one-off debug screens. WickKit keeps everything in one persistent panel that stays out of the way in production via a no-op stub.
 
@@ -96,6 +96,17 @@ Displays live runtime metrics grouped in three sections.
 **How it works:** `WickKitPerformanceManager` posts a repeating runnable on the `Choreographer` to count frames. Memory is read from `ActivityManager.MemoryInfo` and `Debug.getNativeHeapAllocatedSize()`. Compose recomposition tracking is done at bytecode level by the `wickkit-gradle-plugin`, which uses ASM to instrument every `@Composable` function and report calls to `WickKitComposeTracker`.
 
 <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/performance.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/performance-issues.png" width="275">
+
+---
+
+### Threads
+Lists every JVM thread currently active in the process. Each row shows a color-coded state badge, the thread name, its group, type (daemon or user), priority, and the number of stack frames captured. Tap any row to see the full stack trace.
+
+Filter chips at the top let you narrow the list by state — **All**, **Runnable**, **Waiting**, **Timed**, **Blocked**, or **New**. The toolbar shows the total active thread count, and a red badge highlights the number of blocked threads whenever any are detected.
+
+**How it works:** `WickKitThreadManager` calls `Thread.getAllStackTraces()` on a background coroutine every 2 seconds and maps the result into typed `ThreadEntry` objects. Terminated threads are excluded. Results are sorted by priority — BLOCKED first, then RUNNING, then the rest — and alphabetically within each state group.
+
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/threads-all.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/threads-waiting.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/threads-timed.png" width="275">
 
 ---
 

@@ -4,6 +4,7 @@ import io.wickkit.compose.ComposableEntry
 import io.wickkit.compose.RecomposeSeverity
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -302,6 +303,116 @@ class WickKitPerformanceManagerTest {
         )
         WickKitPerformanceManager.reset()
         assertTrue(WickKitPerformanceManager.snapshot.value.composableEntries.isEmpty())
+    }
+
+    // endregion
+
+    // region lifecycle hooks
+
+    @Test
+    fun `onActivityResumed sets activityName in snapshot`() {
+        WickKitPerformanceManager.onActivityResumed(activityName = "HomeActivity")
+        assertEquals("HomeActivity", WickKitPerformanceManager.snapshot.value.activityName)
+    }
+
+    @Test
+    fun `onActivityResumed clears frame stats in snapshot`() {
+        WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
+        WickKitPerformanceManager.onActivityResumed(activityName = "HomeActivity")
+        assertNull(WickKitPerformanceManager.snapshot.value.fps)
+        assertEquals(0, WickKitPerformanceManager.snapshot.value.slowFrames)
+        assertEquals(0, WickKitPerformanceManager.snapshot.value.frozenFrames)
+        assertEquals(0, WickKitPerformanceManager.snapshot.value.totalFrames)
+    }
+
+    @Test
+    fun `onActivityResumed clears jank metrics in snapshot`() {
+        WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
+        WickKitPerformanceManager.onActivityResumed(activityName = "HomeActivity")
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertNull(snapshot.jankRate)
+        assertNull(snapshot.p50Ms)
+        assertNull(snapshot.p90Ms)
+    }
+
+    @Test
+    fun `onActivityResumed preserves runtime stats in snapshot`() {
+        WickKitPerformanceManager.updateRuntimeStats(
+            RuntimeStats(
+                recompositions = 50L,
+                threads = 12,
+                jvmUsedMb = 32L,
+                jvmMaxMb = 256L,
+                nativeHeapMb = 8L,
+            ),
+        )
+        WickKitPerformanceManager.onActivityResumed(activityName = "HomeActivity")
+        val snapshot = WickKitPerformanceManager.snapshot.value
+        assertEquals(50L, snapshot.recompositionCount)
+        assertEquals(12, snapshot.threadCount)
+    }
+
+    @Test
+    fun `onActivityPaused clears frame stats when no frames are collected`() {
+        WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
+        WickKitPerformanceManager.onActivityPaused()
+        assertNull(WickKitPerformanceManager.snapshot.value.fps)
+    }
+
+    @Test
+    fun `onActivityStarted does not alter the snapshot`() {
+        val before = WickKitPerformanceManager.snapshot.value
+        WickKitPerformanceManager.onActivityStarted()
+        assertEquals(before, WickKitPerformanceManager.snapshot.value)
+    }
+
+    @Test
+    fun `onActivityStopped does not alter the snapshot`() {
+        val before = WickKitPerformanceManager.snapshot.value
+        WickKitPerformanceManager.onActivityStopped()
+        assertEquals(before, WickKitPerformanceManager.snapshot.value)
+    }
+
+    @Test
+    fun `onOverlayVisibilityChanged does not alter the snapshot`() {
+        val before = WickKitPerformanceManager.snapshot.value
+        WickKitPerformanceManager.onOverlayVisibilityChanged(true)
+        assertEquals(before, WickKitPerformanceManager.snapshot.value)
+        WickKitPerformanceManager.onOverlayVisibilityChanged(false)
+        assertEquals(before, WickKitPerformanceManager.snapshot.value)
+    }
+
+    // endregion
+
+    // region collectLiveFrameStats
+
+    @Test
+    fun `collectLiveFrameStats with non-empty data updates fps in snapshot`() {
+        WickKitPerformanceManager.collectLiveFrameStats(listOf(16 to 60))
+        assertNotNull(WickKitPerformanceManager.snapshot.value.fps)
+        assertEquals(60, WickKitPerformanceManager.snapshot.value.totalFrames)
+    }
+
+    @Test
+    fun `collectLiveFrameStats with non-empty data counts slow frames`() {
+        WickKitPerformanceManager.collectLiveFrameStats(listOf(16 to 50, 32 to 10))
+        assertEquals(10, WickKitPerformanceManager.snapshot.value.slowFrames)
+        assertEquals(60, WickKitPerformanceManager.snapshot.value.totalFrames)
+    }
+
+    @Test
+    fun `collectLiveFrameStats with empty data preserves existing frame stats`() {
+        WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
+        WickKitPerformanceManager.collectLiveFrameStats(emptyList())
+        assertEquals(60f, WickKitPerformanceManager.snapshot.value.fps)
+        assertEquals(100, WickKitPerformanceManager.snapshot.value.totalFrames)
+    }
+
+    @Test
+    fun `collectLiveFrameStats with all-zero durations clears frame stats`() {
+        WickKitPerformanceManager.updateFrameStats(sampleFrameStats())
+        WickKitPerformanceManager.collectLiveFrameStats(listOf(0 to 10))
+        assertNull(WickKitPerformanceManager.snapshot.value.fps)
     }
 
     // endregion

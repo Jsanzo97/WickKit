@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 object WickKitFlagsManager {
 
@@ -47,7 +48,9 @@ object WickKitFlagsManager {
 
     private fun loadSpFiles(context: Context) {
         val wickkitPrefs = wickkitPrefs(context)
-        sharedPreferencesFiles.value = SharedPrefsDiscovery.discoverNames(context)
+        sharedPreferencesFiles.value = SharedPrefsDiscovery.discoverNames(
+            File(context.applicationInfo.dataDir, "shared_prefs"),
+        )
             .map { name -> buildSharedPreferencesFileState(context, wickkitPrefs, name) }
             .toImmutableList()
     }
