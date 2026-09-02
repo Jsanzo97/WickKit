@@ -17,10 +17,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -31,7 +29,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -57,6 +54,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -294,36 +292,38 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
     val indicatorColor = MaterialTheme.colorScheme.primary
     val selectedColor = MaterialTheme.colorScheme.primary
     val unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    val allTabs = WickKitTab.entries
+    val firstRow = allTabs.take(5)
+    val secondRow = allTabs.drop(5)
     Column {
-        Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-            WickKitTab.entries.chunked(2).forEach { pair ->
-                Column(modifier = Modifier.width(IntrinsicSize.Max)) {
-                    pair.forEach { tab ->
-                        val isSelected = selected == tab
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .clickable { onSelect(tab) }
-                                .drawBehind {
-                                    if (isSelected) {
-                                        drawRect(
-                                            color = indicatorColor,
-                                            topLeft = Offset(0f, size.height - 2.dp.toPx()),
-                                            size = Size(size.width, 2.dp.toPx()),
-                                        )
-                                    }
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = stringResource(tab.labelRes),
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (isSelected) selectedColor else unselectedColor,
-                                maxLines = 1,
-                            )
-                        }
+        listOf(firstRow, secondRow).forEach { rowTabs ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                rowTabs.forEach { tab ->
+                    val isSelected = selected == tab
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clickable { onSelect(tab) }
+                            .drawBehind {
+                                if (isSelected) {
+                                    drawRect(
+                                        color = indicatorColor,
+                                        topLeft = Offset(0f, size.height - 2.dp.toPx()),
+                                        size = Size(size.width, 2.dp.toPx()),
+                                    )
+                                }
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(tab.labelRes),
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isSelected) selectedColor else unselectedColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
             }
