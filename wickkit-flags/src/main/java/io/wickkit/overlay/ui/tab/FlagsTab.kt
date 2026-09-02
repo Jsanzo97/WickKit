@@ -56,7 +56,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.wickkit.core.R
@@ -65,7 +64,6 @@ import io.wickkit.flags.RemoteConfigEntry
 import io.wickkit.flags.SharedPreferencesEntry
 import io.wickkit.flags.SharedPreferencesFileState
 import io.wickkit.flags.WickKitFlagsManager
-import io.wickkit.overlay.ui.WickKitTheme
 
 private val ToolbarHeight = 36.dp
 
@@ -742,6 +740,33 @@ private fun FlagsBadge(text: String, color: Color) {
     }
 }
 
+// ─── Toggle ───────────────────────────────────────────────────────────────────
+
+@Composable
+private fun CompactToggle(checked: Boolean, onToggle: () -> Unit) {
+    val trackColor = if (checked) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    }
+    Box(
+        modifier = Modifier
+            .size(width = 32.dp, height = 16.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(trackColor)
+            .clickable(interactionSource = null, indication = null) { onToggle() },
+        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart,
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(2.dp)
+                .size(16.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White),
+        )
+    }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 private fun prettyPrintIfJson(value: String): String {
@@ -754,15 +779,5 @@ private fun prettyPrintIfJson(value: String): String {
         }
     } catch (_: org.json.JSONException) {
         value
-    }
-}
-
-// ─── Preview ──────────────────────────────────────────────────────────────────
-
-@Preview(showBackground = true, backgroundColor = 0xFF0F1117)
-@Composable
-private fun FlagsTabPreview() {
-    WickKitTheme {
-        FlagsTab()
     }
 }

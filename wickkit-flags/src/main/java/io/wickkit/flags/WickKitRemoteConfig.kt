@@ -1,29 +1,9 @@
 package io.wickkit.flags
 
-import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-
-class WickKitRemoteConfig private constructor(
-    private val delegate: Any,
-    context: Context,
-) {
-
-    init {
-        if (!WickKitFlagsManager.isInitialized) {
-            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                WickKitFlagsManager.init(context.applicationContext)
-            }
-        }
-    }
+class WickKitRemoteConfig private constructor(private val delegate: Any) {
 
     companion object {
-        fun wrap(context: Context, firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(
-            delegate = firebaseRc,
-            context = context,
-        )
+        fun wrap(firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(delegate = firebaseRc)
     }
 
     fun getBoolean(key: String): Boolean = WickKitFlagsManager.getBoolean(

@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Timber.plant(Timber.DebugTree())
         lifecycleScope.launch(Dispatchers.IO) { sampleDb.writableDatabase }
-        SampleRemoteConfig.init(this)
+        SampleRemoteConfig.init()
         Timber.tag("Timber").d("Timber debug log")
         Timber.tag("Timber").i("Timber info log")
         Timber.tag("Timber").w("Timber warning log")

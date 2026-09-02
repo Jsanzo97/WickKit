@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -63,12 +64,12 @@ import io.wickkit.core.R
 import io.wickkit.overlay.ui.tab.CrashesTab
 import io.wickkit.overlay.ui.tab.DatabaseTab
 import io.wickkit.overlay.ui.tab.DeviceTab
-import io.wickkit.overlay.ui.tab.FlagsTab
 import io.wickkit.overlay.ui.tab.LogsTab
 import io.wickkit.overlay.ui.tab.MemoryLeaksTab
 import io.wickkit.overlay.ui.tab.NetworkTab
 import io.wickkit.overlay.ui.tab.PerformanceTab
 import io.wickkit.overlay.ui.tab.ThreadsTab
+import io.wickkit.overlay.ui.tab.WickKitFlagsTabSlot
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -207,13 +208,33 @@ private fun DebugPanel(
         PanelTabs(selected = selectedTab, onSelect = onTabSelected)
         when (selectedTab) {
             WickKitTab.Logs -> LogsTab()
+
             WickKitTab.Network -> NetworkTab()
+
             WickKitTab.Database -> DatabaseTab()
-            WickKitTab.Flags -> FlagsTab()
+
+            WickKitTab.Flags -> WickKitFlagsTabSlot.content?.invoke() ?: Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.wk_flags_module_inactive),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
             WickKitTab.Leaks -> MemoryLeaksTab()
+
             WickKitTab.Crashes -> CrashesTab()
+
             WickKitTab.Performance -> PerformanceTab()
+
             WickKitTab.Threads -> ThreadsTab()
+
             WickKitTab.Device -> DeviceTab()
         }
     }

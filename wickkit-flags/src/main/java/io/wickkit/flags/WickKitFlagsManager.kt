@@ -21,9 +21,6 @@ object WickKitFlagsManager {
 
     @Volatile private var appContext: Context? = null
 
-    @Volatile internal var isInitialized: Boolean = false
-        private set
-
     internal val sharedPreferencesFiles: StateFlow<ImmutableList<SharedPreferencesFileState>>
         field = MutableStateFlow<ImmutableList<SharedPreferencesFileState>>(persistentListOf())
 
@@ -34,7 +31,6 @@ object WickKitFlagsManager {
 
     internal fun init(context: Context) {
         appContext = context.applicationContext
-        isInitialized = true
         reload()
     }
 

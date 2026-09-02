@@ -162,7 +162,26 @@
     <string name="wk_device_value_portrait">vertical</string>
     <string name="wk_device_value_landscape">horizontal</string>
 
-    <!-- Placeholder tab -->
-    <string name="wk_placeholder_coming_soon">Próximamente</string>
-    <string name="wk_placeholder_planned_features">Funcionalidades previstas</string>
+    <!-- Crashes tab -->
+    <string name="wk_tab_crashes">Fallos</string>
+    <string name="wk_crashes_events">eventos</string>
+    <string name="wk_crashes_badge_crash">FALLO</string>
+    <string name="wk_crashes_badge_anr">ANR</string>
+    <string name="wk_crashes_empty_title">No hay fallos ni ANRs registrados</string>
+    <string name="wk_crashes_empty_subtitle">Los fallos y ANRs aparecerán aquí cuando ocurran</string>
+    <string name="wk_crashes_section_info">Información</string>
+    <string name="wk_crashes_section_stack_trace">Traza de pila</string>
+    <string name="wk_crashes_section_trace">Traza</string>
+    <string name="wk_crashes_label_exception">Excepción</string>
+    <string name="wk_crashes_label_message">Mensaje</string>
+    <string name="wk_crashes_label_thread">Hilo</string>
+    <string name="wk_crashes_label_version">Versión de la app</string>
+    <string name="wk_crashes_label_time">Hora</string>
+    <string name="wk_crashes_label_description">Descripción</string>
+    <string name="wk_crashes_label_process">Proceso</string>
+    <string name="wk_crashes_no_trace">No hay traza disponible</string>
+
+    <!-- Flags module inactive -->
+    <string name="wk_flags_module_inactive">Módulo de flags inactivo — añade :wickkit-flags a tus dependencias de debug para activarlo</string>
+
 </resources>

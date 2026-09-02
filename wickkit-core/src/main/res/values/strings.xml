@@ -181,7 +181,6 @@
     <string name="wk_crashes_label_process">Process</string>
     <string name="wk_crashes_no_trace">No trace available</string>
 
-    <!-- Placeholder tab -->
-    <string name="wk_placeholder_coming_soon">Coming soon</string>
-    <string name="wk_placeholder_planned_features">Planned features</string>
+    <!-- Flags module inactive (shown when wickkit-flags is not included) -->
+    <string name="wk_flags_module_inactive">Flags module inactive — add :wickkit-flags to your debug dependencies to enable</string>
 </resources>
