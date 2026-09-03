@@ -29,6 +29,13 @@ object WickKitFlagsManager {
 
     internal val isRemoteConfigAvailable: Boolean get() = RemoteConfigBridge.isAvailable()
 
+    @Volatile internal var isWrapRegistered: Boolean = false
+        private set
+
+    internal fun notifyWrapRegistered() {
+        isWrapRegistered = true
+    }
+
     internal fun init(context: Context) {
         appContext = context.applicationContext
         reload()
@@ -238,29 +245,7 @@ object WickKitFlagsManager {
         loadRcEntries(context)
     }
 
-    // ── Public API for app code ───────────────────────────────────────────────────
-
-    fun getBoolean(
-        key: String,
-        remoteValue: Boolean,
-    ): Boolean = activeRcOverride(key)?.lowercase()?.let { it == "true" } ?: remoteValue
-
-    fun getString(
-        key: String,
-        remoteValue: String,
-    ): String = activeRcOverride(key) ?: remoteValue
-
-    fun getLong(
-        key: String,
-        remoteValue: Long,
-    ): Long = activeRcOverride(key)?.toLongOrNull() ?: remoteValue
-
-    fun getDouble(
-        key: String,
-        remoteValue: Double,
-    ): Double = activeRcOverride(key)?.toDoubleOrNull() ?: remoteValue
-
-    private fun activeRcOverride(key: String): String? {
+    internal fun getActiveRcOverride(key: String): String? {
         val context = appContext ?: return null
         val prefs = wickkitPrefs(context)
         val isEnabled = prefs.getString(RC_ENABLED_PREFIX + key, null) == "true"

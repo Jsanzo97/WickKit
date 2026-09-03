@@ -7,6 +7,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -24,71 +25,55 @@ class WickKitFlagsManagerRcTest {
         WickKitFlagsManager.init(context)
     }
 
-    // region Remote Config public API
+    // region Remote Config active override
 
     @Test
-    fun `getBoolean returns remote value when no override`() {
-        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
-        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = true))
+    fun `getActiveRcOverride returns null when no override`() {
+        assertNull(WickKitFlagsManager.getActiveRcOverride("flag"))
     }
 
     @Test
-    fun `getBoolean returns override when active`() {
+    fun `getActiveRcOverride returns override value when active`() {
         WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
 
-        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
+        assertEquals("true", WickKitFlagsManager.getActiveRcOverride("flag"))
     }
 
     @Test
-    fun `getBoolean returns remote value when override disabled`() {
+    fun `getActiveRcOverride returns null when override is disabled`() {
         WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.toggleRcOverride("flag")
 
-        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
+        assertNull(WickKitFlagsManager.getActiveRcOverride("flag"))
     }
 
     @Test
-    fun `getString returns remote value when no override`() {
-        assertEquals("default", WickKitFlagsManager.getString(key = "title", remoteValue = "default"))
-    }
-
-    @Test
-    fun `getString returns override when active`() {
+    fun `getActiveRcOverride returns string override when active`() {
         WickKitFlagsManager.setRcOverride(key = "title", value = "hello")
 
-        assertEquals("hello", WickKitFlagsManager.getString(key = "title", remoteValue = "default"))
+        assertEquals("hello", WickKitFlagsManager.getActiveRcOverride("title"))
     }
 
     @Test
-    fun `getLong returns remote value when no override`() {
-        assertEquals(3000L, WickKitFlagsManager.getLong(key = "timeout", remoteValue = 3000L))
-    }
-
-    @Test
-    fun `getLong returns override when active`() {
+    fun `getActiveRcOverride returns numeric string override when active`() {
         WickKitFlagsManager.setRcOverride(key = "timeout", value = "5000")
 
-        assertEquals(5000L, WickKitFlagsManager.getLong(key = "timeout", remoteValue = 0L))
+        assertEquals("5000", WickKitFlagsManager.getActiveRcOverride("timeout"))
     }
 
     @Test
-    fun `getDouble returns remote value when no override`() {
-        assertEquals(0.5, WickKitFlagsManager.getDouble(key = "ratio", remoteValue = 0.5), 0.001)
-    }
-
-    @Test
-    fun `getDouble returns override when active`() {
+    fun `getActiveRcOverride returns decimal string override when active`() {
         WickKitFlagsManager.setRcOverride(key = "ratio", value = "0.75")
 
-        assertEquals(0.75, WickKitFlagsManager.getDouble(key = "ratio", remoteValue = 0.0), 0.001)
+        assertEquals("0.75", WickKitFlagsManager.getActiveRcOverride("ratio"))
     }
 
     @Test
-    fun `clearRcOverride makes getBoolean return remote value`() {
+    fun `clearRcOverride removes active override`() {
         WickKitFlagsManager.setRcOverride(key = "flag", value = "true")
         WickKitFlagsManager.clearRcOverride("flag")
 
-        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
+        assertNull(WickKitFlagsManager.getActiveRcOverride("flag"))
     }
 
     @Test
@@ -97,7 +82,7 @@ class WickKitFlagsManagerRcTest {
         WickKitFlagsManager.toggleRcOverride("flag") // disable
         WickKitFlagsManager.toggleRcOverride("flag") // re-enable
 
-        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
+        assertEquals("true", WickKitFlagsManager.getActiveRcOverride("flag"))
     }
 
     // endregion
@@ -184,11 +169,10 @@ class WickKitFlagsManagerRcTest {
     }
 
     @Test
-    fun `getBoolean returns remote value when not initialized`() {
+    fun `getActiveRcOverride returns null when not initialized`() {
         clearAppContext()
 
-        assertFalse(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = false))
-        assertTrue(WickKitFlagsManager.getBoolean(key = "flag", remoteValue = true))
+        assertNull(WickKitFlagsManager.getActiveRcOverride("flag"))
     }
 
     // endregion

@@ -596,7 +596,7 @@ private fun MockRuleRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(interactionSource = null, indication = null) { onEdit() }
-            .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

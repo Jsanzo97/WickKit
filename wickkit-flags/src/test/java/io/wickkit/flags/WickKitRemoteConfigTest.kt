@@ -4,6 +4,8 @@ import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -16,9 +18,16 @@ class WickKitRemoteConfigTest {
     @Before
     fun setUp() {
         wickkitPrefs.data.clear()
+        resetIsWrapRegistered()
         every { context.applicationContext } returns context
         every { context.getSharedPreferences(any(), any()) } returns wickkitPrefs
         WickKitFlagsManager.init(context)
+    }
+
+    private fun resetIsWrapRegistered() {
+        val field = WickKitFlagsManager::class.java.getDeclaredField("isWrapRegistered")
+        field.isAccessible = true
+        field.setBoolean(WickKitFlagsManager, false)
     }
 
     // region delegate passthrough (no override set)
@@ -108,6 +117,22 @@ class WickKitRemoteConfigTest {
         WickKitFlagsManager.toggleRcOverride("flag") // on
         val rc = WickKitRemoteConfig.wrap(firebaseRc = FakeRc(booleans = mapOf("flag" to false)))
         assertEquals(true, rc.getBoolean("flag"))
+    }
+
+    // endregion
+
+    // region wrap registration
+
+    @Test
+    fun `isWrapRegistered is false before wrap is called`() {
+        assertFalse(WickKitFlagsManager.isWrapRegistered)
+    }
+
+    @Test
+    fun `wrap sets isWrapRegistered to true in WickKitFlagsManager`() {
+        WickKitRemoteConfig.wrap(firebaseRc = object {})
+
+        assertTrue(WickKitFlagsManager.isWrapRegistered)
     }
 
     // endregion
