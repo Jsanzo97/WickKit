@@ -5,6 +5,7 @@ plugins {
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
+    id("io.github.jsanzo97.wickkit")
 }
 
 android {

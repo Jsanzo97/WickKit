@@ -77,6 +77,7 @@
     <string name="wk_flags_empty_sp_file">Keine Werte</string>
     <string name="wk_flags_rc_unavailable">Firebase Remote Config nicht in dieser App gefunden</string>
     <string name="wk_flags_rc_empty">Keine aktiven Remote Config-Parameter</string>
+    <string name="wk_flags_rc_no_wrap">Overrides erfordern WickKitRemoteConfig.wrap()</string>
     <string name="wk_flags_not_available">Nicht verfügbar</string>
 
     <!-- Memory leaks tab -->

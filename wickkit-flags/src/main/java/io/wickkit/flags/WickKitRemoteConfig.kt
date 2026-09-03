@@ -3,49 +3,27 @@ package io.wickkit.flags
 class WickKitRemoteConfig private constructor(private val delegate: Any) {
 
     companion object {
-        fun wrap(firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(delegate = firebaseRc)
+        fun wrap(firebaseRc: Any): WickKitRemoteConfig {
+            WickKitFlagsManager.notifyWrapRegistered()
+            return WickKitRemoteConfig(delegate = firebaseRc)
+        }
     }
 
-    fun getBoolean(key: String): Boolean = WickKitFlagsManager.getBoolean(
-        key = key,
-        remoteValue = invokeOn(
-            target = delegate,
-            method = "getBoolean",
-            key = key,
-        ) as? Boolean ?: false,
-    )
+    fun getBoolean(key: String): Boolean = WickKitFlagsManager
+        .getActiveRcOverride(key)
+        ?.equals("true", ignoreCase = true)
+        ?: invokeOn("getBoolean", key) as? Boolean ?: false
 
-    fun getString(key: String): String = WickKitFlagsManager.getString(
-        key = key,
-        remoteValue = invokeOn(
-            target = delegate,
-            method = "getString",
-            key = key,
-        ) as? String ?: "",
-    )
+    fun getString(key: String): String = WickKitFlagsManager.getActiveRcOverride(key)
+        ?: invokeOn("getString", key) as? String ?: ""
 
-    fun getLong(key: String): Long = WickKitFlagsManager.getLong(
-        key = key,
-        remoteValue = invokeOn(
-            target = delegate,
-            method = "getLong",
-            key = key,
-        ) as? Long ?: 0L,
-    )
+    fun getLong(key: String): Long = WickKitFlagsManager.getActiveRcOverride(key)?.toLongOrNull()
+        ?: invokeOn("getLong", key) as? Long ?: 0L
 
-    fun getDouble(key: String): Double = WickKitFlagsManager.getDouble(
-        key = key,
-        remoteValue = invokeOn(
-            target = delegate,
-            method = "getDouble",
-            key = key,
-        ) as? Double ?: 0.0,
-    )
+    fun getDouble(key: String): Double = WickKitFlagsManager.getActiveRcOverride(key)?.toDoubleOrNull()
+        ?: invokeOn("getDouble", key) as? Double ?: 0.0
+
+    private fun invokeOn(method: String, key: String): Any? = runCatching {
+        delegate.javaClass.getMethod(method, String::class.java).invoke(delegate, key)
+    }.getOrNull()
 }
-
-private fun invokeOn(target: Any, method: String, key: String): Any? = runCatching {
-    target.javaClass.getMethod(
-        method,
-        String::class.java,
-    ).invoke(target, key)
-}.getOrNull()

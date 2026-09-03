@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -268,7 +269,7 @@ private fun SharedPreferencesEntryRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 32.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Column(
@@ -390,6 +391,7 @@ private fun LazyListScope.remoteConfigSection(
     onToggleOverride: (RemoteConfigEntry) -> Unit,
 ) {
     val isAvailable = WickKitFlagsManager.isRemoteConfigAvailable
+    val isWrapRegistered = WickKitFlagsManager.isWrapRegistered
     val remoteConfigOverrideCount = if (isAvailable) entries.count { it.isOverrideEnabled } else 0
     item {
         FlagsSectionHeader(
@@ -405,6 +407,9 @@ private fun LazyListScope.remoteConfigSection(
         item { FlagsEmptyRow(stringResource(R.string.wk_flags_rc_unavailable)) }
         return
     }
+    if (!isWrapRegistered) {
+        item { FlagsRcNoWrapBanner() }
+    }
     if (entries.isEmpty()) {
         item { FlagsEmptyRow(stringResource(R.string.wk_flags_rc_empty)) }
         return
@@ -413,6 +418,7 @@ private fun LazyListScope.remoteConfigSection(
         val entry = entries[index]
         RemoteConfigEntryRow(
             entry = entry,
+            enabled = isWrapRegistered,
             onSetValue = { value -> onSetValue(entry.key, value) },
             onToggleOverride = { onToggleOverride(entry) },
         )
@@ -425,6 +431,7 @@ private fun LazyListScope.remoteConfigSection(
 @Composable
 private fun RemoteConfigEntryRow(
     entry: RemoteConfigEntry,
+    enabled: Boolean = true,
     onSetValue: (String) -> Unit,
     onToggleOverride: () -> Unit,
 ) {
@@ -437,21 +444,28 @@ private fun RemoteConfigEntryRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            .then(if (!enabled) Modifier.alpha(0.45f) else Modifier)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Column(
             modifier = Modifier
                 .weight(1f)
-                .clickable {
-                    if (isBoolean) {
-                        isBoolEditing = !isBoolEditing
-                    } else if (!isEditing) {
-                        isEditing = true
-                        val initial = prettyPrintIfJson(entry.overrideValue.ifEmpty { entry.remoteValue })
-                        editValue = TextFieldValue(initial, selection = TextRange(initial.length))
-                    }
-                },
+                .then(
+                    if (enabled) {
+                        Modifier.clickable {
+                            if (isBoolean) {
+                                isBoolEditing = !isBoolEditing
+                            } else if (!isEditing) {
+                                isEditing = true
+                                val initial = prettyPrintIfJson(entry.overrideValue.ifEmpty { entry.remoteValue })
+                                editValue = TextFieldValue(initial, selection = TextRange(initial.length))
+                            }
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
         ) {
             Text(
                 text = entry.key,
@@ -483,7 +497,11 @@ private fun RemoteConfigEntryRow(
                 else -> RemoteConfigEntryValueRow(entry = entry)
             }
         }
-        CompactToggle(checked = entry.isOverrideEnabled, onToggle = { onToggleOverride() })
+        CompactToggle(
+            checked = entry.isOverrideEnabled,
+            enabled = enabled,
+            onToggle = { onToggleOverride() },
+        )
     }
 }
 
@@ -743,8 +761,12 @@ private fun FlagsBadge(text: String, color: Color) {
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CompactToggle(checked: Boolean, onToggle: () -> Unit) {
-    val trackColor = if (checked) {
+private fun CompactToggle(
+    checked: Boolean,
+    enabled: Boolean = true,
+    onToggle: () -> Unit,
+) {
+    val trackColor = if (checked && enabled) {
         MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
@@ -754,7 +776,13 @@ private fun CompactToggle(checked: Boolean, onToggle: () -> Unit) {
             .size(width = 32.dp, height = 16.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(trackColor)
-            .clickable(interactionSource = null, indication = null) { onToggle() },
+            .then(
+                if (enabled) {
+                    Modifier.clickable(interactionSource = null, indication = null) { onToggle() }
+                } else {
+                    Modifier
+                },
+            ),
         contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart,
     ) {
         Box(
@@ -763,6 +791,24 @@ private fun CompactToggle(checked: Boolean, onToggle: () -> Unit) {
                 .size(16.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.White),
+        )
+    }
+}
+
+@Composable
+private fun FlagsRcNoWrapBanner() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
+    ) {
+        Text(
+            text = stringResource(R.string.wk_flags_rc_no_wrap),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
