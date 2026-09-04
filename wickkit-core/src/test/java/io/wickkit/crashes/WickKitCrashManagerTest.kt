@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -213,5 +214,21 @@ class WickKitCrashManagerTest {
     fun `clear resets entries to empty`() {
         WickKitCrashManager.clear()
         assertTrue(WickKitCrashManager.entries.value.isEmpty())
+    }
+
+    @Test
+    fun `clear deletes crash file from disk when context is initialized`() {
+        WickKitCrashManager.init(context)
+        WickKitCrashManager.saveCrash(
+            context = context,
+            thread = Thread.currentThread(),
+            throwable = RuntimeException("crash"),
+        )
+        val file = File(context.filesDir, "wickkit_last_crash.json")
+        assertTrue(file.exists())
+
+        WickKitCrashManager.clear()
+
+        assertFalse(file.exists())
     }
 }

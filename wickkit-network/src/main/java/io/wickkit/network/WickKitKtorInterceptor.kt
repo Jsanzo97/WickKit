@@ -1,14 +1,26 @@
 package io.wickkit.network
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.HttpClientPlugin
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.SaveBodyPlugin
 import io.ktor.client.plugins.plugin
 import io.ktor.client.plugins.pluginOrNull
+import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.utils.EmptyContent
+import io.ktor.http.HttpProtocolVersion
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.OutgoingContent
+import io.ktor.http.headers
 import io.ktor.util.AttributeKey
+import io.ktor.util.date.GMTDate
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.InternalAPI
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,6 +50,32 @@ class WickKitKtorInterceptor private constructor() {
                     .entries()
                     .associate { (key, headerValues) -> key to headerValues.joinToString(", ") }
                 val requestBody = readRequestBody(request.body)
+
+                val mockRule = MockRuleManager.findMatch(url = url, method = method)
+                if (mockRule != null) {
+                    if (mockRule.delayMs > 0) {
+                        delay(mockRule.delayMs.coerceAtMost(MAX_DELAY_MS))
+                    }
+                    val call = buildMockCall(scope = scope, request = request, rule = mockRule)
+                    WickKitNetworkManager.add(
+                        NetworkEntry(
+                            id = id,
+                            method = method,
+                            url = url,
+                            requestHeaders = requestHeaders,
+                            requestBody = requestBody,
+                            statusCode = mockRule.statusCode,
+                            responseHeaders = mockRule.responseHeaders,
+                            responseBody = mockRule.responseBody,
+                            durationMs = mockRule.delayMs,
+                            time = time,
+                            error = null,
+                            isMocked = true,
+                        ),
+                    )
+                    return@intercept call
+                }
+
                 val startMs = System.currentTimeMillis()
                 val call = try {
                     execute(request)
@@ -59,19 +97,7 @@ class WickKitKtorInterceptor private constructor() {
                     )
                     throw e
                 }
-                val responseBody = if (saveBodyInstalled) {
-                    runCatching {
-                        val text = call.response.bodyAsText()
-                        val byteSize = text.toByteArray(Charsets.UTF_8).size
-                        if (byteSize > MAX_BODY_BYTES) {
-                            "[body too large: $byteSize bytes]"
-                        } else {
-                            text
-                        }
-                    }.getOrNull()
-                } else {
-                    null
-                }
+                val responseBody = readResponseBody(call, saveBodyInstalled)
                 WickKitNetworkManager.add(
                     NetworkEntry(
                         id = id,
@@ -93,6 +119,50 @@ class WickKitKtorInterceptor private constructor() {
             }
         }
 
+        @OptIn(InternalAPI::class)
+        private fun buildMockCall(
+            scope: HttpClient,
+            request: io.ktor.client.request.HttpRequestBuilder,
+            rule: MockRule,
+        ): HttpClientCall {
+            val callContext = scope.coroutineContext + Job(scope.coroutineContext[Job])
+            val requestData = HttpRequestData(
+                url = request.url.build(),
+                method = request.method,
+                headers = request.headers.build(),
+                body = request.body as? OutgoingContent ?: EmptyContent,
+                executionContext = request.executionContext,
+                attributes = request.attributes,
+            )
+            val responseHeaders = headers {
+                rule.responseHeaders.forEach { (key, value) -> append(key, value) }
+                if (!rule.responseHeaders.containsKey("Content-Type")) {
+                    append("Content-Type", "application/json; charset=utf-8")
+                }
+            }
+            val responseData = HttpResponseData(
+                statusCode = HttpStatusCode.fromValue(rule.statusCode),
+                requestTime = GMTDate(),
+                headers = responseHeaders,
+                version = HttpProtocolVersion.HTTP_1_1,
+                body = ByteReadChannel((rule.responseBody ?: "").toByteArray(Charsets.UTF_8)),
+                callContext = callContext,
+            )
+            return HttpClientCall(scope, requestData, responseData)
+        }
+
+        private suspend fun readResponseBody(
+            call: io.ktor.client.call.HttpClientCall,
+            saveBodyInstalled: Boolean,
+        ): String? {
+            if (!saveBodyInstalled) return null
+            return runCatching {
+                val text = call.response.bodyAsText()
+                val byteSize = text.toByteArray(Charsets.UTF_8).size
+                if (byteSize > MAX_BODY_BYTES) "[body too large: $byteSize bytes]" else text
+            }.getOrNull()
+        }
+
         private fun readRequestBody(body: Any): String? {
             val content = body as? OutgoingContent ?: return null
             return when (content) {
@@ -110,5 +180,6 @@ class WickKitKtorInterceptor private constructor() {
         }
 
         private const val MAX_BODY_BYTES = 50 * 1024
+        private const val MAX_DELAY_MS = 30_000L
     }
 }

@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-555555?labelColor=0057D8)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage](https://img.shields.io/codecov/c/github/Jsanzo97/WickKit/develop?label=Coverage&labelColor=F01F7A&color=555555&logo=codecov&logoColor=white)](https://codecov.io/gh/Jsanzo97/WickKit)
 
-WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with nine inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open and the exact screen you were on within each tab — re-opening the overlay always picks up exactly where you left off, including active search text and filters. The overlay UI is available in English, Spanish, French, German, and Italian.
+WickKit is a debug overlay SDK for Android that surfaces real-time diagnostics inside your app during development. A notification appears automatically on first launch — tap it to open a bottom-sheet panel with nine inspection tabs. Swipe the panel down to dismiss it, or drag it partially and release to snap it back. Zero configuration needed: the SDK self-initializes via a `ContentProvider`. The panel remembers the last tab you had open, and tabs that support filtering preserve your active search text and method filter across sessions. The overlay UI is available in English, Spanish, French, German, and Italian.
 
 No more switching to Logcat, no more attaching a profiler, no more writing one-off debug screens. WickKit keeps everything in one persistent panel that stays out of the way in production via a no-op stub.
 
@@ -84,6 +84,15 @@ Tracks potential memory leaks in Activities and Fragments. When an Activity or F
 
 ---
 
+### Crashes
+Shows every crash and ANR recorded for the app as a unified, reverse-chronological list. Each entry carries a colored badge — **CRASH** or **ANR** — the exception class or ANR description, and a timestamp. Filter chips at the top let you narrow the list to crashes only or ANRs only. Tap any entry to see the full detail screen: for crashes, the complete stack trace with exception type, message, thread name, and app version; for ANRs, the raw thread dump captured by the system alongside the process name.
+
+**How it works:** `WickKitCrashManager` installs a `Thread.defaultUncaughtExceptionHandler` on startup. When a crash occurs the handler serializes the exception type, message, thread name, app version, and full stack trace to a JSON file synchronously before chaining to the previous handler — Crashlytics and other crash reporters continue to receive the event unmodified. ANRs are read via `ActivityManager.getHistoricalProcessExitReasons()` (API 30+) on the next app launch. Both sources are merged into one list, sorted by time, and refreshed each time the tab opens.
+
+<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/crashes.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/crashes-detail.png" width="275">
+
+---
+
 ### Performance
 Displays live runtime metrics grouped in three sections.
 
@@ -107,15 +116,6 @@ Filter chips at the top let you narrow the list by state — **All**, **Runnable
 **How it works:** `WickKitThreadManager` calls `Thread.getAllStackTraces()` on a background coroutine every 2 seconds and maps the result into typed `ThreadEntry` objects. Terminated threads are excluded. Results are sorted by priority — BLOCKED first, then RUNNING, then the rest — and alphabetically within each state group.
 
 <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/threads-all.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/threads-waiting.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/threads-timed.png" width="275">
-
----
-
-### Crashes
-Shows every crash and ANR recorded for the app as a unified, reverse-chronological list. Each entry carries a colored badge — **CRASH** or **ANR** — the exception class or ANR description, and a timestamp. Filter chips at the top let you narrow the list to crashes only or ANRs only. Tap any entry to see the full detail screen: for crashes, the complete stack trace with exception type, message, thread name, and app version; for ANRs, the raw thread dump captured by the system alongside the process name.
-
-**How it works:** `WickKitCrashManager` installs a `Thread.defaultUncaughtExceptionHandler` on startup. When a crash occurs the handler serializes the exception type, message, thread name, app version, and full stack trace to a JSON file synchronously before chaining to the previous handler — Crashlytics and other crash reporters continue to receive the event unmodified. ANRs are read via `ActivityManager.getHistoricalProcessExitReasons()` (API 30+) on the next app launch. Both sources are merged into one list, sorted by time, and refreshed each time the tab opens.
-
-<img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/crashes.png" width="275"> <img src="https://github.com/Jsanzo97/WickKit/blob/develop/screenshots/crashes-detail.png" width="275">
 
 ---
 
@@ -178,8 +178,8 @@ Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImp
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
 }
 ```
 
@@ -189,9 +189,9 @@ This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The N
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.3")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.4.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
 }
 ```
 
@@ -213,9 +213,9 @@ val client = HttpClient {
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.3")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.4.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
 }
 ```
 
@@ -235,7 +235,7 @@ Apply the plugin in the **app module**. It uses `InstrumentationScope.ALL`, whic
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.3.3"
+    id("io.github.jsanzo97.wickkit") version "1.4.0"
 }
 ```
 
@@ -270,8 +270,8 @@ Add the Compose no-op stub for release:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.3")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.4.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.4.0")
 }
 ```
 
@@ -280,17 +280,17 @@ dependencies {
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.3.3"
+    id("io.github.jsanzo97.wickkit") version "1.4.0"
 }
 
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.3.3")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.3.3")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.3.3")
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.3.3")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.4.0")
 
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.3.3")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.3.3")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.4.0")
 }
 ```
 
@@ -353,7 +353,7 @@ WickKit captures sensitive debug data by design, and that access is deliberately
 
 **Nothing runs in production.** The intended setup uses `debugImplementation` / `releaseImplementation` to ensure the real SDK never reaches a release APK. As a second line of defence, `WickKit.init()` checks `ApplicationInfo.FLAG_DEBUGGABLE` and returns immediately if the flag is not set — so a misconfigured build does not accidentally activate the SDK.
 
-**Captured data never touches disk.** Network entries, log lines, database rows, flag values, leak entries, and performance snapshots all live exclusively in memory. When the process is killed, everything is gone.
+**Almost no captured data touches disk.** Network entries, log lines, database rows, flag values, leak entries, and performance snapshots all live exclusively in memory — when the process is killed, they are gone. The one deliberate exception is crash data: when a crash occurs, WickKit serializes the exception type, message, thread name, and stack trace to a single small JSON file in the app's private `filesDir` so the crash can be read on the next launch. That file never leaves the app sandbox and is overwritten by the next crash.
 
 **Logcat is filtered to the app's own PID.** WickKit reads `logcat --pid=<pid>`, so logs from other installed apps, the system server, or any other process on the device are never captured.
 
