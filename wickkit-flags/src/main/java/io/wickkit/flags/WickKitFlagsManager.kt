@@ -95,8 +95,8 @@ object WickKitFlagsManager {
             type = type,
             hasOverride = hasOverride,
             isOverrideEnabled = hasOverride && isEnabled,
-            overrideValue = overrideEncoded?.let { decode(it).second } ?: "",
-            backupValue = backupEncoded?.let { decode(it).second } ?: "",
+            overrideValue = overrideEncoded?.let { decode(it)?.second } ?: "",
+            backupValue = backupEncoded?.let { decode(it)?.second } ?: "",
         )
     }
 
@@ -140,8 +140,8 @@ object WickKitFlagsManager {
         val wickkitPrefs = wickkitPrefs(context)
         val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName = prefsName, key = key), null) == "true"
         if (isEnabled) {
-            val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null) ?: return
-            val (backupType, backupValue) = decode(backupEncoded)
+            val (backupType, backupValue) = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null)
+                ?.let { decode(it) } ?: return
             prefs.edit().also { editor ->
                 writeTyped(
                     editor = editor,
@@ -152,11 +152,8 @@ object WickKitFlagsManager {
             }.apply()
             wickkitPrefs.edit { putString(spEnabledKey(prefsName = prefsName, key = key), "false") }
         } else {
-            val overrideEncoded = wickkitPrefs.getString(
-                spOverrideKey(prefsName = prefsName, key = key),
-                null,
-            ) ?: return
-            val (overrideType, overrideValue) = decode(overrideEncoded)
+            val overrideEncoded = wickkitPrefs.getString(spOverrideKey(prefsName = prefsName, key = key), null)
+            val (overrideType, overrideValue) = overrideEncoded?.let { decode(it) } ?: return
             prefs.edit().also { editor ->
                 writeTyped(
                     editor = editor,
@@ -178,15 +175,18 @@ object WickKitFlagsManager {
         if (isEnabled) {
             val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null)
             if (backupEncoded != null) {
-                val (backupType, backupValue) = decode(backupEncoded)
-                prefs.edit().also { editor ->
-                    writeTyped(
-                        editor = editor,
-                        key = key,
-                        value = backupValue,
-                        type = backupType,
-                    )
-                }.apply()
+                val decoded = decode(backupEncoded)
+                if (decoded != null) {
+                    val (backupType, backupValue) = decoded
+                    prefs.edit().also { editor ->
+                        writeTyped(
+                            editor = editor,
+                            key = key,
+                            value = backupValue,
+                            type = backupType,
+                        )
+                    }.apply()
+                }
             }
         }
         wickkitPrefs.edit {
@@ -273,9 +273,12 @@ object WickKitFlagsManager {
 
     private fun encode(type: FlagType, value: String) = "${type.name}:$value"
 
-    private fun decode(encoded: String): Pair<FlagType, String> {
+    private fun decode(encoded: String): Pair<FlagType, String>? {
         val separatorIndex = encoded.indexOf(':')
-        return FlagType.valueOf(encoded.substring(0, separatorIndex)) to encoded.substring(separatorIndex + 1)
+        if (separatorIndex < 0) return null
+        return runCatching {
+            FlagType.valueOf(encoded.substring(0, separatorIndex)) to encoded.substring(separatorIndex + 1)
+        }.getOrNull()
     }
 
     private fun writeTyped(

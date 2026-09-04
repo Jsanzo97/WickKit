@@ -14,4 +14,5 @@ android {
 
 dependencies {
     compileOnly(libs.okhttp)
+    compileOnly(libs.ktor.client.core)
 }
