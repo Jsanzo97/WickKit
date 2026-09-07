@@ -28,8 +28,10 @@ internal object WickKitPerformanceManager {
         field = MutableStateFlow(PerformanceSnapshot())
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private var lastRecompositionCount = 0L
-    private var lastPollTimeMs = 0L
+
+    @Volatile private var lastRecompositionCount = 0L
+
+    @Volatile private var lastPollTimeMs = 0L
 
     // Choreographer tracks vsync intervals on the main thread; frameDurations is guarded by frameLock.
     @Volatile private var isTracking = false

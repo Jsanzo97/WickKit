@@ -178,8 +178,8 @@ Add the dependencies you need in your module's `build.gradle.kts`. Use `debugImp
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.1")
 }
 ```
 
@@ -189,9 +189,9 @@ This gives you: Logs, Database, Leaks, Performance (FPS + memory), Device. The N
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.4.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.1")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.4.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.1")
 }
 ```
 
@@ -213,9 +213,9 @@ val client = HttpClient {
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.4.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.1")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.4.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.1")
 }
 ```
 
@@ -235,7 +235,7 @@ Apply the plugin in the **app module**. It uses `InstrumentationScope.ALL`, whic
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.4.0"
+    id("io.github.jsanzo97.wickkit") version "1.4.1"
 }
 ```
 
@@ -270,8 +270,8 @@ Add the Compose no-op stub for release:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.4.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.4.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.4.1")
 }
 ```
 
@@ -280,17 +280,17 @@ dependencies {
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    id("io.github.jsanzo97.wickkit") version "1.4.0"
+    id("io.github.jsanzo97.wickkit") version "1.4.1"
 }
 
 dependencies {
-    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.0")
-    debugImplementation("io.github.jsanzo97:wickkit-network:1.4.0")
-    debugImplementation("io.github.jsanzo97:wickkit-flags:1.4.0")
-    debugImplementation("io.github.jsanzo97:wickkit-compose:1.4.0")
+    debugImplementation("io.github.jsanzo97:wickkit-core:1.4.1")
+    debugImplementation("io.github.jsanzo97:wickkit-network:1.4.1")
+    debugImplementation("io.github.jsanzo97:wickkit-flags:1.4.1")
+    debugImplementation("io.github.jsanzo97:wickkit-compose:1.4.1")
 
-    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.0")
-    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.4.0")
+    releaseImplementation("io.github.jsanzo97:wickkit-no-op:1.4.1")
+    releaseImplementation("io.github.jsanzo97:wickkit-compose-no-op:1.4.1")
 }
 ```
 

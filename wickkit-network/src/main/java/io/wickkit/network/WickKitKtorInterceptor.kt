@@ -43,7 +43,7 @@ class WickKitKtorInterceptor private constructor() {
             val saveBodyInstalled = scope.pluginOrNull(SaveBodyPlugin) != null
             scope.plugin(HttpSend).intercept { request ->
                 val id = idCounter.getAndIncrement()
-                val time = timeFormat.get()!!.format(Date())
+                val time = (timeFormat.get() ?: SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())).format(Date())
                 val url = request.url.buildString()
                 val method = request.method.value
                 val requestHeaders = request.headers.build()

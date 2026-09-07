@@ -128,7 +128,8 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
     val editingCell: StateFlow<CellKey?> = _editingCell.asStateFlow()
 
     private var pollJob: Job? = null
-    private var editInProgress = false
+
+    @Volatile private var editInProgress = false
 
     init {
         _screen.value = DatabaseTabState.screen
@@ -219,9 +220,11 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
 
             is DbScreen.TableList -> {
                 _tables.value = withContext(Dispatchers.IO) {
-                    DatabaseManager(s.database.path, freshReadOnly = true).use { manager ->
-                        manager.listTables().map { it to manager.getRowCount(it) }
-                    }
+                    runCatching {
+                        DatabaseManager(s.database.path, freshReadOnly = true).use { manager ->
+                            manager.listTables().map { it to manager.getRowCount(it) }
+                        }
+                    }.getOrNull()
                 }
             }
 
