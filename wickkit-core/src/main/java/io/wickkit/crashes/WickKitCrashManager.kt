@@ -31,8 +31,11 @@ internal object WickKitCrashManager {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    @Volatile private var appContext: Context? = null
+
     fun init(context: Context) {
         val applicationContext = context.applicationContext
+        appContext = applicationContext
         installCrashHandler(applicationContext)
         scope.launch {
             entries.value = buildEntries(applicationContext)
@@ -144,5 +147,6 @@ internal object WickKitCrashManager {
 
     fun clear() {
         entries.value = persistentListOf()
+        appContext?.let { File(it.filesDir, CRASH_FILE_NAME).delete() }
     }
 }
