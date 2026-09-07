@@ -1,10 +1,18 @@
 plugins {
     `java-gradle-plugin`
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
     id("detekt-convention")
     id("spotless-convention")
     id("publish-convention")
     alias(libs.plugins.gradle.plugin.publish)
+}
+
+group = "io.github.jsanzo97"
+version = run {
+    val tags = providers.exec {
+        commandLine("git", "tag", "--list", "v*.*.*", "--sort=-v:refname")
+    }.standardOutput.asText.getOrElse("")
+    tags.trim().lines().firstOrNull { it.isNotBlank() }?.removePrefix("v") ?: "0.1.0"
 }
 
 description = "WickKit Gradle plugin for Compose composable instrumentation"

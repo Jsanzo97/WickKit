@@ -127,6 +127,10 @@ class WickKitNetworkInterceptor : Interceptor {
             body.isOneShot() -> "[one-shot body]"
 
             else -> runCatching {
+                val contentLength = body.contentLength()
+                if (contentLength != -1L && contentLength > MAX_BODY_BYTES) {
+                    return@runCatching "[body too large: $contentLength bytes]"
+                }
                 val buffer = Buffer()
                 body.writeTo(buffer)
                 if (buffer.size > MAX_BODY_BYTES) "[body too large: ${buffer.size} bytes]" else buffer.readUtf8()

@@ -76,21 +76,26 @@ internal object WickKitPerformanceManager {
         appInForeground = false
     }
 
-    fun onOverlayOpened() {
-        overlayOpen = true
-    }
-
-    fun onOverlayClosed() {
-        overlayOpen = false
+    fun onOverlayVisibilityChanged(visible: Boolean) {
+        overlayOpen = visible
     }
 
     fun onActivityResumed(activity: Activity) {
+        onActivityResumed(activityName = activity.javaClass.simpleName)
+        Handler(Looper.getMainLooper()).post {
+            // Remove before posting to prevent duplicates if overlay was open and Choreographer was already running.
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+            Choreographer.getInstance().postFrameCallback(frameCallback)
+        }
+    }
+
+    internal fun onActivityResumed(activityName: String) {
         synchronized(frameLock) { frameDurations.clear() }
         lastFrameTimeNs = 0L
         isTracking = true
         snapshot.update {
             it.copy(
-                activityName = activity.javaClass.simpleName,
+                activityName = activityName,
                 fps = null,
                 slowFrames = 0,
                 frozenFrames = 0,
@@ -99,11 +104,6 @@ internal object WickKitPerformanceManager {
                 p90Ms = null,
                 totalFrames = 0,
             )
-        }
-        Handler(Looper.getMainLooper()).post {
-            // Remove before posting to prevent duplicates if overlay was open and Choreographer was already running.
-            Choreographer.getInstance().removeFrameCallback(frameCallback)
-            Choreographer.getInstance().postFrameCallback(frameCallback)
         }
     }
 
@@ -208,6 +208,10 @@ internal object WickKitPerformanceManager {
         val frameData = synchronized(frameLock) {
             frameDurations.groupBy { it.toInt() }.map { (durationMs, frames) -> durationMs to frames.size }
         }
+        collectLiveFrameStats(frameData)
+    }
+
+    internal fun collectLiveFrameStats(frameData: List<Pair<Int, Int>>) {
         if (frameData.isNotEmpty()) updateFrameStats(parseFrameData(frameData))
     }
 }

@@ -1,6 +1,5 @@
 package jsanzo.wickkit
 
-import android.content.Context
 import com.google.firebase.Firebase
 import com.google.firebase.remoteconfig.remoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
@@ -19,8 +18,8 @@ object SampleRemoteConfig {
 
     private var remoteConfig: WickKitRemoteConfig? = null
 
-    fun init(context: Context) {
-        remoteConfig = WickKitRemoteConfig.wrap(context = context, firebaseRc = Firebase.remoteConfig)
+    fun init() {
+        remoteConfig = WickKitRemoteConfig.wrap(firebaseRc = Firebase.remoteConfig)
         Firebase.remoteConfig
             .setConfigSettingsAsync(remoteConfigSettings { minimumFetchIntervalInSeconds = 0 })
             .addOnCompleteListener {
@@ -30,12 +29,6 @@ object SampleRemoteConfig {
     }
 
     fun fetch() = doFetch()
-
-    fun getWelcomeMessage(): String = remoteConfig?.getString("welcome_message") ?: "Hello!"
-    fun isNewCheckoutEnabled(): Boolean = remoteConfig?.getBoolean("feature_new_checkout") ?: false
-    fun getMaxItemsPerPage(): Long = remoteConfig?.getLong("max_items_per_page") ?: 20L
-    fun getApiTimeoutSeconds(): Long = remoteConfig?.getLong("api_timeout_seconds") ?: 30L
-    fun isAnalyticsEnabled(): Boolean = remoteConfig?.getBoolean("enable_analytics") ?: true
 
     private fun doFetch() {
         Firebase.remoteConfig.fetchAndActivate()

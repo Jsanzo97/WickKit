@@ -11,3 +11,7 @@ description = "WickKit Compose no-op stub for release builds"
 android {
     namespace = "io.wickkit.compose.noop"
 }
+
+dependencies {
+    compileOnly(libs.kotlinx.collections.immutable)
+}

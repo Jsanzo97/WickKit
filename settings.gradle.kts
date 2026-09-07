@@ -1,5 +1,6 @@
 pluginManagement {
     includeBuild("build-logic")
+    includeBuild("wickkit-gradle-plugin")
     repositories {
         google {
             content {
@@ -31,5 +32,4 @@ include(":wickkit-flags")
 include(":wickkit-no-op")
 include(":wickkit-compose")
 include(":wickkit-compose-no-op")
-include(":wickkit-gradle-plugin")
  

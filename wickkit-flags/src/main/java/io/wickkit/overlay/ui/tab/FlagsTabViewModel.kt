@@ -12,10 +12,6 @@ import kotlinx.coroutines.launch
 
 internal class FlagsTabViewModel(application: Application) : AndroidViewModel(application) {
 
-    init {
-        viewModelScope.launch(Dispatchers.IO) { WickKitFlagsManager.init(getApplication()) }
-    }
-
     fun setRcOverride(key: String, value: String) {
         viewModelScope.launch(Dispatchers.IO) { WickKitFlagsManager.setRcOverride(key = key, value = value) }
     }

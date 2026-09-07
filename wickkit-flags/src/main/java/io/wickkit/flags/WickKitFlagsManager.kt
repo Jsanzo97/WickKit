@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 object WickKitFlagsManager {
 
@@ -20,9 +21,6 @@ object WickKitFlagsManager {
 
     @Volatile private var appContext: Context? = null
 
-    @Volatile internal var isInitialized: Boolean = false
-        private set
-
     internal val sharedPreferencesFiles: StateFlow<ImmutableList<SharedPreferencesFileState>>
         field = MutableStateFlow<ImmutableList<SharedPreferencesFileState>>(persistentListOf())
 
@@ -31,9 +29,15 @@ object WickKitFlagsManager {
 
     internal val isRemoteConfigAvailable: Boolean get() = RemoteConfigBridge.isAvailable()
 
+    @Volatile internal var isWrapRegistered: Boolean = false
+        private set
+
+    internal fun notifyWrapRegistered() {
+        isWrapRegistered = true
+    }
+
     internal fun init(context: Context) {
         appContext = context.applicationContext
-        isInitialized = true
         reload()
     }
 
@@ -47,7 +51,9 @@ object WickKitFlagsManager {
 
     private fun loadSpFiles(context: Context) {
         val wickkitPrefs = wickkitPrefs(context)
-        sharedPreferencesFiles.value = SharedPrefsDiscovery.discoverNames(context)
+        sharedPreferencesFiles.value = SharedPrefsDiscovery.discoverNames(
+            File(context.applicationInfo.dataDir, "shared_prefs"),
+        )
             .map { name -> buildSharedPreferencesFileState(context, wickkitPrefs, name) }
             .toImmutableList()
     }
@@ -89,8 +95,8 @@ object WickKitFlagsManager {
             type = type,
             hasOverride = hasOverride,
             isOverrideEnabled = hasOverride && isEnabled,
-            overrideValue = overrideEncoded?.let { decode(it).second } ?: "",
-            backupValue = backupEncoded?.let { decode(it).second } ?: "",
+            overrideValue = overrideEncoded?.let { decode(it)?.second } ?: "",
+            backupValue = backupEncoded?.let { decode(it)?.second } ?: "",
         )
     }
 
@@ -134,8 +140,8 @@ object WickKitFlagsManager {
         val wickkitPrefs = wickkitPrefs(context)
         val isEnabled = wickkitPrefs.getString(spEnabledKey(prefsName = prefsName, key = key), null) == "true"
         if (isEnabled) {
-            val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null) ?: return
-            val (backupType, backupValue) = decode(backupEncoded)
+            val (backupType, backupValue) = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null)
+                ?.let { decode(it) } ?: return
             prefs.edit().also { editor ->
                 writeTyped(
                     editor = editor,
@@ -146,11 +152,8 @@ object WickKitFlagsManager {
             }.apply()
             wickkitPrefs.edit { putString(spEnabledKey(prefsName = prefsName, key = key), "false") }
         } else {
-            val overrideEncoded = wickkitPrefs.getString(
-                spOverrideKey(prefsName = prefsName, key = key),
-                null,
-            ) ?: return
-            val (overrideType, overrideValue) = decode(overrideEncoded)
+            val overrideEncoded = wickkitPrefs.getString(spOverrideKey(prefsName = prefsName, key = key), null)
+            val (overrideType, overrideValue) = overrideEncoded?.let { decode(it) } ?: return
             prefs.edit().also { editor ->
                 writeTyped(
                     editor = editor,
@@ -172,15 +175,18 @@ object WickKitFlagsManager {
         if (isEnabled) {
             val backupEncoded = wickkitPrefs.getString(spBackupKey(prefsName = prefsName, key = key), null)
             if (backupEncoded != null) {
-                val (backupType, backupValue) = decode(backupEncoded)
-                prefs.edit().also { editor ->
-                    writeTyped(
-                        editor = editor,
-                        key = key,
-                        value = backupValue,
-                        type = backupType,
-                    )
-                }.apply()
+                val decoded = decode(backupEncoded)
+                if (decoded != null) {
+                    val (backupType, backupValue) = decoded
+                    prefs.edit().also { editor ->
+                        writeTyped(
+                            editor = editor,
+                            key = key,
+                            value = backupValue,
+                            type = backupType,
+                        )
+                    }.apply()
+                }
             }
         }
         wickkitPrefs.edit {
@@ -239,29 +245,7 @@ object WickKitFlagsManager {
         loadRcEntries(context)
     }
 
-    // ── Public API for app code ───────────────────────────────────────────────────
-
-    fun getBoolean(
-        key: String,
-        remoteValue: Boolean,
-    ): Boolean = activeRcOverride(key)?.lowercase()?.let { it == "true" } ?: remoteValue
-
-    fun getString(
-        key: String,
-        remoteValue: String,
-    ): String = activeRcOverride(key) ?: remoteValue
-
-    fun getLong(
-        key: String,
-        remoteValue: Long,
-    ): Long = activeRcOverride(key)?.toLongOrNull() ?: remoteValue
-
-    fun getDouble(
-        key: String,
-        remoteValue: Double,
-    ): Double = activeRcOverride(key)?.toDoubleOrNull() ?: remoteValue
-
-    private fun activeRcOverride(key: String): String? {
+    internal fun getActiveRcOverride(key: String): String? {
         val context = appContext ?: return null
         val prefs = wickkitPrefs(context)
         val isEnabled = prefs.getString(RC_ENABLED_PREFIX + key, null) == "true"
@@ -289,9 +273,12 @@ object WickKitFlagsManager {
 
     private fun encode(type: FlagType, value: String) = "${type.name}:$value"
 
-    private fun decode(encoded: String): Pair<FlagType, String> {
+    private fun decode(encoded: String): Pair<FlagType, String>? {
         val separatorIndex = encoded.indexOf(':')
-        return FlagType.valueOf(encoded.substring(0, separatorIndex)) to encoded.substring(separatorIndex + 1)
+        if (separatorIndex < 0) return null
+        return runCatching {
+            FlagType.valueOf(encoded.substring(0, separatorIndex)) to encoded.substring(separatorIndex + 1)
+        }.getOrNull()
     }
 
     private fun writeTyped(

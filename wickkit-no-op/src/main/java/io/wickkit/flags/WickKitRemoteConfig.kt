@@ -1,12 +1,9 @@
 package io.wickkit.flags
 
-import android.content.Context
-
 class WickKitRemoteConfig private constructor(private val delegate: Any) {
 
     companion object {
-        @Suppress("UnusedParameter")
-        fun wrap(context: Context, firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(firebaseRc)
+        fun wrap(firebaseRc: Any): WickKitRemoteConfig = WickKitRemoteConfig(firebaseRc)
     }
 
     fun getBoolean(key: String): Boolean = invoke(method = "getBoolean", key = key) as? Boolean ?: false

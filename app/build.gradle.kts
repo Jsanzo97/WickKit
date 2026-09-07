@@ -5,6 +5,7 @@ plugins {
     id("detekt-convention")
     id("spotless-convention")
     id("jacoco-convention")
+    id("io.github.jsanzo97.wickkit")
 }
 
 android {
@@ -58,6 +59,7 @@ dependencies {
     implementation(libs.timber)
     debugImplementation(project(":wickkit-core"))
     debugImplementation(project(":wickkit-compose"))
+    debugImplementation(project(":wickkit-flags"))
     debugImplementation(project(":wickkit-network"))
     releaseImplementation(project(":wickkit-no-op"))
     releaseImplementation(project(":wickkit-compose-no-op"))

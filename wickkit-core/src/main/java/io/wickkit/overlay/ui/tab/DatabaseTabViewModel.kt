@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 
 internal const val POLL_INTERVAL_MS = 2_000L
@@ -210,7 +211,9 @@ internal class DatabaseTabViewModel(application: Application) : AndroidViewModel
         when (val s = _screen.value) {
             DbScreen.DatabaseList -> {
                 _databases.value = withContext(Dispatchers.IO) {
-                    DatabaseDiscovery.findDatabases(getApplication())
+                    DatabaseDiscovery.findDatabases(
+                        getApplication<Application>().getDatabasePath("_").parentFile ?: File(""),
+                    )
                 }
             }
 

@@ -1,6 +1,5 @@
 package io.wickkit.database
 
-import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import java.io.File
@@ -17,8 +16,8 @@ internal object DatabaseDiscovery {
         "gtm_", // Google Tag Manager
     )
 
-    fun findDatabases(context: Context): List<DatabaseEntry> = context.getDatabasePath("_").parentFile
-        ?.listFiles()
+    fun findDatabases(databasesDir: File): List<DatabaseEntry> = databasesDir
+        .listFiles()
         ?.filter { it.isFile && !isAuxFile(it.name) && !isExcluded(it.nameWithoutExtension) }
         ?.map { toEntry(it) }
         ?.sortedBy { it.name }

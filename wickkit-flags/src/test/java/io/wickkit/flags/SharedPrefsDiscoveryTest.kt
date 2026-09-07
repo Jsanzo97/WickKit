@@ -1,28 +1,27 @@
 package io.wickkit.flags
 
-import android.content.Context
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.annotation.Config
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
 class SharedPrefsDiscoveryTest {
 
-    private lateinit var context: Context
+    @get:Rule val tempDir = TemporaryFolder()
+
     private lateinit var prefsDir: File
 
     @Before
     fun setUp() {
-        context = RuntimeEnvironment.getApplication()
-        prefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
-        prefsDir.mkdirs()
+        prefsDir = tempDir.newFolder("shared_prefs")
+    }
+
+    @After
+    fun tearDown() {
         prefsDir.listFiles()?.forEach { it.delete() }
     }
 
@@ -31,7 +30,7 @@ class SharedPrefsDiscoveryTest {
         File(prefsDir, "wickkit_flags.xml").createNewFile()
         File(prefsDir, "user_settings.xml").createNewFile()
 
-        val names = SharedPrefsDiscovery.discoverNames(context)
+        val names = SharedPrefsDiscovery.discoverNames(prefsDir)
 
         assertFalse("wickkit_flags" in names)
         assertTrue("user_settings" in names)
@@ -42,7 +41,7 @@ class SharedPrefsDiscoveryTest {
         File(prefsDir, "app_prefs.xml").createNewFile()
         File(prefsDir, "readme.txt").createNewFile()
 
-        val names = SharedPrefsDiscovery.discoverNames(context)
+        val names = SharedPrefsDiscovery.discoverNames(prefsDir)
 
         assertTrue("app_prefs" in names)
         assertFalse("readme" in names)
@@ -51,7 +50,7 @@ class SharedPrefsDiscoveryTest {
 
     @Test
     fun `discoverNames returns empty list when directory is empty`() {
-        val names = SharedPrefsDiscovery.discoverNames(context)
+        val names = SharedPrefsDiscovery.discoverNames(prefsDir)
 
         assertTrue(names.isEmpty())
     }

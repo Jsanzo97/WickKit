@@ -77,6 +77,7 @@
     <string name="wk_flags_empty_sp_file">No values</string>
     <string name="wk_flags_rc_unavailable">Firebase Remote Config not found in this app</string>
     <string name="wk_flags_rc_empty">No active Remote Config parameters</string>
+    <string name="wk_flags_rc_no_wrap">Overrides require WickKitRemoteConfig.wrap()</string>
     <string name="wk_flags_not_available">Not available</string>
 
     <!-- Memory leaks tab -->
@@ -112,6 +113,23 @@
     <string name="wk_perf_sort_peak">Peak ↓</string>
     <string name="wk_perf_sort_rate">Rate ↓</string>
 
+    <!-- Threads tab -->
+    <string name="wk_tab_threads">Threads</string>
+    <string name="wk_threads_active">threads active</string>
+    <string name="wk_threads_blocked_warning">blocked</string>
+    <string name="wk_threads_empty_title">No threads found</string>
+    <string name="wk_threads_empty_subtitle">Thread data will appear here momentarily</string>
+    <string name="wk_threads_daemon">daemon</string>
+    <string name="wk_threads_user">user</string>
+    <string name="wk_threads_section_info">Thread</string>
+    <string name="wk_threads_section_stack_trace">Stack Trace</string>
+    <string name="wk_threads_label_state">State</string>
+    <string name="wk_threads_label_type">Type</string>
+    <string name="wk_threads_label_priority">Priority</string>
+    <string name="wk_threads_label_group">Group</string>
+    <string name="wk_threads_label_stack_depth">Stack depth</string>
+    <string name="wk_threads_no_stack_trace">No stack trace available</string>
+
     <!-- Device tab -->
     <string name="wk_device_section_app">App</string>
     <string name="wk_device_section_device">Device</string>
@@ -145,7 +163,25 @@
     <string name="wk_device_value_portrait">portrait</string>
     <string name="wk_device_value_landscape">landscape</string>
 
-    <!-- Placeholder tab -->
-    <string name="wk_placeholder_coming_soon">Coming soon</string>
-    <string name="wk_placeholder_planned_features">Planned features</string>
+    <!-- Crashes tab -->
+    <string name="wk_tab_crashes">Crashes</string>
+    <string name="wk_crashes_events">events</string>
+    <string name="wk_crashes_badge_crash">CRASH</string>
+    <string name="wk_crashes_badge_anr">ANR</string>
+    <string name="wk_crashes_empty_title">No crashes or ANRs recorded</string>
+    <string name="wk_crashes_empty_subtitle">Crashes and ANRs will appear here after they occur</string>
+    <string name="wk_crashes_section_info">Info</string>
+    <string name="wk_crashes_section_stack_trace">Stack Trace</string>
+    <string name="wk_crashes_section_trace">Trace</string>
+    <string name="wk_crashes_label_exception">Exception</string>
+    <string name="wk_crashes_label_message">Message</string>
+    <string name="wk_crashes_label_thread">Thread</string>
+    <string name="wk_crashes_label_version">App Version</string>
+    <string name="wk_crashes_label_time">Time</string>
+    <string name="wk_crashes_label_description">Description</string>
+    <string name="wk_crashes_label_process">Process</string>
+    <string name="wk_crashes_no_trace">No trace available</string>
+
+    <!-- Flags module inactive (shown when wickkit-flags is not included) -->
+    <string name="wk_flags_module_inactive">Flags module inactive — add :wickkit-flags to your debug dependencies to enable</string>
 </resources>

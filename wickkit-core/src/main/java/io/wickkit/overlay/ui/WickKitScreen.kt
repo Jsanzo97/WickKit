@@ -53,18 +53,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.wickkit.core.R
+import io.wickkit.overlay.ui.tab.CrashesTab
 import io.wickkit.overlay.ui.tab.DatabaseTab
 import io.wickkit.overlay.ui.tab.DeviceTab
-import io.wickkit.overlay.ui.tab.FlagsTab
 import io.wickkit.overlay.ui.tab.LogsTab
 import io.wickkit.overlay.ui.tab.MemoryLeaksTab
 import io.wickkit.overlay.ui.tab.NetworkTab
 import io.wickkit.overlay.ui.tab.PerformanceTab
+import io.wickkit.overlay.ui.tab.ThreadsTab
+import io.wickkit.overlay.ui.tab.WickKitFlagsTabSlot
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -78,7 +81,9 @@ private enum class WickKitTab(@StringRes val labelRes: Int) {
     Database(R.string.wk_tab_database),
     Flags(R.string.wk_tab_flags),
     Leaks(R.string.wk_tab_leaks),
+    Crashes(R.string.wk_tab_crashes),
     Performance(R.string.wk_tab_performance),
+    Threads(R.string.wk_tab_threads),
     Device(R.string.wk_tab_device),
 }
 
@@ -201,11 +206,33 @@ private fun DebugPanel(
         PanelTabs(selected = selectedTab, onSelect = onTabSelected)
         when (selectedTab) {
             WickKitTab.Logs -> LogsTab()
+
             WickKitTab.Network -> NetworkTab()
+
             WickKitTab.Database -> DatabaseTab()
-            WickKitTab.Flags -> FlagsTab()
+
+            WickKitTab.Flags -> WickKitFlagsTabSlot.content?.invoke() ?: Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.wk_flags_module_inactive),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
             WickKitTab.Leaks -> MemoryLeaksTab()
+
+            WickKitTab.Crashes -> CrashesTab()
+
             WickKitTab.Performance -> PerformanceTab()
+
+            WickKitTab.Threads -> ThreadsTab()
+
             WickKitTab.Device -> DeviceTab()
         }
     }
@@ -265,16 +292,19 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
     val indicatorColor = MaterialTheme.colorScheme.primary
     val selectedColor = MaterialTheme.colorScheme.primary
     val unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    val allTabs = WickKitTab.entries
+    val firstRow = allTabs.take(5)
+    val secondRow = allTabs.drop(5)
     Column {
-        WickKitTab.entries.chunked(4).forEach { rowTabs ->
+        listOf(firstRow, secondRow).forEach { rowTabs ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 rowTabs.forEach { tab ->
                     val isSelected = selected == tab
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onSelect(tab) }
                             .height(40.dp)
+                            .clickable { onSelect(tab) }
                             .drawBehind {
                                 if (isSelected) {
                                     drawRect(
@@ -288,8 +318,8 @@ private fun PanelTabs(selected: WickKitTab, onSelect: (WickKitTab) -> Unit) {
                     ) {
                         Text(
                             text = stringResource(tab.labelRes),
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                            style = MaterialTheme.typography.labelMedium,
                             color = if (isSelected) selectedColor else unselectedColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,

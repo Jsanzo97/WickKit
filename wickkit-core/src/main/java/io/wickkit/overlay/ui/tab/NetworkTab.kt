@@ -146,13 +146,12 @@ internal fun NetworkTab() {
             canSave = currentScreen.rule != null || rules.size < MockRuleManager.MAX_RULES,
             onBack = { screen = currentScreen.returnTo },
             onSave = { rule ->
-                val saved = if (currentScreen.rule == null) {
+                if (currentScreen.rule == null) {
                     MockRuleManager.add(rule)
                 } else {
                     MockRuleManager.update(rule)
-                    true
                 }
-                if (saved) screen = NetworkScreen.Mocks
+                screen = NetworkScreen.Mocks
             },
         )
     }
@@ -596,7 +595,7 @@ private fun MockRuleRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(interactionSource = null, indication = null) { onEdit() }
-            .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

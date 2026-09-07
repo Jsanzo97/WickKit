@@ -42,10 +42,6 @@ internal object WickKitNotification {
         }
     }
 
-    fun dismiss(context: Context) {
-        NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
-    }
-
     private fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

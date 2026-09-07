@@ -42,15 +42,20 @@ internal object WickKitLogcat {
         val process = Runtime.getRuntime().exec(
             arrayOf("logcat", "--pid=$pid", "-v", "threadtime"),
         )
-        process.inputStream.bufferedReader().lineSequence().forEach { line ->
-            parseLine(line)?.let { (level, tag, message, time) ->
-                WickKitLogManager.add(
-                    level = level,
-                    tag = tag,
-                    message = message,
-                    time = time,
-                )
+        process.errorStream.close()
+        try {
+            process.inputStream.bufferedReader().lineSequence().forEach { line ->
+                parseLine(line)?.let { (level, tag, message, time) ->
+                    WickKitLogManager.add(
+                        level = level,
+                        tag = tag,
+                        message = message,
+                        time = time,
+                    )
+                }
             }
+        } finally {
+            process.destroy()
         }
     }
 

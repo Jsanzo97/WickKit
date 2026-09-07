@@ -32,12 +32,14 @@ import io.wickkit.WickKit
 import io.wickkit.network.WickKitNetworkInterceptor
 import jsanzo.wickkit.ui.theme.WickKitTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
 
@@ -57,7 +59,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Timber.plant(Timber.DebugTree())
         lifecycleScope.launch(Dispatchers.IO) { sampleDb.writableDatabase }
-        SampleRemoteConfig.init(this)
+        SampleRemoteConfig.init()
         Timber.tag("Timber").d("Timber debug log")
         Timber.tag("Timber").i("Timber info log")
         Timber.tag("Timber").w("Timber warning log")
@@ -108,6 +110,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("TooGenericExceptionThrown")
     @Composable
     private fun SampleContent(modifier: Modifier = Modifier) {
         val context = LocalContext.current
@@ -126,76 +129,97 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text("Open Debug Panel")
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    generateSampleLogs()
-                    Toast.makeText(context, "Sample logs generated", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Generate Logs")
+            SampleButton("Generate Logs") {
+                generateSampleLogs()
+                Toast.makeText(context, "Sample logs generated", Toast.LENGTH_SHORT).show()
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    generateSampleRequests()
-                    Toast.makeText(context, "Network requests sent", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Make Network Requests")
+            SampleButton("Make Network Requests") {
+                generateSampleRequests()
+                Toast.makeText(context, "Network requests sent", Toast.LENGTH_SHORT).show()
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    lifecycleScope.launch(Dispatchers.IO) { sampleDb.reseed() }
-                    Toast.makeText(context, "Database reseeded", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Reseed Sample Database")
+            SampleButton("Reseed Sample Database") {
+                lifecycleScope.launch(Dispatchers.IO) { sampleDb.reseed() }
+                Toast.makeText(context, "Database reseeded", Toast.LENGTH_SHORT).show()
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    SamplePreferences.seed(context)
-                    Toast.makeText(context, "Preferences seeded", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Seed Sample Preferences")
+            SampleButton("Seed Sample Preferences") {
+                SamplePreferences.seed(context)
+                Toast.makeText(context, "Preferences seeded", Toast.LENGTH_SHORT).show()
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    SampleRemoteConfig.fetch()
-                    Toast.makeText(context, "Fetching Remote Config", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Fetch Remote Config")
+            SampleButton("Fetch Remote Config") {
+                SampleRemoteConfig.fetch()
+                Toast.makeText(context, "Fetching Remote Config", Toast.LENGTH_SHORT).show()
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    context.startActivity(Intent(context, LeakedActivity::class.java))
-                    Toast.makeText(context, "Leak simulated — check Leaks tab in 5s", Toast.LENGTH_LONG).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Simulate Memory Leak")
+            SampleButton("Simulate Memory Leak") {
+                context.startActivity(Intent(context, LeakedActivity::class.java))
+                Toast.makeText(context, "Leak simulated — check Leaks tab in 5s", Toast.LENGTH_LONG).show()
             }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    context.startActivity(Intent(context, JankActivity::class.java))
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Simulate Performance Issues")
+            SampleButton("Simulate Performance Issues") {
+                context.startActivity(Intent(context, JankActivity::class.java))
+            }
+            SampleButton("Spawn Sample Threads") {
+                lifecycleScope.launch(Dispatchers.IO) { spawnSampleThreads() }
+                Toast.makeText(context, "Sample threads spawned — check Threads tab", Toast.LENGTH_SHORT).show()
+            }
+            SampleButton("Simulate Crash") {
+                Thread {
+                    throw RuntimeException("WickKit sample crash — reopen the app and check the Crashes tab")
+                }.apply {
+                    name = "wk-sample-crash"
+                    start()
+                }
             }
         }
+    }
+
+    @Composable
+    private fun SampleButton(label: String, onClick: () -> Unit) {
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(label)
+        }
+    }
+}
+
+private suspend fun spawnSampleThreads() {
+    repeat(3) { index ->
+        Thread {
+            Thread.sleep(30_000)
+        }.apply {
+            name = "wk-sample-sleeping-$index"
+            isDaemon = true
+            start()
+        }
+    }
+    val lock = Any()
+    Thread {
+        synchronized(lock) { Thread.sleep(30_000) }
+    }.apply {
+        name = "wk-sample-lock-holder"
+        isDaemon = true
+        start()
+    }
+    delay(50.milliseconds)
+    repeat(2) { index ->
+        Thread {
+            synchronized(lock) { Thread.sleep(30_000) }
+        }.apply {
+            name = "wk-sample-blocked-$index"
+            isDaemon = true
+            start()
+        }
+    }
+    Thread {
+        val end = System.currentTimeMillis() + 30_000
+        while (System.currentTimeMillis() < end) {
+            Thread.yield()
+        }
+    }.apply {
+        name = "wk-sample-cpu-bound"
+        isDaemon = true
+        start()
     }
 }
 

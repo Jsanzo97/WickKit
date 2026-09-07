@@ -12,12 +12,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import io.wickkit.compose.WickKitComposeTracker
+import io.wickkit.crashes.WickKitCrashManager
 import io.wickkit.leaks.ObjectWatcher
 import io.wickkit.logs.WickKitLogcat
 import io.wickkit.overlay.WickKitActivity
 import io.wickkit.overlay.WickKitNotification
 import io.wickkit.overlay.WickKitPermissionActivity
 import io.wickkit.performance.WickKitPerformanceManager
+import io.wickkit.threads.WickKitThreadManager
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -40,8 +42,10 @@ object WickKit {
         val app = context.applicationContext as? Application ?: return
         val isDebug = app.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         if (!isDebug) return
+        WickKitCrashManager.init(app)
         WickKitLogcat.start()
         WickKitPerformanceManager.start()
+        WickKitThreadManager.start()
         app.registerActivityLifecycleCallbacks(activityTracker())
     }
 
@@ -89,7 +93,7 @@ object WickKit {
                 is WickKitActivity -> {
                     isVisible = true
                     overlayStarting = false
-                    WickKitPerformanceManager.onOverlayOpened()
+                    WickKitPerformanceManager.onOverlayVisibilityChanged(true)
                 }
 
                 is WickKitPermissionActivity -> Unit
@@ -120,7 +124,7 @@ object WickKit {
                 is WickKitActivity -> {
                     isVisible = false
                     overlayStarting = false
-                    WickKitPerformanceManager.onOverlayClosed()
+                    WickKitPerformanceManager.onOverlayVisibilityChanged(false)
                 }
 
                 is WickKitPermissionActivity -> Unit

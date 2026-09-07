@@ -15,12 +15,18 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
 class WickKitKtorInterceptorTest {
+
+    @After
+    fun tearDown() {
+        MockRuleManager.clear()
+    }
 
     // region success path
 
@@ -223,6 +229,55 @@ class WickKitKtorInterceptorTest {
         }.use { client ->
             val response = client.get("https://api.example.com/data")
             assertEquals("custom-value", response.headers["X-Custom-Header"])
+        }
+    }
+
+    // endregion
+
+    // region mock path
+
+    @Test
+    fun `mock response is returned without calling engine when rule matches`() = runBlocking {
+        MockRuleManager.add(
+            MockRule(
+                id = 0,
+                urlPattern = "/users",
+                method = null,
+                statusCode = 201,
+                responseBody = """{"mocked":true}""",
+            ),
+        )
+        HttpClient(MockEngine) {
+            install(WickKitKtorInterceptor)
+            engine {
+                addHandler { error("engine must not be called for mocked requests") }
+            }
+        }.use { client ->
+            val response = client.get("https://api.example.com/users")
+            assertEquals(HttpStatusCode.Created, response.status)
+        }
+    }
+
+    @Test
+    fun `mock response with delay still returns correct status`() = runBlocking {
+        MockRuleManager.add(
+            MockRule(
+                id = 0,
+                urlPattern = "/slow",
+                method = null,
+                statusCode = 200,
+                responseBody = "ok",
+                delayMs = 10L,
+            ),
+        )
+        HttpClient(MockEngine) {
+            install(WickKitKtorInterceptor)
+            engine {
+                addHandler { error("engine must not be called for mocked requests") }
+            }
+        }.use { client ->
+            val response = client.get("https://api.example.com/slow")
+            assertEquals(HttpStatusCode.OK, response.status)
         }
     }
 
