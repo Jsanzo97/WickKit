@@ -23,7 +23,7 @@ class WickKitNetworkInterceptor : Interceptor {
         val url = request.url.toString()
         val method = request.method
         val id = idCounter.getAndIncrement()
-        val time = timeFormat.get()!!.format(Date())
+        val time = (timeFormat.get() ?: SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())).format(Date())
         val requestHeaders = request.headers.toFlatMap()
         val requestBody = readRequestBody(request)
 

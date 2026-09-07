@@ -104,7 +104,7 @@ private fun buildAppSection(context: Context): DeviceInfoSection {
             @Suppress("DEPRECATION")
             it.versionCode.toLong()
         }
-        "${it.versionName} ($code)"
+        "${it.versionName.orEmpty()} ($code)"
     } ?: "N/A"
     return DeviceInfoSection(
         title = context.getString(R.string.wk_device_section_app),

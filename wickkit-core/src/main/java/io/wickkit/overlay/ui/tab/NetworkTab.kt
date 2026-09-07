@@ -146,12 +146,13 @@ internal fun NetworkTab() {
             canSave = currentScreen.rule != null || rules.size < MockRuleManager.MAX_RULES,
             onBack = { screen = currentScreen.returnTo },
             onSave = { rule ->
-                if (currentScreen.rule == null) {
-                    MockRuleManager.add(rule)
+                val saved = if (currentScreen.rule == null) {
+                    runCatching { MockRuleManager.add(rule) }.isSuccess
                 } else {
                     MockRuleManager.update(rule)
+                    true
                 }
-                screen = NetworkScreen.Mocks
+                if (saved) screen = NetworkScreen.Mocks
             },
         )
     }

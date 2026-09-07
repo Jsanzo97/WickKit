@@ -1,6 +1,7 @@
 package io.wickkit.logs
 
 import android.os.Process
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +33,7 @@ internal object WickKitLogcat {
             var backoffMs = 1_000L
             while (true) {
                 runCatching { readProcess(pid) }
+                    .onFailure { Log.e("WickKit", "Logcat reader crashed", it) }
                 delay(backoffMs.milliseconds)
                 backoffMs = (backoffMs * 2).coerceAtMost(30_000L)
             }

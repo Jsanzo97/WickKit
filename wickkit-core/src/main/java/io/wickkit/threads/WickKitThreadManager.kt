@@ -41,19 +41,24 @@ internal object WickKitThreadManager {
     internal fun buildEntries(
         rawData: Map<Thread, Array<StackTraceElement>>,
     ): PersistentList<ThreadEntry> = rawData.entries
-        .filter { (thread, _) -> thread.state != Thread.State.TERMINATED }
-        .sortedWith(compareBy({ statePriority(it.key.state) }, { it.key.name }))
-        .mapIndexed { index, (thread, stackTrace) ->
-            ThreadEntry(
-                id = index.toLong(),
-                name = thread.name,
-                state = thread.state,
-                isDaemon = thread.isDaemon,
-                priority = thread.priority,
-                threadGroup = thread.threadGroup?.name.orEmpty(),
-                stackTrace = stackTrace.map { it.toString() }.toPersistentList(),
-            )
+        .mapNotNull { (thread, stackTrace) ->
+            val state = thread.state
+            if (state == Thread.State.TERMINATED) {
+                null
+            } else {
+                ThreadEntry(
+                    id = 0L,
+                    name = thread.name.orEmpty(),
+                    state = state,
+                    isDaemon = thread.isDaemon,
+                    priority = thread.priority,
+                    threadGroup = thread.threadGroup?.name.orEmpty(),
+                    stackTrace = stackTrace.map { it.toString() }.toPersistentList(),
+                )
+            }
         }
+        .sortedWith(compareBy({ statePriority(it.state) }, { it.name }))
+        .mapIndexed { index, entry -> entry.copy(id = index.toLong()) }
         .toPersistentList()
 
     private fun statePriority(state: Thread.State): Int = when (state) {
