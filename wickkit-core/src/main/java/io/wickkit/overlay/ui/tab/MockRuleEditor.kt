@@ -84,7 +84,7 @@ internal fun MockRuleEditor(
     ) {
         EditorToolbar(
             isEditing = rule != null,
-            canSave = canSave,
+            canSave = canSave && urlPattern.isNotBlank(),
             onBack = onBack,
             onSave = {
                 if (responseBody.isNotBlank() && !isValidJson(responseBody)) {

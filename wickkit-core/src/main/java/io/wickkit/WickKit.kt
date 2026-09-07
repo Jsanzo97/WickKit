@@ -25,10 +25,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object WickKit {
 
-    internal var isVisible = false
-    private var overlayStarting = false
+    @Volatile internal var isVisible = false
+
+    @Volatile private var overlayStarting = false
     private var currentActivity: WeakReference<Activity>? = null
     private var notificationSetUp = false
+    private var startedCount = 0
     private val initialized = AtomicBoolean(false)
 
     private val fragmentWatcher = object : FragmentManager.FragmentLifecycleCallbacks() {
@@ -85,6 +87,10 @@ object WickKit {
         }
         override fun onActivityStarted(activity: Activity) {
             if (activity !is WickKitActivity && activity !is WickKitPermissionActivity) {
+                startedCount++
+                if (startedCount == 1 && notificationSetUp) {
+                    WickKitNotification.show(activity.applicationContext)
+                }
                 WickKitPerformanceManager.onActivityStarted()
             }
         }
@@ -113,9 +119,15 @@ object WickKit {
         override fun onActivityStopped(activity: Activity) {
             if (currentActivity?.get() === activity) currentActivity = null
             val isSystemActivity = activity is WickKitActivity || activity is WickKitPermissionActivity
-            if (!isSystemActivity && !isVisible && !overlayStarting) {
-                WickKitComposeTracker.reset()
-                WickKitPerformanceManager.onActivityStopped()
+            if (!isSystemActivity) {
+                startedCount = maxOf(0, startedCount - 1)
+                if (startedCount == 0) {
+                    WickKitNotification.cancel(activity.applicationContext)
+                }
+                if (!isVisible && !overlayStarting) {
+                    WickKitComposeTracker.reset()
+                    WickKitPerformanceManager.onActivityStopped()
+                }
             }
         }
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit

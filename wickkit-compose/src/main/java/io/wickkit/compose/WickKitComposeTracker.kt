@@ -20,7 +20,7 @@ object WickKitComposeTracker {
 
     fun onRecompose(name: String) {
         if (!pluginActive) pluginActive = true
-        counts.getOrPut(name) { AtomicLong() }.incrementAndGet()
+        counts.computeIfAbsent(name) { AtomicLong() }.incrementAndGet()
     }
 
     fun isPluginActive(): Boolean = pluginActive
