@@ -71,7 +71,11 @@ object WickKit {
                 if (granted) {
                     WickKitNotification.show(activity.applicationContext)
                 } else {
-                    activity.startActivity(Intent(activity, WickKitPermissionActivity::class.java))
+                    activity.startActivity(
+                        Intent(activity, WickKitPermissionActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        },
+                    )
                 }
             } else {
                 WickKitNotification.show(activity.applicationContext)

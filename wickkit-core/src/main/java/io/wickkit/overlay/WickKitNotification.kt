@@ -1,6 +1,7 @@
 package io.wickkit.overlay
 
 import android.app.NotificationChannel
+import android.app.NotificationChannelGroup
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -14,6 +15,7 @@ import io.wickkit.core.R
 internal object WickKitNotification {
 
     private const val CHANNEL_ID = "io.wickkit.debug"
+    private const val CHANNEL_GROUP_ID = "io.wickkit.debug.group"
     private const val NOTIFICATION_ID = 0x574B
 
     fun show(context: Context) {
@@ -23,7 +25,7 @@ internal object WickKitNotification {
                 context,
                 0,
                 Intent(context, WickKitActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 },
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
@@ -32,6 +34,8 @@ internal object WickKitNotification {
                 .setContentTitle("WickKit")
                 .setContentText("Tap to open debug panel")
                 .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setGroup(CHANNEL_GROUP_ID)
+                .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
                 .setOngoing(true)
                 .setAutoCancel(false)
                 .setContentIntent(pendingIntent)
@@ -48,6 +52,13 @@ internal object WickKitNotification {
 
     private fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = context.getSystemService(NotificationManager::class.java)
+            val group = NotificationChannelGroup(
+                CHANNEL_GROUP_ID,
+                "WickKit",
+            )
+            runCatching { manager.createNotificationChannelGroup(group) }
+
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "WickKit Debug",
@@ -55,9 +66,9 @@ internal object WickKitNotification {
             ).apply {
                 description = "WickKit debug panel"
                 setShowBadge(false)
+                this.group = CHANNEL_GROUP_ID
             }
-            context.getSystemService(NotificationManager::class.java)
-                .createNotificationChannel(channel)
+            runCatching { manager.createNotificationChannel(channel) }
         }
     }
 
