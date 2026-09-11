@@ -2,7 +2,6 @@ package io.wickkit.compose
 
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 private const val YELLOW_THRESHOLD = 5f
@@ -11,7 +10,7 @@ private const val RED_THRESHOLD = 50f
 
 object WickKitComposeTracker {
 
-    private val counts = ConcurrentHashMap<String, AtomicLong>()
+    private val counts = HashMap<String, AtomicLong>()
     private val peakRates = HashMap<String, Float>()
     private val lastPollCounts = HashMap<String, Long>()
     private var lastPollTimeMs = -1L
@@ -20,14 +19,17 @@ object WickKitComposeTracker {
 
     fun onRecompose(name: String) {
         if (!pluginActive) pluginActive = true
-        counts.computeIfAbsent(name) { AtomicLong() }.incrementAndGet()
+        val counter = synchronized(this) {
+            counts.getOrPut(name) { AtomicLong() }
+        }
+        counter.incrementAndGet()
     }
 
     fun isPluginActive(): Boolean = pluginActive
 
     fun reset() {
-        counts.clear()
         synchronized(this) {
+            counts.clear()
             peakRates.clear()
             lastPollCounts.clear()
             lastPollTimeMs = -1L

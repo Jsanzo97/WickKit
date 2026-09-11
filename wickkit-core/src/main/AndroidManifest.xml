@@ -11,12 +11,15 @@
         <activity
             android:name="io.wickkit.overlay.WickKitActivity"
             android:theme="@style/WickKit.Overlay"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
+            android:taskAffinity="io.wickkit.overlay.task"
             android:exported="false" />
 
         <activity
             android:name="io.wickkit.overlay.WickKitPermissionActivity"
             android:theme="@style/WickKit.Overlay"
+            android:launchMode="singleTask"
+            android:taskAffinity="io.wickkit.overlay.task"
             android:exported="false" />
     </application>
 </manifest>
