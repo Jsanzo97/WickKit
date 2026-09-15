@@ -27,13 +27,15 @@ object MockRuleManager {
 
     fun add(rule: MockRule): Boolean {
         require(rule.urlPattern.isNotBlank()) { "urlPattern must not be blank" }
+        val newId = idCounter.getAndIncrement()
         var added = false
         rules.update { current ->
             if (current.size >= MAX_RULES) {
+                added = false
                 current
             } else {
                 added = true
-                current.adding(rule.copy(id = idCounter.getAndIncrement()))
+                current.adding(rule.copy(id = newId))
             }
         }
         return added

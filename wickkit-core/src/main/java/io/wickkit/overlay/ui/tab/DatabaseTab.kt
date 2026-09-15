@@ -136,7 +136,10 @@ private fun DatabaseListScreen(
             databases.isEmpty() -> EmptyState(stringResource(R.string.wk_database_empty_databases))
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(databases.size) { index ->
+                items(
+                    count = databases.size,
+                    key = { databases[it].path },
+                ) { index ->
                     DatabaseRow(databaseEntry = databases[index], onSelect = onSelect)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 }
@@ -204,7 +207,10 @@ private fun TableListScreen(
             tables.isEmpty() -> EmptyState(stringResource(R.string.wk_database_empty_tables))
 
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(tables.size) { index ->
+                items(
+                    count = tables.size,
+                    key = { tables[it].first },
+                ) { index ->
                     val (name, count) = tables[index]
                     TableRow(name = name, rowCount = count, onClick = { onSelect(name) })
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))

@@ -63,7 +63,7 @@ class WickKitFlagsManagerTest {
         )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        val backup = wickkitPrefs.getString("sp.backup.test_prefs.name", null)
+        val backup = wickkitPrefs.getString("sp.backup.test_prefs::name", null)
         assertEquals("STRING:original", backup)
     }
 
@@ -86,7 +86,7 @@ class WickKitFlagsManagerTest {
         )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        val backup = wickkitPrefs.getString("sp.backup.test_prefs.name", null)
+        val backup = wickkitPrefs.getString("sp.backup.test_prefs::name", null)
         assertEquals("STRING:original", backup)
         assertEquals("second_override", prefs.getString("name", null))
     }
@@ -168,9 +168,9 @@ class WickKitFlagsManagerTest {
         WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "key")
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        assertFalse(wickkitPrefs.contains("sp.backup.test_prefs.key"))
-        assertFalse(wickkitPrefs.contains("sp.override.test_prefs.key"))
-        assertFalse(wickkitPrefs.contains("sp.enabled.test_prefs.key"))
+        assertFalse(wickkitPrefs.contains("sp.backup.test_prefs::key"))
+        assertFalse(wickkitPrefs.contains("sp.override.test_prefs::key"))
+        assertFalse(wickkitPrefs.contains("sp.enabled.test_prefs::key"))
     }
 
     @Test
@@ -200,7 +200,7 @@ class WickKitFlagsManagerTest {
 
         assertFalse(prefs.getBoolean("feature", true))
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        assertEquals("false", wickkitPrefs.getString("sp.enabled.test_prefs.feature", null))
+        assertEquals("false", wickkitPrefs.getString("sp.enabled.test_prefs::feature", null))
     }
 
     @Test
@@ -225,7 +225,7 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("feature", false).commit()
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        wickkitPrefs.edit().putString("sp.enabled.test_prefs.feature", "true").commit()
+        wickkitPrefs.edit().putString("sp.enabled.test_prefs::feature", "true").commit()
 
         WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
 
@@ -237,7 +237,7 @@ class WickKitFlagsManagerTest {
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("feature", false).commit()
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        wickkitPrefs.edit().putString("sp.enabled.test_prefs.feature", "false").commit()
+        wickkitPrefs.edit().putString("sp.enabled.test_prefs::feature", "false").commit()
 
         WickKitFlagsManager.toggleSpOverride(prefsName = "test_prefs", key = "feature")
 
@@ -287,7 +287,7 @@ class WickKitFlagsManagerTest {
         )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        assertEquals("STRING:", wickkitPrefs.getString("sp.backup.test_prefs.new_key", null))
+        assertEquals("STRING:", wickkitPrefs.getString("sp.backup.test_prefs::new_key", null))
     }
 
     @Test
@@ -338,11 +338,11 @@ class WickKitFlagsManagerTest {
     @Test
     fun `clearSpOverride with no backup when enabled does not crash`() {
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        wickkitPrefs.edit().putString("sp.enabled.test_prefs.key", "true").commit()
+        wickkitPrefs.edit().putString("sp.enabled.test_prefs::key", "true").commit()
 
         WickKitFlagsManager.clearSpOverride(prefsName = "test_prefs", key = "key")
 
-        assertFalse(wickkitPrefs.contains("sp.enabled.test_prefs.key"))
+        assertFalse(wickkitPrefs.contains("sp.enabled.test_prefs::key"))
     }
 
     // ── Early-return guards (appContext null paths) ────────────────────────────
@@ -364,7 +364,7 @@ class WickKitFlagsManagerTest {
         )
 
         val wickkitPrefs = context.getSharedPreferences("wickkit_flags", Context.MODE_PRIVATE)
-        assertFalse(wickkitPrefs.contains("sp.backup.test_prefs.key"))
+        assertFalse(wickkitPrefs.contains("sp.backup.test_prefs::key"))
     }
 
     @Test

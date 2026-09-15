@@ -265,6 +265,7 @@ private fun SharedPreferencesEntryRow(
     var isEditing by remember(entry.key) { mutableStateOf(false) }
     var isBoolEditing by remember(entry.key) { mutableStateOf(false) }
     var editValue by remember(entry.key) { mutableStateOf(TextFieldValue("")) }
+    var validationError by remember(entry.key) { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -280,6 +281,7 @@ private fun SharedPreferencesEntryRow(
                         isBoolEditing = !isBoolEditing
                     } else if (!isEditing) {
                         isEditing = true
+                        validationError = false
                         val initial = prettyPrintIfJson(entry.currentValue)
                         editValue = TextFieldValue(initial, selection = TextRange(initial.length))
                     }
@@ -300,11 +302,20 @@ private fun SharedPreferencesEntryRow(
                         FlagType.FLOAT -> KeyboardType.Decimal
                         else -> KeyboardType.Text
                     },
-                    onValueChange = { editValue = it },
+                    isError = validationError,
+                    onValueChange = {
+                        editValue = it
+                        validationError = false
+                    },
                     onCommit = {
                         if (isEditing) {
-                            isEditing = false
-                            onSetValue(editValue.text)
+                            if (isValidForType(editValue.text, entry.type)) {
+                                isEditing = false
+                                validationError = false
+                                onSetValue(editValue.text)
+                            } else {
+                                validationError = true
+                            }
                         }
                     },
                 )
@@ -542,38 +553,49 @@ private fun RemoteConfigEntryValueRow(entry: RemoteConfigEntry) {
 private fun FlagsInlineEdit(
     value: TextFieldValue,
     keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean = false,
     onValueChange: (TextFieldValue) -> Unit,
     onCommit: () -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
     var hasFocused by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(3.dp))
-            .padding(horizontal = 6.dp, vertical = 4.dp),
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            singleLine = false,
-            maxLines = 8,
-            textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onCommit() }),
+    val borderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val textColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    Column {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .onFocusChanged { state ->
-                    if (state.hasFocus) {
-                        hasFocused = true
-                    } else if (hasFocused) {
-                        onCommit()
-                    }
-                },
-        )
+                .border(1.5.dp, borderColor, RoundedCornerShape(3.dp))
+                .padding(horizontal = 6.dp, vertical = 4.dp),
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = false,
+                maxLines = 8,
+                textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                cursorBrush = SolidColor(borderColor),
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onCommit() }),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { state ->
+                        if (state.hasFocus) {
+                            hasFocused = true
+                        }
+                    },
+            )
+        }
+        if (isError) {
+            Text(
+                text = stringResource(R.string.wk_mock_invalid_format),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 2.dp, top = 2.dp),
+            )
+        }
     }
 }
 
@@ -671,7 +693,7 @@ private fun FlagsSearchBar(query: String, onQueryChange: (String) -> Unit) {
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = null,
+                    contentDescription = stringResource(io.wickkit.core.R.string.wk_cd_clear_search),
                     modifier = Modifier.fillMaxSize(),
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
@@ -814,6 +836,13 @@ private fun FlagsRcNoWrapBanner() {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+private fun isValidForType(text: String, type: FlagType): Boolean = when (type) {
+    FlagType.INT -> text.toIntOrNull() != null
+    FlagType.LONG -> text.toLongOrNull() != null
+    FlagType.FLOAT -> text.toFloatOrNull() != null
+    else -> true
+}
 
 private fun prettyPrintIfJson(value: String): String {
     val trimmed = value.trim()

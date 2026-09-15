@@ -13,7 +13,8 @@ android {
 }
 
 dependencies {
-    compileOnly(project(":wickkit-core"))
+    implementation(project(":wickkit-core"))
+    implementation(libs.kotlinx.collections.immutable)
     compileOnly(libs.okhttp)
     compileOnly(libs.ktor.client.core)
     testImplementation(project(":wickkit-core"))

@@ -20,7 +20,6 @@ import io.wickkit.overlay.WickKitNotification
 import io.wickkit.overlay.WickKitPermissionActivity
 import io.wickkit.performance.WickKitPerformanceManager
 import io.wickkit.threads.WickKitThreadManager
-import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 
 object WickKit {
@@ -28,27 +27,44 @@ object WickKit {
     @Volatile internal var isVisible = false
 
     @Volatile private var overlayStarting = false
-    private var currentActivity: WeakReference<Activity>? = null
     private var notificationSetUp = false
     private var startedCount = 0
     private val initialized = AtomicBoolean(false)
+    private var app: Application? = null
+    private var lifecycleCallbacks: Application.ActivityLifecycleCallbacks? = null
 
     private val fragmentWatcher = object : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentDestroyed(fragmentManager: FragmentManager, fragment: Fragment) {
-            ObjectWatcher.watch(fragment)
+            if (initialized.get()) ObjectWatcher.watch(fragment)
         }
     }
 
     internal fun init(context: Context) {
         if (!initialized.compareAndSet(false, true)) return
-        val app = context.applicationContext as? Application ?: return
-        val isDebug = app.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val application = context.applicationContext as? Application ?: return
+        val isDebug = application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         if (!isDebug) return
-        WickKitCrashManager.init(app)
+        app = application
+        WickKitCrashManager.init(application)
         WickKitLogcat.start()
         WickKitPerformanceManager.start()
         WickKitThreadManager.start()
-        app.registerActivityLifecycleCallbacks(activityTracker())
+        val callbacks = activityTracker()
+        lifecycleCallbacks = callbacks
+        application.registerActivityLifecycleCallbacks(callbacks)
+    }
+
+    fun stop() {
+        if (!initialized.compareAndSet(true, false)) return
+        lifecycleCallbacks?.let { app?.unregisterActivityLifecycleCallbacks(it) }
+        lifecycleCallbacks = null
+        app = null
+        WickKitLogcat.stop()
+        WickKitPerformanceManager.stop()
+        WickKitThreadManager.stop()
+        ObjectWatcher.stop()
+        notificationSetUp = false
+        startedCount = 0
     }
 
     fun open(context: Context) {
@@ -109,7 +125,6 @@ object WickKit {
                 is WickKitPermissionActivity -> Unit
 
                 else -> {
-                    currentActivity = WeakReference(activity)
                     setupNotification(activity)
                     WickKitPerformanceManager.onActivityResumed(activity)
                 }
@@ -121,7 +136,6 @@ object WickKit {
             }
         }
         override fun onActivityStopped(activity: Activity) {
-            if (currentActivity?.get() === activity) currentActivity = null
             val isSystemActivity = activity is WickKitActivity || activity is WickKitPermissionActivity
             if (!isSystemActivity) {
                 startedCount = maxOf(0, startedCount - 1)

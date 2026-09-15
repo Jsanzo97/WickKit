@@ -2,6 +2,7 @@
 
 package io.wickkit.network
 
+import kotlinx.collections.immutable.persistentMapOf
 import okhttp3.Authenticator
 import okhttp3.Cache
 import okhttp3.Call
@@ -202,7 +203,7 @@ class WickKitNetworkInterceptorTest {
                 method = null,
                 statusCode = 200,
                 responseBody = "{}",
-                responseHeaders = mapOf("X-Mock" to "true", "Cache-Control" to "no-store"),
+                responseHeaders = persistentMapOf("X-Mock" to "true", "Cache-Control" to "no-store"),
             ),
         )
         val request = Request.Builder().url("https://api.example.com/data").build()

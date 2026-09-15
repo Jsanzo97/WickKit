@@ -49,6 +49,7 @@ import io.wickkit.core.R
 import io.wickkit.network.MockRule
 import io.wickkit.network.NetworkEntry
 import io.wickkit.overlay.ui.WickKitTheme
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -385,10 +386,10 @@ private fun MockRuleEditorNewPreview() {
                     id = 0,
                     method = "GET",
                     url = "https://api.example.com/v1/products",
-                    requestHeaders = emptyMap(),
+                    requestHeaders = persistentMapOf(),
                     requestBody = null,
                     statusCode = 200,
-                    responseHeaders = emptyMap(),
+                    responseHeaders = persistentMapOf(),
                     responseBody = null,
                     durationMs = 0,
                     time = "",

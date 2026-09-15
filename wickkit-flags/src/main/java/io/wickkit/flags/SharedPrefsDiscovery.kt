@@ -10,29 +10,41 @@ internal object SharedPrefsDiscovery {
         "WebViewChromiumPrefs",
     )
 
-    private val REVERSE_DOMAIN_PREFIXES = listOf(
-        "com.", "org.", "io.", "net.", "de.", "me.", "co.", "uk.", "fr.", "es.",
-    )
-
     private val EXCLUDED_SIMPLE_PREFIXES = listOf(
-        "frc_", // Firebase Remote Config
-        "firebase_", // Firebase SDK
-        "gtm_", // Google Tag Manager
-        "androidx_", // AndroidX internal (underscore variant)
+        "frc_",
+        "firebase_",
+        "gtm_",
+        "androidx_",
     )
 
     private val EXCLUDED_SUFFIXES = listOf(
-        "_secure_prefs", // EncryptedSharedPreferences internal file
+        "_secure_prefs",
     )
 
-    fun discoverNames(prefsDir: File): List<String> = prefsDir.listFiles()
+    private val KNOWN_SDK_PREFIXES = listOf(
+        "com.google.",
+        "com.facebook.",
+        "com.crashlytics.",
+        "com.appsflyer.",
+        "com.onesignal.",
+        "io.sentry.",
+        "io.embrace.",
+        "io.intercom.",
+    )
+
+    fun discoverNames(prefsDir: File, appPackage: String? = null): List<String> = prefsDir.listFiles()
         ?.filter { it.extension == "xml" }
         ?.map { it.nameWithoutExtension }
         ?.filter { name ->
             name !in EXCLUDED_EXACT &&
-                REVERSE_DOMAIN_PREFIXES.none { name.startsWith(it) } &&
                 EXCLUDED_SIMPLE_PREFIXES.none { name.startsWith(it) } &&
-                EXCLUDED_SUFFIXES.none { name.endsWith(it) }
+                EXCLUDED_SUFFIXES.none { name.endsWith(it) } &&
+                !isThirdPartySdkFile(name, appPackage)
         }
         ?: emptyList()
+
+    private fun isThirdPartySdkFile(name: String, appPackage: String?): Boolean {
+        if (appPackage != null && name.startsWith(appPackage)) return false
+        return KNOWN_SDK_PREFIXES.any { name.startsWith(it) }
+    }
 }
