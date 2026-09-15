@@ -23,6 +23,7 @@
     <string name="wk_cd_back">Zurück</string>
     <string name="wk_cd_share_logs">Logs teilen</string>
     <string name="wk_cd_delete_rule">Regel löschen</string>
+    <string name="wk_cd_clear_search">Suche löschen</string>
 
     <!-- Logs tab -->
     <string name="wk_logs_search_hint">Logs suchen… oder tag:OkHttp verwenden</string>
@@ -184,5 +185,12 @@
 
     <!-- Flags module inactive -->
     <string name="wk_flags_module_inactive">Flags-Modul inaktiv — füge :wickkit-flags zu deinen Debug-Abhängigkeiten hinzu, um es zu aktivieren</string>
+
+    <!-- Notification -->
+    <string name="wk_notification_title">WickKit</string>
+    <string name="wk_notification_text">Tippen, um das Debug-Panel zu öffnen</string>
+    <string name="wk_notification_channel_group">WickKit</string>
+    <string name="wk_notification_channel_name">WickKit Debug</string>
+    <string name="wk_notification_channel_description">WickKit Debug-Panel</string>
 
 </resources>

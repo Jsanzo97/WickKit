@@ -4,14 +4,19 @@ import android.os.Process
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 internal object WickKitLogcat {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var readJob: Job? = null
+
+    @Volatile private var activeProcess: java.lang.Process? = null
 
     // threadtime format: MM-DD HH:MM:SS.mmm  PID  TID LEVEL TAG: message
     private val lineRegex = Regex(
@@ -29,10 +34,11 @@ internal object WickKitLogcat {
 
     fun start() {
         val pid = Process.myPid()
-        scope.launch {
+        readJob = scope.launch {
             var backoffMs = 1_000L
             while (true) {
                 runCatching { readProcess(pid) }
+                    .onSuccess { backoffMs = 1_000L }
                     .onFailure { Log.e("WickKit", "Logcat reader crashed", it) }
                 delay(backoffMs.milliseconds)
                 backoffMs = (backoffMs * 2).coerceAtMost(30_000L)
@@ -40,11 +46,20 @@ internal object WickKitLogcat {
         }
     }
 
+    fun stop() {
+        activeProcess?.destroy()
+        activeProcess = null
+        readJob?.cancel()
+        readJob = null
+        scope.cancel()
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
     private fun readProcess(pid: Int) {
-        val process = Runtime.getRuntime().exec(
-            arrayOf("logcat", "--pid=$pid", "-v", "threadtime"),
-        )
-        process.errorStream.close()
+        val process = ProcessBuilder("logcat", "--pid=$pid", "-v", "threadtime")
+            .redirectErrorStream(true)
+            .start()
+        activeProcess = process
         try {
             process.inputStream.bufferedReader().lineSequence().forEach { line ->
                 parseLine(line)?.let { (level, tag, message, time) ->
@@ -58,6 +73,7 @@ internal object WickKitLogcat {
             }
         } finally {
             process.destroy()
+            activeProcess = null
         }
     }
 

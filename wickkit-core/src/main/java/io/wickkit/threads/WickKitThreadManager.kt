@@ -6,7 +6,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,15 +21,25 @@ internal object WickKitThreadManager {
     val entries: StateFlow<ImmutableList<ThreadEntry>>
         field = MutableStateFlow<PersistentList<ThreadEntry>>(persistentListOf())
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var pollJob: Job? = null
 
     fun start() {
-        scope.launch {
+        if (pollJob?.isActive == true) return
+        pollJob = scope.launch {
             while (true) {
-                refresh()
+                runCatching { refresh() }
                 delay(POLL_INTERVAL_MS)
             }
         }
+    }
+
+    fun stop() {
+        pollJob?.cancel()
+        pollJob = null
+        scope.cancel()
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        clear()
     }
 
     fun refresh() {

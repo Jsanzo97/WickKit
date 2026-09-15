@@ -50,7 +50,7 @@ private class WickKitDatabaseMethodVisitor(next: MethodVisitor) : MethodVisitor(
         if (descriptor.endsWith(")$SQLITE_DATABASE_DESC")) {
             val isOpenDatabase = opcode == Opcodes.INVOKESTATIC &&
                 owner == SQLITE_DATABASE &&
-                name == "openDatabase"
+                (name == "openDatabase" || name == "openOrCreateDatabase")
 
             val isGetDatabase = (name == "getWritableDatabase" || name == "getReadableDatabase") &&
                 descriptor == "()$SQLITE_DATABASE_DESC"

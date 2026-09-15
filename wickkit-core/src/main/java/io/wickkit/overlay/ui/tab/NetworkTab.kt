@@ -2,7 +2,6 @@ package io.wickkit.overlay.ui.tab
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -57,6 +56,7 @@ import io.wickkit.network.WickKitNetworkManager
 import io.wickkit.overlay.ui.WickKitTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 
 private val ToolbarHeight = 36.dp
@@ -311,50 +311,20 @@ private fun MethodFilterRow(selected: String?, onSelect: (String?) -> Unit) {
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        MethodChip(
+        WickKitFilterChip(
             label = "ALL",
             isSelected = selected == null,
             color = MaterialTheme.colorScheme.onSurface,
             onClick = { onSelect(null) },
         )
         HTTP_METHODS.forEach { method ->
-            MethodChip(
+            WickKitFilterChip(
                 label = method,
                 isSelected = selected == method,
                 color = methodColor(method),
                 onClick = { onSelect(if (selected == method) null else method) },
             )
         }
-    }
-}
-
-@Composable
-private fun MethodChip(
-    label: String,
-    isSelected: Boolean,
-    color: Color,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) color.copy(alpha = 0.15f) else Color.Transparent)
-            .border(
-                width = 1.dp,
-                color = if (isSelected) color.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(8.dp),
-            )
-            .clickable(interactionSource = null, indication = null) { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            ),
-            color = if (isSelected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-        )
     }
 }
 
@@ -709,10 +679,10 @@ private fun sampleEntries() = persistentListOf(
         id = 0,
         method = "GET",
         url = "https://api.example.com/v1/users",
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = null,
         statusCode = 200,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 142,
         time = "10:23:44",
@@ -722,10 +692,10 @@ private fun sampleEntries() = persistentListOf(
         id = 1,
         method = "POST",
         url = "https://api.example.com/v1/users",
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = "{}",
         statusCode = 201,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 340,
         time = "10:23:45",
@@ -735,10 +705,10 @@ private fun sampleEntries() = persistentListOf(
         id = 2,
         method = "GET",
         url = "https://api.example.com/v1/products?page=1",
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = null,
         statusCode = 404,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 88,
         time = "10:23:46",
@@ -748,10 +718,10 @@ private fun sampleEntries() = persistentListOf(
         id = 3,
         method = "DELETE",
         url = "https://api.example.com/v1/items/42",
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = null,
         statusCode = 500,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 1230,
         time = "10:23:47",
@@ -761,10 +731,10 @@ private fun sampleEntries() = persistentListOf(
         id = 4,
         method = "GET",
         url = "https://api.example.com/v1/data",
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = null,
         statusCode = 200,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 95,
         time = "10:23:48",
@@ -775,10 +745,10 @@ private fun sampleEntries() = persistentListOf(
         id = 5,
         method = "GET",
         url = "https://api.example.com/v1/timeout",
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = null,
         statusCode = null,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 30000,
         time = "10:23:49",

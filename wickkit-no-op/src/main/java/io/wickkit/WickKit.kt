@@ -6,4 +6,6 @@ object WickKit {
 
     @Suppress("UnusedParameter")
     fun open(context: Context) = Unit
+
+    fun stop() = Unit
 }

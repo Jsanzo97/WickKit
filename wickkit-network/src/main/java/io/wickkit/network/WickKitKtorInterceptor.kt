@@ -19,12 +19,13 @@ import io.ktor.util.AttributeKey
 import io.ktor.util.date.GMTDate
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.InternalAPI
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicLong
 
 class WickKitKtorInterceptor private constructor() {
 
@@ -35,26 +36,27 @@ class WickKitKtorInterceptor private constructor() {
 
         @Suppress("TooGenericExceptionCaught")
         override fun install(plugin: WickKitKtorInterceptor, scope: HttpClient) {
-            val idCounter = AtomicLong(0)
             val timeFormat = object : ThreadLocal<SimpleDateFormat>() {
                 override fun initialValue() = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
             }
 
             val saveBodyInstalled = scope.pluginOrNull(SaveBodyPlugin) != null
             scope.plugin(HttpSend).intercept { request ->
-                val id = idCounter.getAndIncrement()
+                val id = WickKitNetworkManager.nextId()
                 val time = (timeFormat.get() ?: SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())).format(Date())
                 val url = request.url.buildString()
                 val method = request.method.value
                 val requestHeaders = request.headers.build()
                     .entries()
                     .associate { (key, headerValues) -> key to headerValues.joinToString(", ") }
+                    .toImmutableMap()
                 val requestBody = readRequestBody(request.body)
 
                 val mockRule = MockRuleManager.findMatch(url = url, method = method)
                 if (mockRule != null) {
-                    if (mockRule.delayMs > 0) {
-                        delay(mockRule.delayMs.coerceAtMost(MAX_DELAY_MS))
+                    val actualDelayMs = mockRule.delayMs.coerceAtMost(MAX_DELAY_MS)
+                    if (actualDelayMs > 0) {
+                        delay(actualDelayMs)
                     }
                     val call = buildMockCall(scope = scope, request = request, rule = mockRule)
                     WickKitNetworkManager.add(
@@ -67,7 +69,7 @@ class WickKitKtorInterceptor private constructor() {
                             statusCode = mockRule.statusCode,
                             responseHeaders = mockRule.responseHeaders,
                             responseBody = mockRule.responseBody,
-                            durationMs = mockRule.delayMs,
+                            durationMs = actualDelayMs,
                             time = time,
                             error = null,
                             isMocked = true,
@@ -88,7 +90,7 @@ class WickKitKtorInterceptor private constructor() {
                             requestHeaders = requestHeaders,
                             requestBody = requestBody,
                             statusCode = null,
-                            responseHeaders = emptyMap(),
+                            responseHeaders = persistentMapOf(),
                             responseBody = null,
                             durationMs = System.currentTimeMillis() - startMs,
                             time = time,
@@ -108,7 +110,8 @@ class WickKitKtorInterceptor private constructor() {
                         statusCode = call.response.status.value,
                         responseHeaders = call.response.headers
                             .entries()
-                            .associate { (key, headerValues) -> key to headerValues.joinToString(", ") },
+                            .associate { (key, headerValues) -> key to headerValues.joinToString(", ") }
+                            .toImmutableMap(),
                         responseBody = responseBody,
                         durationMs = System.currentTimeMillis() - startMs,
                         time = time,
@@ -136,7 +139,10 @@ class WickKitKtorInterceptor private constructor() {
             )
             val responseHeaders = headers {
                 rule.responseHeaders.forEach { (key, value) -> append(key, value) }
-                if (!rule.responseHeaders.containsKey("Content-Type")) {
+                val hasContentType = rule.responseHeaders.keys.any {
+                    it.equals("Content-Type", ignoreCase = true)
+                }
+                if (!hasContentType) {
                     append("Content-Type", "application/json; charset=utf-8")
                 }
             }

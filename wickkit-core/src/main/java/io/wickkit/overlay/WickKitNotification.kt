@@ -31,8 +31,8 @@ internal object WickKitNotification {
             )
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.wickkit_ic_notification)
-                .setContentTitle("WickKit")
-                .setContentText("Tap to open debug panel")
+                .setContentTitle(context.getString(R.string.wk_notification_title))
+                .setContentText(context.getString(R.string.wk_notification_text))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setGroup(CHANNEL_GROUP_ID)
                 .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
@@ -55,16 +55,16 @@ internal object WickKitNotification {
             val manager = context.getSystemService(NotificationManager::class.java)
             val group = NotificationChannelGroup(
                 CHANNEL_GROUP_ID,
-                "WickKit",
+                context.getString(R.string.wk_notification_channel_group),
             )
             runCatching { manager.createNotificationChannelGroup(group) }
 
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "WickKit Debug",
+                context.getString(R.string.wk_notification_channel_name),
                 NotificationManager.IMPORTANCE_LOW,
             ).apply {
-                description = "WickKit debug panel"
+                description = context.getString(R.string.wk_notification_channel_description)
                 setShowBadge(false)
                 this.group = CHANNEL_GROUP_ID
             }

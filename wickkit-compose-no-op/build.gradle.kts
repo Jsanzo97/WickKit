@@ -13,5 +13,5 @@ android {
 }
 
 dependencies {
-    compileOnly(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.collections.immutable)
 }

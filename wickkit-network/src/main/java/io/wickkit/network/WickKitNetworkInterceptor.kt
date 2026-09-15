@@ -1,5 +1,8 @@
 package io.wickkit.network
 
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableMap
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -10,7 +13,6 @@ import okio.Buffer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicLong
 
 class WickKitNetworkInterceptor : Interceptor {
 
@@ -22,7 +24,7 @@ class WickKitNetworkInterceptor : Interceptor {
         val request = chain.request()
         val url = request.url.toString()
         val method = request.method
-        val id = idCounter.getAndIncrement()
+        val id = WickKitNetworkManager.nextId()
         val time = (timeFormat.get() ?: SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())).format(Date())
         val requestHeaders = request.headers.toFlatMap()
         val requestBody = readRequestBody(request)
@@ -51,7 +53,7 @@ class WickKitNetworkInterceptor : Interceptor {
                     requestBody = requestBody,
                     statusCode = response.code,
                     responseHeaders = response.headers.toFlatMap(),
-                    responseBody = runCatching { response.peekBody(MAX_BODY_BYTES).string() }.getOrNull(),
+                    responseBody = readResponseBody(response),
                     durationMs = durationMs,
                     time = time,
                     error = null,
@@ -67,7 +69,7 @@ class WickKitNetworkInterceptor : Interceptor {
                     requestHeaders = requestHeaders,
                     requestBody = requestBody,
                     statusCode = null,
-                    responseHeaders = emptyMap(),
+                    responseHeaders = persistentMapOf(),
                     responseBody = null,
                     durationMs = System.currentTimeMillis() - startMs,
                     time = time,
@@ -86,14 +88,18 @@ class WickKitNetworkInterceptor : Interceptor {
         requestBody: String?,
     ): Response {
         val requestHeaders = request.headers.toFlatMap()
-        if (rule.delayMs > 0) {
+        val actualDelayMs = rule.delayMs.coerceAtMost(MAX_DELAY_MS)
+        if (actualDelayMs > 0) {
             try {
-                Thread.sleep(rule.delayMs.coerceAtMost(MAX_DELAY_MS))
+                Thread.sleep(actualDelayMs)
             } catch (_: InterruptedException) {
                 Thread.currentThread().interrupt()
             }
         }
-        val contentType = (rule.responseHeaders["Content-Type"] ?: "application/json; charset=utf-8").toMediaType()
+        val contentTypeValue = rule.responseHeaders.entries
+            .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }?.value
+            ?: "application/json; charset=utf-8"
+        val contentType = contentTypeValue.toMediaType()
         val mockBody = (rule.responseBody ?: "").toResponseBody(contentType)
         val response = Response.Builder()
             .request(request)
@@ -113,7 +119,7 @@ class WickKitNetworkInterceptor : Interceptor {
                 statusCode = rule.statusCode,
                 responseHeaders = rule.responseHeaders,
                 responseBody = rule.responseBody,
-                durationMs = rule.delayMs,
+                durationMs = actualDelayMs,
                 time = time,
                 error = null,
                 isMocked = true,
@@ -133,19 +139,36 @@ class WickKitNetworkInterceptor : Interceptor {
                 }
                 val buffer = Buffer()
                 body.writeTo(buffer)
-                if (buffer.size > MAX_BODY_BYTES) "[body too large: ${buffer.size} bytes]" else buffer.readUtf8()
+                if (buffer.size > MAX_BODY_BYTES) {
+                    val size = buffer.size
+                    buffer.clear()
+                    "[body too large: $size bytes]"
+                } else {
+                    buffer.readUtf8()
+                }
             }.getOrNull()
         }
     }
 
-    private fun Headers.toFlatMap(): Map<String, String> = names().associateWith { name ->
-        values(name).joinToString(", ")
+    private fun readResponseBody(response: Response): String? {
+        val contentType = response.header("Content-Type")?.lowercase()
+        if (contentType != null && isStreamingContentType(contentType)) {
+            return "[streaming body: $contentType]"
+        }
+        return runCatching { response.peekBody(MAX_BODY_BYTES).string() }.getOrNull()
     }
+
+    private fun isStreamingContentType(contentType: String): Boolean = contentType.contains("text/event-stream") ||
+        contentType.contains("application/octet-stream") ||
+        contentType.contains("multipart/")
+
+    private fun Headers.toFlatMap(): ImmutableMap<String, String> = names().associateWith { name ->
+        values(name).joinToString(", ")
+    }.toImmutableMap()
 
     private fun statusMessage(code: Int): String = STATUS_MESSAGES[code] ?: ""
 
     private companion object {
-        private val idCounter = AtomicLong(0)
         private const val MAX_BODY_BYTES = 50 * 1024L
         private const val MAX_DELAY_MS = 30_000L
         private val STATUS_MESSAGES = mapOf(
