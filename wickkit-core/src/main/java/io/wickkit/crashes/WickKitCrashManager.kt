@@ -21,7 +21,8 @@ import java.io.File
 
 internal object WickKitCrashManager {
 
-    private const val CRASH_FILE_NAME = "wickkit_last_crash.json"
+    private const val CRASH_FILE_NAME = "wickkit_crashes.json"
+    private const val MAX_PERSISTED_CRASHES = 3
     private const val MAX_STACK_TRACE_LINES = 200
     private const val MAX_ANR_ENTRIES = 5
     private const val MAX_TRACE_LINES = 500
@@ -30,6 +31,8 @@ internal object WickKitCrashManager {
         field = MutableStateFlow<PersistentList<CrashEntry>>(persistentListOf())
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private val fileLock = Any()
 
     @Volatile private var appContext: Context? = null
 
@@ -56,29 +59,39 @@ internal object WickKitCrashManager {
         throwable: Throwable,
     ) {
         runCatching {
-            val appVersion = runCatching {
-                @Suppress("DEPRECATION")
-                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                packageInfo.versionName.orEmpty()
-            }.getOrDefault("")
-            val stackTraceArray = JSONArray()
-            throwable.stackTrace.take(MAX_STACK_TRACE_LINES).forEach { element ->
-                stackTraceArray.put(element.toString())
+            synchronized(fileLock) {
+                val appVersion = runCatching {
+                    @Suppress("DEPRECATION")
+                    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                    packageInfo.versionName.orEmpty()
+                }.getOrDefault("")
+                val stackTraceArray = JSONArray()
+                throwable.stackTrace.take(MAX_STACK_TRACE_LINES).forEach { element ->
+                    stackTraceArray.put(element.toString())
+                }
+                val newCrash = JSONObject().apply {
+                    put("exceptionType", throwable.javaClass.name)
+                    put("message", throwable.message.orEmpty())
+                    put("threadName", thread.name)
+                    put("appVersion", appVersion)
+                    put("timestamp", System.currentTimeMillis())
+                    put("stackTrace", stackTraceArray)
+                }
+                val file = File(context.filesDir, CRASH_FILE_NAME)
+                val existing = loadCrashArray(file)
+                val updated = JSONArray().apply {
+                    put(newCrash)
+                    for (i in 0 until minOf(existing.length(), MAX_PERSISTED_CRASHES - 1)) {
+                        put(existing.getJSONObject(i))
+                    }
+                }
+                file.writeText(updated.toString())
             }
-            val json = JSONObject().apply {
-                put("exceptionType", throwable.javaClass.name)
-                put("message", throwable.message.orEmpty())
-                put("threadName", thread.name)
-                put("appVersion", appVersion)
-                put("timestamp", System.currentTimeMillis())
-                put("stackTrace", stackTraceArray)
-            }
-            File(context.filesDir, CRASH_FILE_NAME).writeText(json.toString())
         }
     }
 
     internal fun buildEntries(context: Context): PersistentList<CrashEntry> {
-        val crashes = loadPersistedCrash(context)?.let { listOf(it) } ?: emptyList()
+        val crashes = loadPersistedCrashes(context)
         val anrs = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> loadAnrEntries(context)
             else -> emptyList()
@@ -99,12 +112,25 @@ internal object WickKitCrashManager {
         }
         .toPersistentList()
 
-    internal fun loadPersistedCrash(context: Context): CrashEntry.Crash? = runCatching {
+    internal fun loadPersistedCrashes(context: Context): List<CrashEntry.Crash> = runCatching {
         val file = File(context.filesDir, CRASH_FILE_NAME)
-        if (!file.exists()) {
-            return null
+        val array = loadCrashArray(file)
+        (0 until array.length()).mapNotNull { i ->
+            parseCrashJson(array.getJSONObject(i))
         }
-        val json = JSONObject(file.readText())
+    }.getOrDefault(emptyList())
+
+    private fun loadCrashArray(file: File): JSONArray = runCatching {
+        if (!file.exists()) return@runCatching JSONArray()
+        val text = file.readText().trim()
+        when {
+            text.startsWith('[') -> JSONArray(text)
+            text.startsWith('{') -> JSONArray().apply { put(JSONObject(text)) }
+            else -> JSONArray()
+        }
+    }.getOrDefault(JSONArray())
+
+    private fun parseCrashJson(json: JSONObject): CrashEntry.Crash? = runCatching {
         val stackTraceArray = json.getJSONArray("stackTrace")
         val stackTrace = (0 until stackTraceArray.length())
             .map { stackTraceArray.getString(it) }

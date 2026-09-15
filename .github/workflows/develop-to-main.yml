@@ -53,6 +53,7 @@ jobs:
             --base main \
             --head develop \
             --title "Release ${{ steps.version.outputs.version }} [WickKit]" \
-            --body "Automated release PR for ${{ steps.version.outputs.version }}."
+            --body "Automated release PR for ${{ steps.version.outputs.version }}." \
+            --label "release"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -42,7 +42,7 @@ import io.wickkit.core.R
 import io.wickkit.network.NetworkEntry
 import io.wickkit.overlay.ui.WickKitTheme
 import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.collections.immutable.persistentMapOf
 
 @Composable
 internal fun NetworkDetailScreen(
@@ -66,7 +66,7 @@ internal fun NetworkDetailScreen(
             if (entry.requestHeaders.isNotEmpty()) {
                 HeadersSection(
                     title = stringResource(R.string.wk_network_request_headers),
-                    headers = entry.requestHeaders.toPersistentMap(),
+                    headers = entry.requestHeaders,
                 )
             }
             if (!entry.requestBody.isNullOrBlank()) {
@@ -79,7 +79,7 @@ internal fun NetworkDetailScreen(
                 if (entry.responseHeaders.isNotEmpty()) {
                     HeadersSection(
                         title = stringResource(R.string.wk_network_response_headers),
-                        headers = entry.responseHeaders.toPersistentMap(),
+                        headers = entry.responseHeaders,
                     )
                 }
                 if (!entry.responseBody.isNullOrBlank()) {
@@ -321,13 +321,13 @@ private fun NetworkDetailPreview() {
                     id = 0,
                     method = "POST",
                     url = "https://api.example.com/v1/users/create",
-                    requestHeaders = mapOf(
+                    requestHeaders = persistentMapOf(
                         "Content-Type" to "application/json",
                         "Authorization" to "Bearer eyJhbGciOiJSUzI1NiJ9...",
                     ),
                     requestBody = """{"name":"Jorge","email":"jorge@example.com"}""",
                     statusCode = 201,
-                    responseHeaders = mapOf("Content-Type" to "application/json"),
+                    responseHeaders = persistentMapOf("Content-Type" to "application/json"),
                     responseBody = """{"id":42,"name":"Jorge","createdAt":"2026-01-01"}""",
                     durationMs = 340,
                     time = "10:23:45",
@@ -350,10 +350,10 @@ private fun NetworkDetailMockedPreview() {
                     id = 1,
                     method = "GET",
                     url = "https://api.example.com/v1/products",
-                    requestHeaders = emptyMap(),
+                    requestHeaders = persistentMapOf(),
                     requestBody = null,
                     statusCode = 200,
-                    responseHeaders = emptyMap(),
+                    responseHeaders = persistentMapOf(),
                     responseBody = """{"items":[]}""",
                     durationMs = 0,
                     time = "10:23:46",

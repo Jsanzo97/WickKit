@@ -22,20 +22,14 @@ class WickKitPlugin : Plugin<Project> {
         }
 
         target.plugins.withId("com.android.application") {
-            registerTransforms(target = target, extension = extension, isApp = true)
-        }
-
-        target.plugins.withId("com.android.library") {
-            registerTransforms(target = target, extension = extension, isApp = false)
+            registerTransforms(target = target, extension = extension)
         }
     }
 
     private fun registerTransforms(
         target: Project,
         extension: WickKitExtension,
-        isApp: Boolean,
     ) {
-        if (!isApp) return
         val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
         androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
             if (!extension.enabled.get()) {

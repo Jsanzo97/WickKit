@@ -3,6 +3,7 @@ package io.wickkit.leaks
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
@@ -18,12 +19,16 @@ private const val GC_SETTLE_MS = 200L
 
 internal object ObjectWatcher {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val pendingRefs = ConcurrentLinkedQueue<Pair<String, WeakReference<Any>>>()
     private val gcScheduled = AtomicBoolean(false)
 
     fun watch(target: Any) {
         pendingRefs.add(target.javaClass.name to WeakReference(target))
+        scheduleDrainIfNeeded()
+    }
+
+    private fun scheduleDrainIfNeeded() {
         if (gcScheduled.compareAndSet(false, true)) {
             scope.launch {
                 delay(WATCH_DELAY_MS.milliseconds)
@@ -36,7 +41,17 @@ internal object ObjectWatcher {
                     }
                 }
                 gcScheduled.set(false)
+                if (pendingRefs.isNotEmpty()) {
+                    scheduleDrainIfNeeded()
+                }
             }
         }
+    }
+
+    fun stop() {
+        scope.cancel()
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        pendingRefs.clear()
+        gcScheduled.set(false)
     }
 }

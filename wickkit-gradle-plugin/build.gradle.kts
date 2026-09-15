@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     id("detekt-convention")
     id("spotless-convention")
-    id("publish-convention")
     alias(libs.plugins.gradle.plugin.publish)
 }
 

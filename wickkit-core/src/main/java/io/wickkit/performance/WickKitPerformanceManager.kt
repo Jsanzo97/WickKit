@@ -11,7 +11,9 @@ import io.wickkit.compose.WickKitComposeTracker
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,12 +24,14 @@ import kotlin.time.Duration.Companion.milliseconds
 private const val POLL_INTERVAL_MS = 2_000L
 private const val MAX_FRAME_SAMPLES = 600
 
+@Suppress("TooManyFunctions")
 internal object WickKitPerformanceManager {
 
     val snapshot: StateFlow<PerformanceSnapshot>
         field = MutableStateFlow(PerformanceSnapshot())
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var pollJob: Job? = null
 
     @Volatile private var lastRecompositionCount = 0L
 
@@ -58,15 +62,27 @@ internal object WickKitPerformanceManager {
     }
 
     fun start() {
-        scope.launch {
+        if (pollJob?.isActive == true) return
+        pollJob = scope.launch {
             while (true) {
                 delay(POLL_INTERVAL_MS.milliseconds)
                 if (appInForeground || overlayOpen) {
-                    collectAndUpdateRuntimeStats()
-                    if (isTracking) collectLiveFrameStats()
+                    runCatching { collectAndUpdateRuntimeStats() }
+                    if (isTracking) runCatching { collectLiveFrameStats() }
                 }
             }
         }
+    }
+
+    fun stop() {
+        pollJob?.cancel()
+        pollJob = null
+        scope.cancel()
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        Handler(Looper.getMainLooper()).post {
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+        }
+        reset()
     }
 
     fun onActivityStarted() {

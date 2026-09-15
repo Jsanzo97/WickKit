@@ -2,7 +2,6 @@ package io.wickkit.overlay.ui.tab
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -172,43 +171,13 @@ private fun ThreadsFilterBar(
                 ThreadFilter.BLOCKED -> ThreadBlockedColor
                 ThreadFilter.NEW -> ThreadNewColor
             }
-            ThreadFilterChip(
+            WickKitFilterChip(
                 label = "${filter.label} ($count)",
                 isSelected = filter == selected,
                 color = color,
                 onClick = { onSelect(filter) },
             )
         }
-    }
-}
-
-@Composable
-private fun ThreadFilterChip(
-    label: String,
-    isSelected: Boolean,
-    color: Color,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) color.copy(alpha = 0.15f) else Color.Transparent)
-            .border(
-                width = 1.dp,
-                color = if (isSelected) color.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(8.dp),
-            )
-            .clickable(interactionSource = null, indication = null) { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            ),
-            color = if (isSelected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-        )
     }
 }
 

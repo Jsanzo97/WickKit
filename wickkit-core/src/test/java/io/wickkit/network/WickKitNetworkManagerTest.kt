@@ -1,5 +1,6 @@
 package io.wickkit.network
 
+import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -103,10 +104,10 @@ class WickKitNetworkManagerTest {
         id = id,
         method = method,
         url = url,
-        requestHeaders = emptyMap(),
+        requestHeaders = persistentMapOf(),
         requestBody = null,
         statusCode = statusCode,
-        responseHeaders = emptyMap(),
+        responseHeaders = persistentMapOf(),
         responseBody = null,
         durationMs = 100L,
         time = "10:00:00.000",

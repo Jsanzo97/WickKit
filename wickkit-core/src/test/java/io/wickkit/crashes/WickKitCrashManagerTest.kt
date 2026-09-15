@@ -5,8 +5,6 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -25,25 +23,25 @@ class WickKitCrashManagerTest {
     @Before
     fun setUp() {
         context = RuntimeEnvironment.getApplication()
-        File(context.filesDir, "wickkit_last_crash.json").delete()
+        crashFile().delete()
         WickKitCrashManager.clear()
     }
 
     @After
     fun tearDown() {
-        File(context.filesDir, "wickkit_last_crash.json").delete()
+        crashFile().delete()
         WickKitCrashManager.clear()
     }
 
     @Test
-    fun `loadPersistedCrash returns null when no file exists`() {
-        assertNull(WickKitCrashManager.loadPersistedCrash(context))
+    fun `loadPersistedCrashes returns empty list when no file exists`() {
+        assertTrue(WickKitCrashManager.loadPersistedCrashes(context).isEmpty())
     }
 
     @Test
-    fun `loadPersistedCrash returns null for malformed JSON`() {
-        File(context.filesDir, "wickkit_last_crash.json").writeText("not valid json {{")
-        assertNull(WickKitCrashManager.loadPersistedCrash(context))
+    fun `loadPersistedCrashes returns empty list for malformed JSON`() {
+        crashFile().writeText("not valid json {{")
+        assertTrue(WickKitCrashManager.loadPersistedCrashes(context).isEmpty())
     }
 
     @Test
@@ -53,8 +51,8 @@ class WickKitCrashManagerTest {
             thread = Thread.currentThread(),
             throwable = RuntimeException("test message"),
         )
-        val crash = WickKitCrashManager.loadPersistedCrash(context)
-        assertNotNull(crash)
+        val crashes = WickKitCrashManager.loadPersistedCrashes(context)
+        assertEquals(1, crashes.size)
     }
 
     @Test
@@ -64,8 +62,8 @@ class WickKitCrashManagerTest {
             thread = Thread.currentThread(),
             throwable = NullPointerException("npe"),
         )
-        val crash = WickKitCrashManager.loadPersistedCrash(context)
-        assertEquals("java.lang.NullPointerException", crash!!.exceptionType)
+        val crash = WickKitCrashManager.loadPersistedCrashes(context).first()
+        assertEquals("java.lang.NullPointerException", crash.exceptionType)
     }
 
     @Test
@@ -75,8 +73,8 @@ class WickKitCrashManagerTest {
             thread = Thread.currentThread(),
             throwable = RuntimeException("expected message"),
         )
-        val crash = WickKitCrashManager.loadPersistedCrash(context)
-        assertEquals("expected message", crash!!.message)
+        val crash = WickKitCrashManager.loadPersistedCrashes(context).first()
+        assertEquals("expected message", crash.message)
     }
 
     @Test
@@ -87,8 +85,8 @@ class WickKitCrashManagerTest {
             thread = thread,
             throwable = RuntimeException("crash"),
         )
-        val crash = WickKitCrashManager.loadPersistedCrash(context)
-        assertEquals(thread.name, crash!!.threadName)
+        val crash = WickKitCrashManager.loadPersistedCrashes(context).first()
+        assertEquals(thread.name, crash.threadName)
     }
 
     @Test
@@ -98,8 +96,8 @@ class WickKitCrashManagerTest {
             thread = Thread.currentThread(),
             throwable = RuntimeException("with stack"),
         )
-        val crash = WickKitCrashManager.loadPersistedCrash(context)
-        assertTrue(crash!!.stackTrace.isNotEmpty())
+        val crash = WickKitCrashManager.loadPersistedCrashes(context).first()
+        assertTrue(crash.stackTrace.isNotEmpty())
     }
 
     @Test
@@ -109,9 +107,38 @@ class WickKitCrashManagerTest {
             thread = Thread.currentThread(),
             throwable = NullPointerException(),
         )
-        val crash = WickKitCrashManager.loadPersistedCrash(context)
-        assertNotNull(crash)
-        assertEquals("", crash!!.message)
+        val crashes = WickKitCrashManager.loadPersistedCrashes(context)
+        assertEquals(1, crashes.size)
+        assertEquals("", crashes.first().message)
+    }
+
+    @Test
+    fun `saveCrash keeps at most 3 crashes`() {
+        repeat(5) { i ->
+            WickKitCrashManager.saveCrash(
+                context = context,
+                thread = Thread.currentThread(),
+                throwable = RuntimeException("crash $i"),
+            )
+        }
+        val crashes = WickKitCrashManager.loadPersistedCrashes(context)
+        assertEquals(3, crashes.size)
+        assertEquals("crash 4", crashes[0].message)
+        assertEquals("crash 3", crashes[1].message)
+        assertEquals("crash 2", crashes[2].message)
+    }
+
+    @Test
+    fun `loadPersistedCrashes migrates single-object format`() {
+        val json = """
+            |{"exceptionType":"java.lang.RuntimeException",
+            |"message":"legacy","threadName":"main",
+            |"appVersion":"1.0","timestamp":1000,"stackTrace":[]}
+        """.trimMargin().replace("\n", "")
+        crashFile().writeText(json)
+        val crashes = WickKitCrashManager.loadPersistedCrashes(context)
+        assertEquals(1, crashes.size)
+        assertEquals("legacy", crashes.first().message)
     }
 
     @Test
@@ -224,11 +251,13 @@ class WickKitCrashManagerTest {
             thread = Thread.currentThread(),
             throwable = RuntimeException("crash"),
         )
-        val file = File(context.filesDir, "wickkit_last_crash.json")
+        val file = crashFile()
         assertTrue(file.exists())
 
         WickKitCrashManager.clear()
 
         assertFalse(file.exists())
     }
+
+    private fun crashFile(): File = File(context.filesDir, "wickkit_crashes.json")
 }
