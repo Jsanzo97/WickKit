@@ -4,31 +4,34 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.core.view.WindowCompat
+import androidx.activity.enableEdgeToEdge
 import io.wickkit.overlay.ui.WickKitScreen
 import io.wickkit.overlay.ui.WickKitTheme
 
 internal class WickKitActivity : ComponentActivity() {
 
-    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         disableSystemTransitions()
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isStatusBarContrastEnforced = false
-            window.isNavigationBarContrastEnforced = false
-        }
         setContent {
             WickKitTheme {
-                WickKitScreen(onClose = ::finish)
+                WickKitScreen(onClose = ::dismissAndFinish)
             }
         }
     }
 
+    private fun dismissAndFinish() {
+        window.attributes = window.attributes.also { it.alpha = 0f }
+        finish()
+    }
+
+    @Suppress("DEPRECATION")
     override fun finish() {
         super.finish()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -36,6 +39,7 @@ internal class WickKitActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun disableSystemTransitions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0)
