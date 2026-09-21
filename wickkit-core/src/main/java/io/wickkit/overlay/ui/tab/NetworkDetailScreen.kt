@@ -69,7 +69,7 @@ internal fun NetworkDetailScreen(
                     headers = entry.requestHeaders,
                 )
             }
-            if (!entry.requestBody.isNullOrBlank()) {
+            if (!entry.requestBody.isNullOrEmpty()) {
                 BodySection(title = stringResource(R.string.wk_network_request_body), body = entry.requestBody)
             }
 
@@ -82,7 +82,7 @@ internal fun NetworkDetailScreen(
                         headers = entry.responseHeaders,
                     )
                 }
-                if (!entry.responseBody.isNullOrBlank()) {
+                if (!entry.responseBody.isNullOrEmpty()) {
                     BodySection(title = stringResource(R.string.wk_network_response_body), body = entry.responseBody)
                 }
             }
