@@ -151,19 +151,13 @@ class WickKitNetworkInterceptor : Interceptor {
     }
 
     private fun readResponseBody(response: Response): String? {
-        val body = response.body ?: return null
         val contentType = response.header("Content-Type")?.lowercase()
         if (contentType != null && isStreamingContentType(contentType)) {
             return "[streaming body: $contentType]"
         }
-        return runCatching {
-            val source = body.source()
-            source.request(MAX_BODY_BYTES)
-            val buffer = source.buffer
-            if (buffer.size == 0L) return@runCatching null
-            val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
-            buffer.clone().readString(minOf(buffer.size, MAX_BODY_BYTES), charset)
-        }.getOrNull()
+        return runCatching { response.peekBody(MAX_BODY_BYTES).string() }
+            .getOrNull()
+            ?.ifEmpty { null }
     }
 
     private fun isStreamingContentType(contentType: String): Boolean = contentType.contains("text/event-stream") ||
