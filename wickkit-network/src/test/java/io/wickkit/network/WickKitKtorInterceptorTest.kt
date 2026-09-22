@@ -5,10 +5,10 @@ package io.wickkit.network
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.SaveBodyPlugin
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.prepareGet
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
@@ -95,7 +95,7 @@ class WickKitKtorInterceptorTest {
     // region response body
 
     @Test
-    fun `response body is readable by caller without SaveBodyPlugin`() = runBlocking {
+    fun `response body is readable by caller after interceptor reads it`() = runBlocking {
         HttpClient(MockEngine) {
             install(WickKitKtorInterceptor)
             engine {
@@ -114,22 +114,42 @@ class WickKitKtorInterceptorTest {
     }
 
     @Test
-    fun `response body is readable by caller after interceptor reads it with SaveBodyPlugin`() = runBlocking {
+    fun `error response body is readable by caller after interceptor reads it`() = runBlocking {
         HttpClient(MockEngine) {
-            install(SaveBodyPlugin)
             install(WickKitKtorInterceptor)
             engine {
                 addHandler {
                     respond(
-                        content = """{"saved":true}""",
+                        content = """{"message":"Invalid credentials"}""",
+                        status = HttpStatusCode.Unauthorized,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+            }
+        }.use { client ->
+            val body = client.post("https://api.example.com/login").bodyAsText()
+            assertEquals("""{"message":"Invalid credentials"}""", body)
+        }
+    }
+
+    @Test
+    fun `streamed response body is not consumed by interceptor`() = runBlocking {
+        HttpClient(MockEngine) {
+            install(WickKitKtorInterceptor)
+            engine {
+                addHandler {
+                    respond(
+                        content = """{"streamed":true}""",
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json"),
                     )
                 }
             }
         }.use { client ->
-            val body = client.get("https://api.example.com/data").bodyAsText()
-            assertEquals("""{"saved":true}""", body)
+            val body = client.prepareGet("https://api.example.com/stream").execute { response ->
+                response.bodyAsText()
+            }
+            assertEquals("""{"streamed":true}""", body)
         }
     }
 
@@ -156,10 +176,9 @@ class WickKitKtorInterceptorTest {
     }
 
     @Test
-    fun `response body larger than 50KB is truncated in interceptor entry with SaveBodyPlugin`() = runBlocking {
+    fun `response body larger than 50KB is truncated in interceptor entry`() = runBlocking {
         val largeBody = "a".repeat(51 * 1024)
         HttpClient(MockEngine) {
-            install(SaveBodyPlugin)
             install(WickKitKtorInterceptor)
             engine {
                 addHandler {

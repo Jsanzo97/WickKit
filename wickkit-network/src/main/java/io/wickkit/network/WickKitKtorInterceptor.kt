@@ -4,9 +4,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.HttpClientPlugin
 import io.ktor.client.plugins.HttpSend
-import io.ktor.client.plugins.SaveBodyPlugin
+import io.ktor.client.plugins.isSaved
 import io.ktor.client.plugins.plugin
-import io.ktor.client.plugins.pluginOrNull
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.client.statement.bodyAsText
@@ -40,7 +39,6 @@ class WickKitKtorInterceptor private constructor() {
                 override fun initialValue() = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
             }
 
-            val saveBodyInstalled = scope.pluginOrNull(SaveBodyPlugin) != null
             scope.plugin(HttpSend).intercept { request ->
                 val id = WickKitNetworkManager.nextId()
                 val time = (timeFormat.get() ?: SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())).format(Date())
@@ -99,7 +97,7 @@ class WickKitKtorInterceptor private constructor() {
                     )
                     throw e
                 }
-                val responseBody = readResponseBody(call, saveBodyInstalled)
+                val responseBody = readResponseBody(call)
                 WickKitNetworkManager.add(
                     NetworkEntry(
                         id = id,
@@ -157,16 +155,13 @@ class WickKitKtorInterceptor private constructor() {
             return HttpClientCall(scope, requestData, responseData)
         }
 
-        private suspend fun readResponseBody(
-            call: io.ktor.client.call.HttpClientCall,
-            saveBodyInstalled: Boolean,
-        ): String? {
-            if (!saveBodyInstalled) return null
+        private suspend fun readResponseBody(call: HttpClientCall): String? {
+            if (!call.response.isSaved) return null
             return runCatching {
                 val text = call.response.bodyAsText()
                 val byteSize = text.toByteArray(Charsets.UTF_8).size
                 if (byteSize > MAX_BODY_BYTES) "[body too large: $byteSize bytes]" else text
-            }.getOrNull()
+            }.getOrNull()?.ifEmpty { null }
         }
 
         private fun readRequestBody(body: Any): String? {
