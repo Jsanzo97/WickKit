@@ -584,6 +584,8 @@ private fun FlagsInlineEdit(
                     .onFocusChanged { state ->
                         if (state.hasFocus) {
                             hasFocused = true
+                        } else if (hasFocused) {
+                            onCommit()
                         }
                     },
             )
