@@ -105,8 +105,8 @@ internal fun DatabaseTab() {
                 editValue = editValue,
                 onBack = viewModel::navigateBack,
                 onFocusClear = {
+                    if (editingCell != null) viewModel.onEditingCommitted(editValue.text)
                     focusManager.clearFocus()
-                    viewModel.cancelEdit()
                 },
                 onEditValueChange = { editValue = it },
                 onCellClick = { rowIndex, colName, text ->
